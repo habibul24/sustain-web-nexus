@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, TrendingUp, Globe } from 'lucide-react';
+import { ArrowRight, CheckCircle, TrendingUp } from 'lucide-react';
 
 const ImageTextSection = () => {
   return (
-    <section className="bg-gradient-to-br from-emerald-100 via-green-50 to-white py-24">
+    <section className="bg-gradient-to-br from-green-50 via-gray-50 to-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1">
@@ -42,10 +42,6 @@ const ImageTextSection = () => {
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
                 Learn More About Our Impact
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button variant="outline" className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold text-lg px-8 py-4 rounded-xl">
-                <Globe className="mr-2 w-5 h-5" />
-                View Case Studies
               </Button>
             </div>
           </div>
