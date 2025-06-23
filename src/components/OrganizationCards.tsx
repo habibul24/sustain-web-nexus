@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,7 +47,9 @@ const OrganizationCards = () => {
   ];
 
   return (
-    <section className="bg-gradient-to-br from-green-400 to-green-500 py-24">
+    <section className="py-24" style={{ 
+      background: 'linear-gradient(to bottom, #e3e480, #d4c973)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {organizationCards.map((card, index) => (

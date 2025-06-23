@@ -1,11 +1,12 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle, TrendingUp } from 'lucide-react';
 
 const ImageTextSection = () => {
   return (
-    <section className="relative bg-gradient-to-br from-green-50 via-gray-50 to-white py-24">
+    <section className="relative py-24" style={{ 
+      background: 'linear-gradient(to bottom, #f8fafc, #e3e480)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1">
