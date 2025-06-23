@@ -1,186 +1,144 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Users, Shield, ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Leaf, Users, Shield, TrendingUp, BarChart3, Award } from 'lucide-react';
 
 const ESGCarousel = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
 
-  const esgData = [
+  const slides = [
     {
-      letter: 'E',
-      title: 'Environmental',
-      icon: <Leaf className="w-12 h-12" />,
-      description: 'Monitor and reduce your environmental impact',
+      icon: <Leaf className="w-8 h-8 text-green-600" />,
+      title: "Environmental Impact",
+      description: "Comprehensive carbon footprint tracking and environmental sustainability metrics",
       features: [
-        'Carbon footprint tracking',
-        'Energy consumption analysis',
-        'Waste management optimization',
-        'Water usage monitoring',
-        'Renewable energy integration'
+        "Carbon emissions monitoring",
+        "Renewable energy tracking",
+        "Waste reduction analytics",
+        "Water usage optimization"
       ],
-      color: 'from-emerald-600 via-green-600 to-green-700',
-      bgColor: 'bg-gradient-to-br from-green-50 to-emerald-100',
-      iconColor: 'text-emerald-600',
-      accent: 'bg-emerald-500'
+      bgGradient: "from-green-50 to-emerald-100"
     },
     {
-      letter: 'S',
-      title: 'Social',
-      icon: <Users className="w-12 h-12" />,
-      description: 'Build stronger communities and workforce',
+      icon: <Users className="w-8 h-8 text-blue-600" />,
+      title: "Social Responsibility", 
+      description: "Track social impact initiatives and community engagement programs",
       features: [
-        'Employee engagement metrics',
-        'Diversity & inclusion tracking',
-        'Community impact assessment',
-        'Health & safety monitoring',
-        'Supply chain responsibility'
+        "Employee diversity metrics",
+        "Community investment tracking",
+        "Safety performance indicators",
+        "Training and development programs"
       ],
-      color: 'from-green-500 via-emerald-500 to-green-600',
-      bgColor: 'bg-gradient-to-br from-emerald-50 to-green-100',
-      iconColor: 'text-green-600',
-      accent: 'bg-green-500'
+      bgGradient: "from-blue-50 to-sky-100"
     },
     {
-      letter: 'G',
-      title: 'Governance',
-      icon: <Shield className="w-12 h-12" />,
-      description: 'Ensure transparent and ethical operations',
+      icon: <Shield className="w-8 h-8 text-purple-600" />,
+      title: "Governance Excellence",
+      description: "Ensure transparency, accountability, and ethical business practices",
       features: [
-        'Board composition analysis',
-        'Executive compensation tracking',
-        'Risk management systems',
-        'Compliance monitoring',
-        'Stakeholder engagement'
+        "Board diversity tracking",
+        "Ethics compliance monitoring",
+        "Risk management protocols",
+        "Stakeholder engagement"
       ],
-      color: 'from-gray-700 via-gray-800 to-black',
-      bgColor: 'bg-gradient-to-br from-gray-50 to-gray-100',
-      iconColor: 'text-gray-700',
-      accent: 'bg-gray-700'
+      bgGradient: "from-purple-50 to-violet-100"
     }
   ];
 
-  const getCardPosition = (index) => {
-    if (index === activeIndex) {
-      return 'translate-x-0 scale-100 z-20 opacity-100';
-    } else if (index === (activeIndex - 1 + esgData.length) % esgData.length) {
-      return '-translate-x-32 scale-90 z-10 opacity-60 blur-sm';
-    } else {
-      return 'translate-x-32 scale-90 z-10 opacity-60 blur-sm';
-    }
-  };
-
   return (
-    <section className="bg-gradient-to-br from-white via-green-50 to-emerald-100 py-24 overflow-hidden">
+    <section className="bg-gradient-to-br from-white via-gray-50 to-green-50 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full font-semibold text-sm mb-6">
-            <Shield className="w-4 h-4 mr-2" />
-            Complete ESG Solution
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            ESG Solutions
           </div>
-          <h2 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 bg-clip-text text-transparent">
-              ESG Excellence
-            </span>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
+            Comprehensive 
+            <span className="text-green-600"> ESG Platform</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            Comprehensive Environmental, Social, and Governance solutions designed 
-            to transform your sustainability strategy and drive meaningful change
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+            Monitor, measure, and improve your environmental, social, and governance performance 
+            with our integrated sustainability platform.
           </p>
         </div>
 
-        {/* Custom Carousel Container */}
-        <div className="relative max-w-6xl mx-auto mb-16">
-          <div className="relative h-[650px] flex items-center justify-center">
-            {esgData.map((item, index) => (
+        {/* Custom Carousel */}
+        <div className="relative">
+          {/* Cards Container */}
+          <div className="flex justify-center items-center space-x-4 mb-12">
+            {slides.map((slide, index) => (
               <div
                 key={index}
-                className={`absolute transition-all duration-700 ease-in-out ${getCardPosition(index)}`}
-                style={{ width: '520px' }}
+                className={`transition-all duration-500 cursor-pointer ${
+                  index === activeSlide 
+                    ? 'scale-100 z-10 opacity-100' 
+                    : 'scale-90 opacity-60 blur-sm'
+                } ${
+                  index === activeSlide 
+                    ? 'w-96' 
+                    : 'w-80'
+                }`}
+                onClick={() => setActiveSlide(index)}
               >
-                <Card className="bg-white border-0 shadow-2xl overflow-hidden cursor-pointer hover:shadow-3xl transition-all duration-300 group">
-                  <CardContent className="p-0">
-                    <div className="relative">
-                      {/* Gradient Header */}
-                      <div className={`bg-gradient-to-r ${item.color} p-10 text-white relative overflow-hidden`}>
-                        <div className="flex items-center justify-between relative z-10">
-                          <div>
-                            <h3 className="text-4xl font-bold mb-3">{item.title}</h3>
-                            <p className="text-xl opacity-90 font-medium">{item.description}</p>
-                          </div>
-                          <div className="text-white/90 group-hover:scale-110 transition-transform duration-300">
-                            {item.icon}
-                          </div>
+                <Card className={`h-96 bg-gradient-to-br ${slide.bgGradient} border-2 hover:border-green-300 shadow-xl hover:shadow-2xl transition-all duration-300`}>
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      {slide.icon}
+                    </div>
+                    <CardTitle className="text-2xl text-gray-900 mb-2">{slide.title}</CardTitle>
+                    <CardDescription className="text-gray-700 text-base px-2">
+                      {slide.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-6">
+                    <div className="space-y-3">
+                      {slide.features.map((feature, featureIndex) => (
+                        <div key={featureIndex} className="flex items-center text-sm text-gray-700">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                          {feature}
                         </div>
-                        <div className="text-9xl font-bold opacity-10 absolute -top-6 -right-10">
-                          {item.letter}
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                          <div>
-                            <h4 className="text-2xl font-bold text-gray-800 mb-6">
-                              Key Capabilities
-                            </h4>
-                            <ul className="space-y-4">
-                              {item.features.map((feature, idx) => (
-                                <li key={idx} className="flex items-center text-gray-700 text-lg">
-                                  <div className={`w-3 h-3 rounded-full ${item.accent} mr-4 flex-shrink-0`}></div>
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className={`${item.bgColor} rounded-3xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden`}>
-                            <div className={`${item.iconColor} mb-6 flex justify-center group-hover:scale-110 transition-transform duration-300`}>
-                              {React.cloneElement(item.icon, { className: "w-20 h-20" })}
-                            </div>
-                            <p className="text-gray-700 font-semibold text-lg mb-6">
-                              Advanced analytics and reporting for {item.title.toLowerCase()} metrics
-                            </p>
-                            <div className="flex items-center text-green-600 font-semibold group-hover:text-green-700 transition-colors duration-300">
-                              <span>Explore Features</span>
-                              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                            </div>
-                            <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-white/20 rounded-full"></div>
-                            <div className="absolute -top-2 -left-2 w-8 h-8 bg-white/30 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
               </div>
             ))}
           </div>
+
+          {/* Dot Navigation */}
+          <div className="flex justify-center space-x-3">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === activeSlide 
+                    ? 'bg-green-600 scale-125' 
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Enhanced Dot Navigation */}
-        <div className="flex justify-center space-x-6">
-          {esgData.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`relative transition-all duration-300 ${
-                index === activeIndex
-                  ? 'scale-125'
-                  : 'hover:scale-110'
-              }`}
-              aria-label={`Go to ${item.title} slide`}
-            >
-              <div className={`w-5 h-5 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? `bg-gradient-to-r ${item.color} shadow-lg`
-                  : 'bg-gray-300 hover:bg-gray-400'
-              }`}></div>
-              {index === activeIndex && (
-                <div className={`absolute -inset-2 rounded-full bg-gradient-to-r ${item.color} opacity-20 animate-pulse`}></div>
-              )}
-            </button>
-          ))}
+        {/* Stats Section */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <BarChart3 className="w-12 h-12 text-green-600 mx-auto mb-4" />
+            <div className="text-3xl font-bold text-gray-900 mb-2">500+</div>
+            <div className="text-gray-600">Companies Tracking ESG</div>
+          </div>
+          <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <TrendingUp className="w-12 h-12 text-green-600 mx-auto mb-4" />
+            <div className="text-3xl font-bold text-gray-900 mb-2">40%</div>
+            <div className="text-gray-600">Average Carbon Reduction</div>
+          </div>
+          <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <Award className="w-12 h-12 text-green-600 mx-auto mb-4" />
+            <div className="text-3xl font-bold text-gray-900 mb-2">95%</div>
+            <div className="text-gray-600">Compliance Rate</div>
+          </div>
         </div>
       </div>
     </section>

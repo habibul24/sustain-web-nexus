@@ -1,19 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section className="relative bg-gradient-to-br from-white via-green-50 to-emerald-100 min-h-screen">
+    <section className="relative bg-gradient-to-br from-gray-900 via-green-900 to-black min-h-screen">
       {/* Hero Image Section */}
       <div className="relative h-96 md:h-[600px] overflow-hidden">
         <img 
-          src="https://static.wixstatic.com/media/84770f_c2ce0da1dbc6481da30aa5b929f4ac3b~mv2.jpg" 
-          alt="Green sustainable landscape with rolling hills" 
+          src="https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
+          alt="Dark forest with mystical lighting" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/70 via-green-800/60 to-green-900/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-green-900/70 to-black/80"></div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
@@ -32,6 +32,7 @@ const Hero = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-green-800 font-semibold text-lg px-8 py-4 rounded-full backdrop-blur-sm bg-white/10">
+                <Play className="mr-2 w-5 h-5" />
                 Watch Demo
               </Button>
             </div>
