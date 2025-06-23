@@ -5,12 +5,14 @@ import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import ImageTextSection from '@/components/ImageTextSection';
 import ESGCarousel from '@/components/ESGCarousel';
+import OrganizationCards from '@/components/OrganizationCards';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-green-900 to-black">
       <Header />
       <Hero />
+      <OrganizationCards />
       <ImageTextSection />
       <ESGCarousel />
       <Footer />

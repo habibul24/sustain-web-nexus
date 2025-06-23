@@ -46,15 +46,15 @@ const ESGCarousel = () => {
   ];
 
   return (
-    <section className="relative bg-gradient-to-br from-white via-gray-50 to-green-50 py-24">
+    <section className="relative bg-gradient-to-br from-gray-900 to-green-900 py-24">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-          alt="People sitting down near table with assorted laptop computers"
+          src="https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          alt="Bird's eye view photograph of green mountains"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-white/85"></div>
+        <div className="absolute inset-0 bg-gray-900/70"></div>
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,11 +63,11 @@ const ESGCarousel = () => {
             <TrendingUp className="w-4 h-4 mr-2" />
             ESG Solutions
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight">
             Comprehensive 
-            <span className="text-green-600"> ESG Platform</span>
+            <span className="text-green-400"> ESG Platform</span>
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
             Monitor, measure, and improve your environmental, social, and governance performance 
             with our integrated sustainability platform.
           </p>
@@ -82,7 +82,7 @@ const ESGCarousel = () => {
                 className={`transition-all duration-500 cursor-pointer ${
                   index === activeSlide 
                     ? 'scale-100 z-10 opacity-100' 
-                    : 'scale-90 opacity-60 blur-sm'
+                    : 'scale-90 opacity-60'
                 } ${
                   index === activeSlide 
                     ? 'w-96' 
@@ -122,7 +122,7 @@ const ESGCarousel = () => {
                 onClick={() => setActiveSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === activeSlide 
-                    ? 'bg-green-600 scale-125' 
+                    ? 'bg-green-400 scale-125' 
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
               />
