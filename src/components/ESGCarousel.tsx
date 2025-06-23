@@ -17,7 +17,7 @@ const ESGCarousel = () => {
         "Waste reduction analytics",
         "Water usage optimization"
       ],
-      bgGradient: "from-green-50/95 to-emerald-100/95"
+      bgGradient: "from-green-50 to-emerald-100"
     },
     {
       icon: <Users className="w-8 h-8 text-green-700" />,
@@ -29,7 +29,7 @@ const ESGCarousel = () => {
         "Safety performance indicators",
         "Training and development programs"
       ],
-      bgGradient: "from-green-50/95 to-green-100/95"
+      bgGradient: "from-green-50 to-green-100"
     },
     {
       icon: <Shield className="w-8 h-8 text-green-800" />,
@@ -41,7 +41,7 @@ const ESGCarousel = () => {
         "Risk management protocols",
         "Stakeholder engagement"
       ],
-      bgGradient: "from-green-50/95 to-green-200/95"
+      bgGradient: "from-green-50 to-green-200"
     }
   ];
 
@@ -58,24 +58,24 @@ const ESGCarousel = () => {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-          alt="Modern sustainable office building"
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          alt="Business team meeting in modern office"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gray-900/75"></div>
+        <div className="absolute inset-0 bg-gray-900/80"></div>
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center px-6 py-3 bg-green-100/90 backdrop-blur-sm text-green-800 rounded-full font-bold text-sm mb-8 shadow-lg">
-            <TrendingUp className="w-5 h-5 mr-3" />
+          <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
+            <TrendingUp className="w-4 h-4 mr-2" />
             ESG Solutions
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight">
             Comprehensive 
             <span className="text-green-400"> ESG Platform</span>
           </h2>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
             Monitor, measure, and improve your environmental, social, and governance performance 
             with our integrated sustainability platform.
           </p>
@@ -86,26 +86,26 @@ const ESGCarousel = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
           >
             <ArrowRight className="w-6 h-6" />
           </button>
 
-          <div className="flex justify-center items-center space-x-6 mb-12">
+          <div className="flex justify-center items-center space-x-4 mb-12">
             {slides.map((slide, index) => (
               <div
                 key={index}
                 className={`transition-all duration-500 cursor-pointer ${
                   index === activeSlide 
                     ? 'scale-100 z-10 opacity-100' 
-                    : 'scale-90 opacity-70'
+                    : 'scale-90 opacity-60'
                 } ${
                   index === activeSlide 
                     ? 'w-96' 
@@ -113,21 +113,21 @@ const ESGCarousel = () => {
                 }`}
                 onClick={() => setActiveSlide(index)}
               >
-                <Card className={`h-96 bg-gradient-to-br ${slide.bgGradient} backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1`}>
-                  <CardHeader className="text-center pb-6">
-                    <div className="w-20 h-20 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl ring-4 ring-white/30">
+                <Card className={`h-96 bg-gradient-to-br ${slide.bgGradient} border-2 hover:border-green-300 shadow-xl hover:shadow-2xl transition-all duration-300`}>
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                       {slide.icon}
                     </div>
-                    <CardTitle className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">{slide.title}</CardTitle>
-                    <CardDescription className="text-gray-700 text-base px-2 leading-relaxed font-medium">
+                    <CardTitle className="text-2xl text-gray-900 mb-2">{slide.title}</CardTitle>
+                    <CardDescription className="text-gray-700 text-base px-2">
                       {slide.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="px-6">
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {slide.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-center text-sm text-gray-700 font-medium">
-                          <div className="w-2.5 h-2.5 bg-gradient-to-r from-green-500 to-green-600 rounded-full mr-4 flex-shrink-0 shadow-sm"></div>
+                        <div key={featureIndex} className="flex items-center text-sm text-gray-700">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
                           {feature}
                         </div>
                       ))}
@@ -143,9 +143,9 @@ const ESGCarousel = () => {
               <button
                 key={index}
                 onClick={() => setActiveSlide(index)}
-                className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === activeSlide 
-                    ? 'bg-green-400 scale-125 shadow-lg' 
+                    ? 'bg-green-400 scale-125' 
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
               />
