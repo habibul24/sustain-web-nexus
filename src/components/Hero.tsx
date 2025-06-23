@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, Leaf, Users, Building } from 'lucide-react';
 
 const Hero = () => {
   return (
@@ -36,53 +37,47 @@ const Hero = () => {
             </h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
             {/* Individuals Card */}
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <div className="w-8 h-8 bg-secondary rounded-full"></div>
-                </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">Individuals</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Start your sustainability journey with our comprehensive courses
-                </p>
-                <Button className="bg-secondary hover:bg-secondary/90 text-primary font-semibold w-full">
-                  Start Learning
-                </Button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center hover:shadow-md transition-shadow duration-300">
+              <div className="w-16 h-16 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-6">
+                <Users className="w-8 h-8 text-secondary" />
               </div>
+              <h3 className="text-xl font-semibold text-primary mb-3">Individuals</h3>
+              <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                Start your sustainability journey with our comprehensive courses
+              </p>
+              <Button className="bg-secondary hover:bg-secondary/90 text-primary font-medium w-full">
+                Start Learning
+              </Button>
             </div>
 
             {/* Businesses Card */}
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <div className="w-8 h-8 bg-accent rounded-full"></div>
-                </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">Businesses</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Comprehensive sustainability solutions for growing businesses
-                </p>
-                <Button className="bg-accent hover:bg-accent/90 text-primary font-semibold w-full">
-                  Start Your Assessment
-                </Button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center hover:shadow-md transition-shadow duration-300">
+              <div className="w-16 h-16 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-6">
+                <Building className="w-8 h-8 text-accent-orange" />
               </div>
+              <h3 className="text-xl font-semibold text-primary mb-3">Businesses</h3>
+              <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                Comprehensive sustainability solutions for growing businesses
+              </p>
+              <Button className="bg-accent hover:bg-accent/90 text-primary font-medium w-full">
+                Start Your Assessment
+              </Button>
             </div>
 
             {/* Large Organizations Card */}
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-accent-orange/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <div className="w-8 h-8 bg-accent-orange rounded-full"></div>
-                </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">Large Organizations</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Have you already implemented ESG, or need help with governance metrics?
-                </p>
-                <Button className="bg-accent-orange hover:bg-accent-orange/90 text-white font-semibold w-full">
-                  Simplify with GreenData
-                </Button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center hover:shadow-md transition-shadow duration-300">
+              <div className="w-16 h-16 bg-accent-orange/10 rounded-lg flex items-center justify-center mx-auto mb-6">
+                <Leaf className="w-8 h-8 text-accent-orange" />
               </div>
+              <h3 className="text-xl font-semibold text-primary mb-3">Large Organizations</h3>
+              <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                Have you already implemented ESG, or need help with governance metrics?
+              </p>
+              <Button className="bg-accent-orange hover:bg-accent-orange/90 text-white font-medium w-full">
+                Simplify with GreenData
+              </Button>
             </div>
           </div>
         </div>
