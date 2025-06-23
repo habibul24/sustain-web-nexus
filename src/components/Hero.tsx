@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -9,9 +8,10 @@ const Hero = () => {
       {/* Hero Image Section */}
       <div className="relative h-96 md:h-[600px] overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
+          src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=100&sharp=10" 
           alt="Dark forest with mystical lighting" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
+          style={{ imageRendering: 'crisp-edges' }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-green-900/70 to-black/80"></div>
         <div className="absolute inset-0 flex items-center justify-center">

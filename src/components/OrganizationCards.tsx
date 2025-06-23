@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Building, Building2 } from 'lucide-react';
+import { User, Building, Building2, Sparkles } from 'lucide-react';
 
 const OrganizationCards = () => {
   const organizationCards = [
@@ -51,6 +51,19 @@ const OrganizationCards = () => {
       background: 'linear-gradient(to bottom, #e3e480, #d4c973)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 mb-6">
+            <Sparkles className="w-4 h-4 text-green-700" />
+            <span className="text-sm font-medium text-green-800">Our Solutions</span>
+          </div>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Who We Serve
+          </h2>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            From individual consumers to enterprise corporations, we provide tailored sustainability solutions for every organization type
+          </p>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {organizationCards.map((card, index) => (
             <Card key={index} className={`${card.bgColor} border-2 border-green-300 hover:border-green-600 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col`}>

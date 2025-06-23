@@ -36,7 +36,7 @@ const SustainabilitySection = () => {
 
   return (
     <section className="py-24" style={{ 
-      background: 'linear-gradient(to bottom, #d4c973, #374151)'
+      background: 'linear-gradient(to bottom, #d4c973, #1f2937)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
