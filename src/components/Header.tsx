@@ -51,7 +51,7 @@ const Header = () => {
               asChild 
               className="bg-accent hover:bg-accent/90 text-primary"
             >
-              <Link to="/contact">Get Started</Link>
+              <Link to="/contact">Sign In</Link>
             </Button>
           </div>
 
@@ -92,7 +92,7 @@ const Header = () => {
                   className="w-full bg-accent hover:bg-accent/90 text-primary"
                 >
                   <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
-                    Get Started
+                    Sign In
                   </Link>
                 </Button>
               </div>

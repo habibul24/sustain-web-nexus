@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   return (
@@ -9,7 +9,7 @@ const Hero = () => {
       {/* Hero Image Section */}
       <div className="relative h-96 md:h-[600px] overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
+          src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
           alt="Dark forest with mystical lighting" 
           className="w-full h-full object-cover"
         />
@@ -26,14 +26,10 @@ const Hero = () => {
               Comprehensive ESG tools and sustainability analytics to help your 
               organization meet compliance requirements and drive sustainable growth.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex justify-center">
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
                 Get Started Today
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-green-800 font-semibold text-lg px-8 py-4 rounded-full backdrop-blur-sm bg-white/10">
-                <Play className="mr-2 w-5 h-5" />
-                Watch Demo
               </Button>
             </div>
           </div>
