@@ -17,10 +17,7 @@ const Hero = () => {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Navigate Your Sustainability Journey
-              <span className="text-green-300 block bg-gradient-to-r from-green-300 to-emerald-200 bg-clip-text text-transparent">
-                With Clarity
-              </span>
+              Navigate Your Sustainability Journey With Clarity
             </h1>
             <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-4xl mx-auto leading-relaxed font-medium">
               Explore courses that equip you with the knowledge to drive positive
