@@ -1,16 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { Leaf, Users, Shield } from 'lucide-react';
 
 const ESGCarousel = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const esgData = [
     {
       letter: 'E',
@@ -62,8 +57,18 @@ const ESGCarousel = () => {
     }
   ];
 
+  const getCardPosition = (index) => {
+    if (index === activeIndex) {
+      return 'translate-x-0 scale-100 z-20 opacity-100';
+    } else if (index === (activeIndex - 1 + esgData.length) % esgData.length) {
+      return '-translate-x-32 scale-90 z-10 opacity-60 blur-sm';
+    } else {
+      return 'translate-x-32 scale-90 z-10 opacity-60 blur-sm';
+    }
+  };
+
   return (
-    <section className="bg-cream py-20">
+    <section className="bg-cream py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">
@@ -75,68 +80,85 @@ const ESGCarousel = () => {
           </p>
         </div>
 
-        <Carousel className="w-full max-w-5xl mx-auto">
-          <CarouselContent>
+        {/* Custom Carousel Container */}
+        <div className="relative max-w-5xl mx-auto mb-12">
+          <div className="relative h-[600px] flex items-center justify-center">
             {esgData.map((item, index) => (
-              <CarouselItem key={index}>
-                <div className="p-4">
-                  <Card className="bg-white border-0 shadow-2xl overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative">
-                        {/* Gradient Header */}
-                        <div className={`bg-gradient-to-r ${item.color} p-8 text-white`}>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="text-6xl font-bold opacity-20 absolute top-4 right-8">
-                                {item.letter}
-                              </div>
-                              <h3 className="text-3xl font-bold mb-2">{item.title}</h3>
-                              <p className="text-lg opacity-90">{item.description}</p>
-                            </div>
-                            <div className="text-white/80">
-                              {item.icon}
-                            </div>
+              <div
+                key={index}
+                className={`absolute transition-all duration-500 ease-in-out ${getCardPosition(index)}`}
+                style={{ width: '500px' }}
+              >
+                <Card className="bg-white border-0 shadow-2xl overflow-hidden cursor-pointer hover:shadow-3xl transition-shadow duration-300">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      {/* Gradient Header */}
+                      <div className={`bg-gradient-to-r ${item.color} p-8 text-white relative overflow-hidden`}>
+                        <div className="flex items-center justify-between relative z-10">
+                          <div>
+                            <h3 className="text-3xl font-bold mb-2">{item.title}</h3>
+                            <p className="text-lg opacity-90">{item.description}</p>
+                          </div>
+                          <div className="text-white/80">
+                            {item.icon}
                           </div>
                         </div>
+                        <div className="text-8xl font-bold opacity-10 absolute -top-4 -right-8">
+                          {item.letter}
+                        </div>
+                      </div>
 
-                        {/* Content */}
-                        <div className="p-8">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                              <h4 className="text-xl font-semibold text-primary mb-4">
-                                Key Capabilities
-                              </h4>
-                              <ul className="space-y-3">
-                                {item.features.map((feature, idx) => (
-                                  <li key={idx} className="flex items-center text-gray-700">
-                                    <div className={`w-2 h-2 rounded-full ${item.iconColor.replace('text-', 'bg-')} mr-3`}></div>
-                                    {feature}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className={`${item.bgColor} rounded-2xl p-6 flex items-center justify-center`}>
-                              <div className="text-center">
-                                <div className={`${item.iconColor} mb-4 flex justify-center`}>
-                                  {React.cloneElement(item.icon, { className: "w-16 h-16" })}
-                                </div>
-                                <p className="text-gray-700 font-medium">
-                                  Advanced analytics and reporting for {item.title.toLowerCase()} metrics
-                                </p>
+                      {/* Content */}
+                      <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div>
+                            <h4 className="text-xl font-semibold text-primary mb-4">
+                              Key Capabilities
+                            </h4>
+                            <ul className="space-y-3">
+                              {item.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-center text-gray-700">
+                                  <div className={`w-2 h-2 rounded-full ${item.iconColor.replace('text-', 'bg-')} mr-3`}></div>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className={`${item.bgColor} rounded-2xl p-6 flex items-center justify-center`}>
+                            <div className="text-center">
+                              <div className={`${item.iconColor} mb-4 flex justify-center`}>
+                                {React.cloneElement(item.icon, { className: "w-16 h-16" })}
                               </div>
+                              <p className="text-gray-700 font-medium">
+                                Advanced analytics and reporting for {item.title.toLowerCase()} metrics
+                              </p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CarouselItem>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </Carousel>
+          </div>
+        </div>
+
+        {/* Dot Navigation */}
+        <div className="flex justify-center space-x-4">
+          {esgData.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                index === activeIndex
+                  ? 'bg-primary scale-125'
+                  : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to ${esgData[index].title} slide`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
