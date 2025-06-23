@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle, TrendingUp, Globe } from 'lucide-react';
 
 const ImageTextSection = () => {
   return (
-    <section className="bg-gradient-to-br from-white to-green-50 py-24">
+    <section className="bg-gradient-to-br from-emerald-100 via-green-50 to-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1">
@@ -51,7 +51,7 @@ const ImageTextSection = () => {
           </div>
           <div className="order-1 lg:order-2">
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-3xl blur opacity-20"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur opacity-20"></div>
               <img
                 src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
                 alt="Sunlight filtering through green forest canopy"

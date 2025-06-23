@@ -19,7 +19,7 @@ const ESGCarousel = () => {
         'Water usage monitoring',
         'Renewable energy integration'
       ],
-      color: 'from-emerald-500 via-green-500 to-teal-600',
+      color: 'from-emerald-600 via-green-600 to-green-700',
       bgColor: 'bg-gradient-to-br from-green-50 to-emerald-100',
       iconColor: 'text-emerald-600',
       accent: 'bg-emerald-500'
@@ -36,10 +36,10 @@ const ESGCarousel = () => {
         'Health & safety monitoring',
         'Supply chain responsibility'
       ],
-      color: 'from-blue-500 via-indigo-500 to-purple-600',
-      bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-100',
-      iconColor: 'text-blue-600',
-      accent: 'bg-blue-500'
+      color: 'from-green-500 via-emerald-500 to-green-600',
+      bgColor: 'bg-gradient-to-br from-emerald-50 to-green-100',
+      iconColor: 'text-green-600',
+      accent: 'bg-green-500'
     },
     {
       letter: 'G',
@@ -53,10 +53,10 @@ const ESGCarousel = () => {
         'Compliance monitoring',
         'Stakeholder engagement'
       ],
-      color: 'from-purple-500 via-violet-500 to-indigo-600',
-      bgColor: 'bg-gradient-to-br from-purple-50 to-violet-100',
-      iconColor: 'text-purple-600',
-      accent: 'bg-purple-500'
+      color: 'from-gray-700 via-gray-800 to-black',
+      bgColor: 'bg-gradient-to-br from-gray-50 to-gray-100',
+      iconColor: 'text-gray-700',
+      accent: 'bg-gray-700'
     }
   ];
 
@@ -71,15 +71,15 @@ const ESGCarousel = () => {
   };
 
   return (
-    <section className="bg-gradient-to-br from-gray-50 to-white py-24 overflow-hidden">
+    <section className="bg-gradient-to-br from-white via-green-50 to-emerald-100 py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-blue-100 text-green-800 rounded-full font-semibold text-sm mb-6">
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full font-semibold text-sm mb-6">
             <Shield className="w-4 h-4 mr-2" />
             Complete ESG Solution
           </div>
           <h2 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 bg-clip-text text-transparent">
               ESG Excellence
             </span>
           </h2>
