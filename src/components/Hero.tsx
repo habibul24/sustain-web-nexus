@@ -17,14 +17,14 @@ const Hero = () => {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Transform Your Business with
+              Navigate Your Sustainability Journey
               <span className="text-green-300 block bg-gradient-to-r from-green-300 to-emerald-200 bg-clip-text text-transparent">
-                Sustainable Solutions
+                With Clarity
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-4xl mx-auto leading-relaxed font-medium">
-              Comprehensive ESG tools and sustainability analytics to help your 
-              organization meet compliance requirements and drive sustainable growth.
+              Explore courses that equip you with the knowledge to drive positive
+              ESG practices within your business.
             </p>
             <div className="flex justify-center">
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
