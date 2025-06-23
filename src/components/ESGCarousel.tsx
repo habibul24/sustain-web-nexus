@@ -46,8 +46,18 @@ const ESGCarousel = () => {
   ];
 
   return (
-    <section className="bg-gradient-to-br from-white via-gray-50 to-green-50 py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-gradient-to-br from-white via-gray-50 to-green-50 py-24">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          alt="People sitting down near table with assorted laptop computers"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-white/85"></div>
+      </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
             <TrendingUp className="w-4 h-4 mr-2" />

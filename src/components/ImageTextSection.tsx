@@ -50,7 +50,37 @@ const ImageTextSection = () => {
   return (
     <section className="bg-gradient-to-br from-green-50 via-gray-50 to-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+        {/* Organization Size Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+          {organizationCards.map((card, index) => (
+            <Card key={index} className={`${card.bgColor} border-2 border-green-200 hover:border-green-400 shadow-lg hover:shadow-xl transition-all duration-300 h-full`}>
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  {card.icon}
+                </div>
+                <CardTitle className="text-2xl text-gray-900 mb-2">{card.title}</CardTitle>
+                <CardDescription className="text-gray-700 text-base">
+                  {card.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6 flex flex-col h-full">
+                <div className="space-y-3 mb-6 flex-grow">
+                  {card.features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-center text-sm text-gray-700">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">
+                  {card.buttonText}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1">
             <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -92,48 +122,12 @@ const ImageTextSection = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur opacity-20"></div>
               <img
-                src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                alt="Sunlight filtering through green forest canopy"
+                src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                alt="People working together collaboratively"
                 className="relative w-full h-96 lg:h-[500px] object-cover rounded-3xl shadow-2xl"
               />
-              <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-gray-100">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">1000+</div>
-                  <div className="text-sm text-gray-600 font-medium">Companies Trust Us</div>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-
-        {/* Organization Size Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {organizationCards.map((card, index) => (
-            <Card key={index} className={`${card.bgColor} border-2 border-green-200 hover:border-green-400 shadow-lg hover:shadow-xl transition-all duration-300 h-full`}>
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  {card.icon}
-                </div>
-                <CardTitle className="text-2xl text-gray-900 mb-2">{card.title}</CardTitle>
-                <CardDescription className="text-gray-700 text-base">
-                  {card.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 flex flex-col h-full">
-                <div className="space-y-3 mb-6 flex-grow">
-                  {card.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center text-sm text-gray-700">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">
-                  {card.buttonText}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
         </div>
       </div>
     </section>
