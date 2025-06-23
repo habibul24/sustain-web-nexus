@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Users, Shield, TrendingUp } from 'lucide-react';
+import { Leaf, Users, Shield, TrendingUp, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const ESGCarousel = () => {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -45,16 +45,24 @@ const ESGCarousel = () => {
     }
   ];
 
+  const nextSlide = () => {
+    setActiveSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 to-green-900 py-24">
+    <section className="relative bg-white py-24">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-          alt="Bird's eye view photograph of green mountains"
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          alt="Business team meeting in modern office"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gray-900/70"></div>
+        <div className="absolute inset-0 bg-gray-900/80"></div>
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,8 +81,23 @@ const ESGCarousel = () => {
           </p>
         </div>
 
-        {/* ESG Carousel */}
+        {/* ESG Carousel with Navigation */}
         <div className="relative">
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+          >
+            <ArrowRight className="w-6 h-6" />
+          </button>
+
           <div className="flex justify-center items-center space-x-4 mb-12">
             {slides.map((slide, index) => (
               <div

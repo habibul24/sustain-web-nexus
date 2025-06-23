@@ -9,7 +9,7 @@ import OrganizationCards from '@/components/OrganizationCards';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-green-900 to-black">
+    <div className="min-h-screen bg-white">
       <Header />
       <Hero />
       <OrganizationCards />
