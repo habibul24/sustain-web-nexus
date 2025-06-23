@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 via-green-900 to-black min-h-screen">
+    <section className="relative">
       {/* Hero Image Section */}
       <div className="relative h-96 md:h-[600px] overflow-hidden">
         <img 
