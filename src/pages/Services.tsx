@@ -87,10 +87,10 @@ const Services = () => {
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in tracking-tight">
             Our Services
           </h1>
-          <p className="text-xl text-gray-100 max-w-3xl mx-auto animate-fade-in">
+          <p className="text-xl text-gray-100 max-w-3xl mx-auto animate-fade-in font-medium leading-relaxed">
             Comprehensive sustainability solutions designed to help your business 
             achieve environmental goals while driving operational efficiency.
           </p>
@@ -98,8 +98,8 @@ const Services = () => {
       </section>
 
       {/* Services Grid */}
-      <section className="py-20 bg-cream">
-        <div className="max-w-7xl mx-auto px-4 sm: px-6 lg:px-8">
+      <section className="py-24 bg-gradient-to-br from-green-50/50 to-cream/70">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
               <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
@@ -111,11 +111,11 @@ const Services = () => {
       </section>
 
       {/* Process Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-3xl font-bold text-primary mb-4">How We Work</h2>
-            <p className="text-xl text-gray-600">
+          <div className="text-center mb-20 animate-fade-in">
+            <h2 className="text-4xl font-bold text-primary mb-6 tracking-tight">How We Work</h2>
+            <p className="text-xl text-gray-600 font-medium">
               Our proven methodology ensures successful sustainability transformations
             </p>
           </div>
@@ -127,12 +127,12 @@ const Services = () => {
               { step: "3", title: "Implementation", description: "Deployment of tools and processes with full support" },
               { step: "4", title: "Optimization", description: "Continuous monitoring and improvement of performance" }
             ].map((item, index) => (
-              <div key={index} className="text-center animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
-                <div className="w-16 h-16 bg-secondary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+              <div key={index} className="text-center animate-fade-in bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2" style={{ animationDelay: `${index * 0.2}s` }}>
+                <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg">
                   {item.step}
                 </div>
-                <h3 className="text-xl font-bold text-primary mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+                <h3 className="text-2xl font-bold text-primary mb-4 tracking-tight">{item.title}</h3>
+                <p className="text-gray-600 font-medium leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
