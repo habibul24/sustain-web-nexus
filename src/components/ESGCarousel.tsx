@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Leaf, Users, Shield, TrendingUp, User, Building, Building2 } from 'lucide-react';
+import { Leaf, Users, Shield, TrendingUp } from 'lucide-react';
 
 const ESGCarousel = () => {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -46,48 +45,6 @@ const ESGCarousel = () => {
     }
   ];
 
-  const organizationCards = [
-    {
-      icon: <User className="w-8 h-8 text-green-600" />,
-      title: "Individual",
-      description: "Personal sustainability tracking for conscious consumers",
-      features: [
-        "Personal carbon footprint calculator",
-        "Sustainable lifestyle recommendations",
-        "Green purchasing guides",
-        "Environmental impact tracking"
-      ],
-      buttonText: "Start Personal Journey",
-      bgColor: "bg-gradient-to-br from-green-50 to-white"
-    },
-    {
-      icon: <Building className="w-8 h-8 text-green-700" />,
-      title: "Business",
-      description: "Comprehensive ESG solutions for growing companies",
-      features: [
-        "ESG reporting and analytics",
-        "Compliance management",
-        "Sustainability metrics",
-        "Stakeholder communication"
-      ],
-      buttonText: "Explore Business Solutions",
-      bgColor: "bg-gradient-to-br from-green-100 to-green-50"
-    },
-    {
-      icon: <Building2 className="w-8 h-8 text-green-800" />,
-      title: "Large Organization",
-      description: "Enterprise-grade sustainability platform for complex operations",
-      features: [
-        "Advanced ESG analytics",
-        "Multi-location tracking",
-        "Custom reporting dashboards",
-        "API integrations"
-      ],
-      buttonText: "Schedule Enterprise Demo",
-      bgColor: "bg-gradient-to-br from-green-200 to-green-100"
-    }
-  ];
-
   return (
     <section className="bg-gradient-to-br from-white via-gray-50 to-green-50 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,7 +64,7 @@ const ESGCarousel = () => {
         </div>
 
         {/* ESG Carousel */}
-        <div className="relative mb-20">
+        <div className="relative">
           <div className="flex justify-center items-center space-x-4 mb-12">
             {slides.map((slide, index) => (
               <div
@@ -161,36 +118,6 @@ const ESGCarousel = () => {
               />
             ))}
           </div>
-        </div>
-
-        {/* Organization Size Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {organizationCards.map((card, index) => (
-            <Card key={index} className={`${card.bgColor} border-2 border-green-200 hover:border-green-400 shadow-lg hover:shadow-xl transition-all duration-300 h-full`}>
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  {card.icon}
-                </div>
-                <CardTitle className="text-2xl text-gray-900 mb-2">{card.title}</CardTitle>
-                <CardDescription className="text-gray-700 text-base">
-                  {card.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 flex flex-col h-full">
-                <div className="space-y-3 mb-6 flex-grow">
-                  {card.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center text-sm text-gray-700">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">
-                  {card.buttonText}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
         </div>
       </div>
     </section>
