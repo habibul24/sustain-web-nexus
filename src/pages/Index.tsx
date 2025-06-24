@@ -6,13 +6,14 @@ import ImageTextSection from '@/components/ImageTextSection';
 import ESGCarousel from '@/components/ESGCarousel';
 import OrganizationCards from '@/components/OrganizationCards';
 import SustainabilitySection from '@/components/SustainabilitySection';
+import FloatInOnView from '@/components/FloatInOnView';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <Hero />
-      <ImageTextSection />
+      <FloatInOnView><ImageTextSection /></FloatInOnView>
       <OrganizationCards />
       <SustainabilitySection />
       <ESGCarousel />

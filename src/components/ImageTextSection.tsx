@@ -40,7 +40,7 @@ const ImageTextSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
+              <Button className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
                 Learn More About Our Impact
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>

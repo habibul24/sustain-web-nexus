@@ -1,114 +1,129 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Globe, TrendingUp, ArrowRight, CheckCircle } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 const SustainabilitySection = () => {
-  const sustainabilityStats = [
-    {
-      icon: <Leaf className="w-8 h-8 text-green-600" />,
-      title: "Carbon Reduction",
-      value: "2.5M+",
-      description: "Tons of CO2 reduced annually"
-    },
-    {
-      icon: <Globe className="w-8 h-8 text-blue-600" />,
-      title: "Global Impact",
-      value: "150+",
-      description: "Countries with active sustainability programs"
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8 text-emerald-600" />,
-      title: "Efficiency Gains",
-      value: "35%",
-      description: "Average improvement in resource efficiency"
-    }
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [fadeState, setFadeState] = useState<'fade-in' | 'fade-out'>('fade-in');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const animatedTexts = [
+    "automate in-house ESG Data collation",
+    "automate supplier education & reporting", 
+    "automate your ESG aggregation & analysis",
+    "generate detailed ESG reports"
   ];
 
-  const keyFeatures = [
-    "Real-time environmental monitoring and reporting",
-    "Advanced analytics for sustainability optimization",
-    "Comprehensive ESG compliance tracking",
-    "Stakeholder engagement and transparency tools",
-    "Supply chain sustainability management",
-    "Climate risk assessment and mitigation strategies"
-  ];
+  useEffect(() => {
+    if (fadeState === 'fade-in') {
+      timeoutRef.current = setTimeout(() => setFadeState('fade-out'), 2200);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setCurrentTextIndex((prevIndex) => (prevIndex + 1) % animatedTexts.length);
+        setFadeState('fade-in');
+      }, 600);
+    }
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
+  }, [fadeState]);
 
   return (
-    <section className="py-24" style={{ 
-      background: 'linear-gradient(to bottom, #d4c973, #1f2937)'
-    }}>
+    <section className="py-24" style={{ background: 'linear-gradient(to bottom, #d4c973, #1f2937)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-6">
-            <Leaf className="w-4 h-4 text-green-400" />
-            <span className="text-sm font-medium text-white">Sustainability Excellence</span>
-          </div>
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Driving Global Sustainability Transformation
-          </h2>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            Our comprehensive sustainability platform empowers organizations worldwide to achieve 
-            meaningful environmental impact while driving business growth and stakeholder value.
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {sustainabilityStats.map((stat, index) => (
-            <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20 text-center hover:bg-white/15 transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {stat.icon}
-                </div>
-                <CardTitle className="text-2xl font-bold text-white">{stat.value}</CardTitle>
-                <CardDescription className="text-lg font-semibold text-green-300">{stat.title}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300">{stat.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h3 className="text-3xl font-bold text-white mb-6">
-              Comprehensive Sustainability Solutions
-            </h3>
-            <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-              From carbon footprint tracking to ESG reporting, our platform provides the tools 
-              and insights needed to build a sustainable future. We help organizations measure, 
-              manage, and improve their environmental impact while maintaining operational excellence.
-            </p>
-            
-            <div className="space-y-4 mb-8">
-              {keyFeatures.map((feature, index) => (
-                <div key={index} className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-4 mt-1 flex-shrink-0" />
-                  <span className="text-gray-200 leading-relaxed">{feature}</span>
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-0">
+          {/* Left Content */}
+          <div className="flex-1 flex flex-col justify-center items-start">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-[#29443e] leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)]" style={{letterSpacing: '-0.04em'}}>
+              Green Data
+            </h1>
+            <h4 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-200 mt-2 drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)]">
+              The only solution you need to
+            </h4>
+            <div className="h-16 md:h-20 relative mt-2 mb-4 w-full">
+              {animatedTexts.map((text, index) => (
+                <div
+                  key={index}
+                  className={`absolute left-0 top-0 w-full font-extrabold transition-opacity duration-500 ${
+                    index === currentTextIndex
+                      ? fadeState === 'fade-in'
+                        ? 'opacity-100 z-10'
+                        : 'opacity-0 z-10'
+                      : 'opacity-0 z-0 pointer-events-none'
+                  }`}
+                  style={{
+                    color: '#29443e',
+                    fontWeight: 800,
+                    fontSize: '2.2rem',
+                    lineHeight: 1.1,
+                    textAlign: 'left',
+                    textShadow: '0 2px 8px #fff, 0 1px 0 #fff',
+                  }}
+                >
+                  {text}
                 </div>
               ))}
             </div>
-
-            <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2">
-              <span>Explore Our Impact</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            <p className="mt-2 text-lg md:text-xl italic text-slate-800 drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)]">
+              Aggregate, Analyze, and Act on ESG Data & Insights, All in Real-Time.
+            </p>
+            <div className="mt-8">
+              <Button 
+                className="flex items-center gap-2 text-white text-lg md:text-xl px-8 py-4 rounded-lg font-semibold shadow-lg hover:scale-105 transition-all duration-300"
+                style={{ backgroundColor: '#ffb300', borderColor: '#ffb300' }}
+              >
+                <Zap className="w-6 h-6 mr-2" />
+                Request a Demo
+              </Button>
+            </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-3xl blur opacity-30"></div>
-            <img
-              src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-              alt="Sustainable business practices and green technology"
-              className="relative w-full h-80 object-cover rounded-2xl shadow-2xl"
+          {/* Right Content - Globe and Card */}
+          <div className="flex-1 flex items-center justify-center relative mt-12 lg:mt-0 min-w-[340px]">
+            {/* SVG Arc Ring - pixel-perfect to original */}
+            <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0" width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" style={{pointerEvents: 'none'}}>
+              <path d="M60 260A140 140 0 1 1 260 60" stroke="#245c36" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M260 60A140 140 0 0 1 60 260" stroke="#b6d97a" strokeWidth="16" strokeLinecap="round"/>
+              <path d="M60 260A140 140 0 0 1 90 300" stroke="#e3e480" strokeWidth="16" strokeLinecap="round"/>
+            </svg>
+            {/* Globe Image - NASA Blue Marble Pacific */}
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg" 
+              className="rounded-full relative z-10 w-60 h-60 object-cover animate-spin-slow shadow-lg" 
+              style={{ animationDuration: '20s', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)' }}
+              alt="Globe"
             />
+            {/* Carbon Footprint Card */}
+            <div className="bg-white shadow-xl absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-80 sm:w-96 z-20 rounded-2xl p-6 flex flex-col gap-2 border border-slate-100" style={{minWidth: '270px'}}>
+              <span className="text-slate-500 text-sm font-semibold">Carbon Footprint</span>
+              <span className="text-4xl font-extrabold text-slate-800">3400kg</span>
+              <div className="flex items-center gap-2">
+                <span className="text-red-500 font-bold text-sm">↓ 40%</span>
+                <span className="text-slate-500 text-xs">vs last month</span>
+              </div>
+              {/* Graph SVG - downward trend */}
+              <svg className="w-full h-16 mt-2" viewBox="0 0 260 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="redfill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f04438" stopOpacity="0.18"/>
+                    <stop offset="100%" stopColor="#f04438" stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <polyline points="8,16 38,24 58,22 78,30 98,28 118,36 138,34 158,42 178,40 198,48 218,46 238,56 252,60" fill="none" stroke="#F04438" strokeWidth="3"/>
+                <polygon points="8,16 38,24 58,22 78,30 98,28 118,36 138,34 158,42 178,40 198,48 218,46 238,56 252,60 252,64 8,64" fill="url(#redfill)"/>
+                <circle cx="252" cy="60" r="7" fill="#fff" stroke="#F04438" strokeWidth="2"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
+      <style>{`
+        .animate-spin-slow {
+          animation: spin 20s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </section>
   );
 };
