@@ -42,15 +42,25 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (!error) {
-      navigate('/');
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      } else {
+        navigate('/');
+        setIsMenuOpen(false);
+      }
+    } catch (error) {
+      console.error('Error during sign out:', error);
     }
   };
 
   const getDisplayName = () => {
     if (profile?.full_name) {
       return profile.full_name;
+    }
+    if (profile?.company_name) {
+      return profile.company_name;
     }
     if (user?.email) {
       return user.email.split('@')[0];
@@ -60,7 +70,10 @@ const Header = () => {
 
   const getInitials = () => {
     const name = getDisplayName();
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    if (profile?.full_name) {
+      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   return (
@@ -236,10 +249,7 @@ const Header = () => {
                       </span>
                     </div>
                     <Button 
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMenuOpen(false);
-                      }}
+                      onClick={handleSignOut}
                       variant="ghost"
                       className="w-full text-white hover:bg-gray-800 justify-start"
                     >
