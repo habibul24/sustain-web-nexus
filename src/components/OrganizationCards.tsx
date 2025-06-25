@@ -48,7 +48,7 @@ const OrganizationCards = () => {
 
   return (
     <section className="py-24" style={{ 
-      background: 'linear-gradient(to bottom, #e3e480, #d4c973)'
+      background: 'linear-gradient(to bottom, #dcfce7, #86efac)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">

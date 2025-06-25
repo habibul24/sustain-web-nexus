@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center"> {/* Added min-h-screen and flex properties */}
+    <section className="relative min-h-[120vh] flex items-center justify-center">
       {/* Hero Image Section */}
       <div className="absolute inset-0 overflow-hidden"> {/* Changed to absolute inset-0 to cover the full section */}
         <img
@@ -29,6 +29,12 @@ const Hero = () => {
             <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
+      </div>
+      {/* SVG Wave Divider */}
+      <div className="w-full overflow-hidden leading-none absolute bottom-0 left-0" style={{lineHeight:0}}>
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="block w-full h-24 md:h-32" preserveAspectRatio="none">
+          <path d="M0,40 C360,120 1080,0 1440,80 L1440,120 L0,120 Z" fill="#fff"/>
+        </svg>
       </div>
     </section>
   );
