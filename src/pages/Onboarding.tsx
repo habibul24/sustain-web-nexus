@@ -24,7 +24,7 @@ const Onboarding = () => {
   });
   const [loading, setLoading] = useState(false);
   
-  const { user } = useAuthContext();
+  const { user, refreshProfile } = useAuthContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +60,16 @@ const Onboarding = () => {
         description: "Your information has been saved. Let's start your sustainability journey!",
       });
       
-      navigate('/my-esg');
+      // Refresh the profile to get updated data
+      await refreshProfile();
+      
+      // Small delay to ensure state is updated, then navigate
+      setTimeout(() => {
+        navigate('/my-esg');
+        // Force a page reload as backup to ensure auth state is properly updated
+        window.location.reload();
+      }, 500);
+      
     } catch (error: any) {
       toast({
         title: "Error saving information",
