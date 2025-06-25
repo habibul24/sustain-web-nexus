@@ -107,7 +107,7 @@ const Header = () => {
               asChild 
               className="btn-orange-gradient"
             >
-              <Link to="/contact">Sign In</Link>
+              <Link to="/sign-in">Sign In</Link>
             </Button>
           </div>
 
@@ -175,7 +175,7 @@ const Header = () => {
                   asChild 
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                 >
-                  <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
+                  <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
                     Sign In
                   </Link>
                 </Button>

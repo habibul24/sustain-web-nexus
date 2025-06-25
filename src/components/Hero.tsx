@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -24,9 +26,11 @@ const Hero = () => {
           ESG practices within your business.
         </p>
         <div className="flex justify-center">
-          <Button className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
-            Get Started Today
-            <ArrowRight className="ml-2 w-5 h-5" />
+          <Button asChild className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
+            <Link to="/sign-up">
+              Get Started Today
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
           </Button>
         </div>
       </div>

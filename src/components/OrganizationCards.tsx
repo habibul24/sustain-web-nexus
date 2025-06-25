@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Building, Building2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const OrganizationCards = () => {
   const organizationCards = [
@@ -85,8 +87,10 @@ const OrganizationCards = () => {
                     </div>
                   ))}
                 </div>
-                <Button className="w-full btn-orange-gradient font-semibold py-3 rounded-lg mt-auto">
-                  {card.buttonText}
+                <Button asChild className="w-full btn-orange-gradient font-semibold py-3 rounded-lg mt-auto">
+                  <Link to="/sign-up">
+                    {card.buttonText}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
