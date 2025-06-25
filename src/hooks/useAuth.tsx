@@ -125,6 +125,12 @@ export const useAuth = () => {
     }
   }
 
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await handleFetchProfile(user.id);
+    }
+  }
+
   const isAdmin = profile?.role_id === 'admin'
 
   return {
@@ -134,6 +140,7 @@ export const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    refreshProfile,
     isAdmin,
   }
 }

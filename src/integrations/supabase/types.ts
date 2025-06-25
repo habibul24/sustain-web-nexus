@@ -1127,56 +1127,77 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          applicable_framework: string | null
           avatar_url: string | null
           business_registration_number: string | null
           company_name: string | null
           company_size: string | null
           created_at: string
           email: string
+          first_year_reporting: boolean | null
           full_name: string | null
           id: string
           industry: string | null
           job_title: string | null
+          linking_subsidiaries: boolean | null
+          number_of_locations: string | null
+          onboarding_completed: boolean | null
+          operations_description: string | null
           phone: string | null
           preferred_contact: string | null
           role_id: string | null
           service_needed: string | null
+          software_used: string | null
           subscription_status: string | null
           updated_at: string
         }
         Insert: {
+          applicable_framework?: string | null
           avatar_url?: string | null
           business_registration_number?: string | null
           company_name?: string | null
           company_size?: string | null
           created_at?: string
           email: string
+          first_year_reporting?: boolean | null
           full_name?: string | null
           id: string
           industry?: string | null
           job_title?: string | null
+          linking_subsidiaries?: boolean | null
+          number_of_locations?: string | null
+          onboarding_completed?: boolean | null
+          operations_description?: string | null
           phone?: string | null
           preferred_contact?: string | null
           role_id?: string | null
           service_needed?: string | null
+          software_used?: string | null
           subscription_status?: string | null
           updated_at?: string
         }
         Update: {
+          applicable_framework?: string | null
           avatar_url?: string | null
           business_registration_number?: string | null
           company_name?: string | null
           company_size?: string | null
           created_at?: string
           email?: string
+          first_year_reporting?: boolean | null
           full_name?: string | null
           id?: string
           industry?: string | null
           job_title?: string | null
+          linking_subsidiaries?: boolean | null
+          number_of_locations?: string | null
+          onboarding_completed?: boolean | null
+          operations_description?: string | null
           phone?: string | null
           preferred_contact?: string | null
           role_id?: string | null
           service_needed?: string | null
+          software_used?: string | null
           subscription_status?: string | null
           updated_at?: string
         }
