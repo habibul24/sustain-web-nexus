@@ -14,6 +14,14 @@ export interface UserProfile {
   role_id?: string
   avatar_url?: string
   subscription_status: string
+  // Onboarding fields
+  software_used?: string
+  operations_description?: string
+  first_year_reporting?: boolean
+  applicable_framework?: string
+  number_of_locations?: string
+  linking_subsidiaries?: boolean
+  onboarding_completed?: boolean
 }
 
 export interface SignUpData {

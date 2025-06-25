@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
 import AuthenticatedHeader from "@/components/AuthenticatedHeader";
 import Header from "@/components/Header";
 import Dashboard from "@/pages/Dashboard";
@@ -25,9 +26,23 @@ import Team from "@/pages/Team";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user, loading } = useAuthContext();
+  const { user, profile, loading } = useAuthContext();
   if (loading) return null;
+  
   if (user) {
+    // Check if user needs to complete onboarding
+    if (profile && !profile.onboarding_completed) {
+      return (
+        <>
+          <AuthenticatedHeader />
+          <Routes>
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="*" element={<Navigate to="/onboarding" replace />} />
+          </Routes>
+        </>
+      );
+    }
+    
     return (
       <>
         <AuthenticatedHeader />
