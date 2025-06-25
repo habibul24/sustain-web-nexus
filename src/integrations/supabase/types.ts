@@ -1398,6 +1398,10 @@ export type Database = {
         Args: { assessment_id: string }
         Returns: Json
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
