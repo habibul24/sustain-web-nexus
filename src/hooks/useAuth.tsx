@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -39,18 +37,20 @@ export const useAuth = () => {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      console.log('Calling supabase.auth.getSession...');
+      console.log('=== Getting initial session ===');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Session result:', session?.user?.email || 'No user', 'Error:', error);
+        console.log('Initial session:', session?.user?.email || 'No user', 'Error:', error);
         
         setUser(session?.user ?? null);
+        
         if (session?.user) {
+          console.log('User found, fetching profile...');
           await fetchProfile(session.user.id);
         } else {
+          console.log('No user found, setting loading to false');
           setProfile(null);
           setLoading(false);
-          console.log('No user found, setLoading(false) called');
         }
       } catch (error) {
         console.error('Error getting session:', error);
@@ -63,15 +63,16 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email || 'No user');
+        console.log('=== Auth state changed ===', event, session?.user?.email || 'No user');
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('User in auth change, fetching profile...');
           await fetchProfile(session.user.id);
         } else {
+          console.log('No user in auth change, setting loading to false');
           setProfile(null);
           setLoading(false);
-          console.log('Auth state change - no user, setLoading(false) called');
         }
       }
     );
@@ -80,33 +81,34 @@ export const useAuth = () => {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    console.log('fetchProfile started with userId:', userId);
+    console.log('=== fetchProfile START ===', userId);
+    
     try {
+      console.log('Making Supabase query...');
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      console.log('Profile query result:', { data, error });
+      console.log('Query completed. Data:', data, 'Error:', error);
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        // Set profile to null but don't block the app
+        console.error('Profile fetch error:', error);
         setProfile(null);
       } else if (data) {
+        console.log('Setting profile data:', data.email);
         setProfile(data);
-        console.log('Profile set successfully:', data.email);
       } else {
-        console.log('No profile found for user');
+        console.log('No profile data found');
         setProfile(null);
       }
     } catch (error) {
       console.error('Exception in fetchProfile:', error);
       setProfile(null);
     } finally {
+      console.log('=== fetchProfile END - Setting loading to false ===');
       setLoading(false);
-      console.log('fetchProfile completed, setLoading(false) called');
     }
   };
 
@@ -179,4 +181,3 @@ export const useAuth = () => {
     isAdmin,
   }
 }
-
