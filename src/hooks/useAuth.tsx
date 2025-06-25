@@ -33,14 +33,19 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileFetching, setProfileFetching] = useState(false)
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getSession = async () => {
       console.log('=== Getting initial session ===');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('Initial session:', session?.user?.email || 'No user', 'Error:', error);
+        
+        if (!mounted) return;
         
         setUser(session?.user ?? null);
         
@@ -54,7 +59,9 @@ export const useAuth = () => {
         }
       } catch (error) {
         console.error('Error getting session:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -64,6 +71,9 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('=== Auth state changed ===', event, session?.user?.email || 'No user');
+        
+        if (!mounted) return;
+        
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -77,19 +87,37 @@ export const useAuth = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
+    // Prevent duplicate fetches
+    if (profileFetching) {
+      console.log('Profile fetch already in progress, skipping...');
+      return;
+    }
+    
     console.log('=== fetchProfile START ===', userId);
+    setProfileFetching(true);
     
     try {
       console.log('Making Supabase query...');
-      const { data, error } = await supabase
+      
+      // Add a reasonable timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout after 15 seconds')), 15000)
+      );
+      
+      const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
       
       console.log('Query completed. Data:', data, 'Error:', error);
 
@@ -108,6 +136,7 @@ export const useAuth = () => {
       setProfile(null);
     } finally {
       console.log('=== fetchProfile END - Setting loading to false ===');
+      setProfileFetching(false);
       setLoading(false);
     }
   };
