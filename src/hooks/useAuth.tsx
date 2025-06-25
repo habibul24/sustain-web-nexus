@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -41,19 +42,19 @@ export const useAuth = () => {
       console.log('Calling supabase.auth.getSession...');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Session result:', session, 'Error:', error);
+        console.log('Session result:', session?.user?.email || 'No user', 'Error:', error);
         
         setUser(session?.user ?? null);
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setLoading(false);
+          console.log('No user found, setLoading(false) called');
         }
       } catch (error) {
         console.error('Error getting session:', error);
-      } finally {
         setLoading(false);
-        console.log('setLoading(false) called in getSession');
       }
     };
 
@@ -62,17 +63,16 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('Auth state changed:', event, session?.user?.email || 'No user');
         setUser(session?.user ?? null);
         
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setLoading(false);
+          console.log('Auth state change - no user, setLoading(false) called');
         }
-        
-        setLoading(false);
-        console.log('setLoading(false) called in onAuthStateChange');
       }
     );
 
@@ -80,28 +80,34 @@ export const useAuth = () => {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    console.log('fetchProfile called with userId:', userId);
+    console.log('fetchProfile started with userId:', userId);
     try {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
+
+      console.log('Profile query result:', { data, error });
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // Don't throw, just set profile to null and continue
+        // Set profile to null but don't block the app
         setProfile(null);
-        return;
+      } else if (data) {
+        setProfile(data);
+        console.log('Profile set successfully:', data.email);
+      } else {
+        console.log('No profile found for user');
+        setProfile(null);
       }
-      
-      setProfile(data);
-      console.log('fetchProfile success:', data);
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      console.error('Exception in fetchProfile:', error);
       setProfile(null);
+    } finally {
+      setLoading(false);
+      console.log('fetchProfile completed, setLoading(false) called');
     }
-    console.log('fetchProfile finished');
   };
 
   const signIn = async (email: string, password: string) => {
@@ -173,3 +179,4 @@ export const useAuth = () => {
     isAdmin,
   }
 }
+
