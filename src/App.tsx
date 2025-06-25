@@ -26,7 +26,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { user, loading } = useAuthContext();
-  if (loading) return <div style={{padding: 40, textAlign: 'center'}}>Loading authentication...</div>;
+  if (loading) return null;
   if (user) {
     return (
       <>
