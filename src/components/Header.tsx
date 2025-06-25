@@ -115,55 +115,71 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 items-center">
-            {navigation.map((item) => (
-              <div key={item.name} className="relative group">
-                {item.dropdown ? (
-                  <>
-                    <button
-                      className={`flex items-center text-sm font-medium transition-colors hover:text-green-400 focus:outline-none ${
+            {user ? (
+              // Authenticated user navigation (no dropdowns)
+              authenticatedNavigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`text-sm font-medium transition-colors hover:text-green-400 ${
+                    isActive(item.href) ? 'text-green-400' : 'text-white'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))
+            ) : (
+              // Public navigation (with dropdowns)
+              publicNavigation.map((item) => (
+                <div key={item.name} className="relative group">
+                  {'dropdown' in item ? (
+                    <>
+                      <button
+                        className={`flex items-center text-sm font-medium transition-colors hover:text-green-400 focus:outline-none ${
+                          isActive(item.href) ? 'text-green-400' : 'text-white'
+                        }`}
+                        onMouseEnter={() => setOpenDropdown(item.name)}
+                        onMouseLeave={() => setOpenDropdown(null)}
+                        onFocus={() => setOpenDropdown(item.name)}
+                        onBlur={() => setOpenDropdown(null)}
+                        tabIndex={0}
+                        type="button"
+                      >
+                        {item.name}
+                        <ChevronDown className="w-4 h-4 ml-1" />
+                      </button>
+                      {/* Dropdown menu */}
+                      <div
+                        className={`absolute left-0 mt-2 min-w-[200px] bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-150 ${
+                          openDropdown === item.name ? 'block' : 'hidden'
+                        } group-hover:block`}
+                        onMouseEnter={() => setOpenDropdown(item.name)}
+                        onMouseLeave={() => setOpenDropdown(null)}
+                      >
+                        {item.dropdown.map((sub) => (
+                          <Link
+                            key={sub.name}
+                            to={sub.href}
+                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-green-50 hover:text-green-700 rounded"
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Link
+                      to={item.href}
+                      className={`text-sm font-medium transition-colors hover:text-green-400 ${
                         isActive(item.href) ? 'text-green-400' : 'text-white'
                       }`}
-                      onMouseEnter={() => setOpenDropdown(item.name)}
-                      onMouseLeave={() => setOpenDropdown(null)}
-                      onFocus={() => setOpenDropdown(item.name)}
-                      onBlur={() => setOpenDropdown(null)}
-                      tabIndex={0}
-                      type="button"
                     >
                       {item.name}
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    </button>
-                    {/* Dropdown menu */}
-                    <div
-                      className={`absolute left-0 mt-2 min-w-[200px] bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-150 ${
-                        openDropdown === item.name ? 'block' : 'hidden'
-                      } group-hover:block`}
-                      onMouseEnter={() => setOpenDropdown(item.name)}
-                      onMouseLeave={() => setOpenDropdown(null)}
-                    >
-                      {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.name}
-                          to={sub.href}
-                          className="block px-4 py-2 text-sm text-gray-800 hover:bg-green-50 hover:text-green-700 rounded"
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <Link
-                    to={item.href}
-                    className={`text-sm font-medium transition-colors hover:text-green-400 ${
-                      isActive(item.href) ? 'text-green-400' : 'text-white'
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                )}
-              </div>
-            ))}
+                    </Link>
+                  )}
+                </div>
+              ))
+            )}
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -216,48 +232,67 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black">
-              {navigation.map((item) => (
-                <div key={item.name} className="relative">
-                  {item.dropdown ? (
-                    <>
-                      <button
-                        className="flex items-center w-full text-left px-3 py-2 text-base font-medium text-white hover:text-green-400 focus:outline-none"
-                        onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
-                        type="button"
+              {user ? (
+                // Authenticated user mobile navigation (no dropdowns)
+                authenticatedNavigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`block px-3 py-2 text-base font-medium transition-colors ${
+                      isActive(item.href)
+                        ? 'text-green-400 bg-gray-800 rounded-md'
+                        : 'text-white hover:text-green-400'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              ) : (
+                // Public mobile navigation (with dropdowns)
+                publicNavigation.map((item) => (
+                  <div key={item.name} className="relative">
+                    {'dropdown' in item ? (
+                      <>
+                        <button
+                          className="flex items-center w-full text-left px-3 py-2 text-base font-medium text-white hover:text-green-400 focus:outline-none"
+                          onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
+                          type="button"
+                        >
+                          {item.name}
+                          <ChevronDown className="w-4 h-4 ml-1" />
+                        </button>
+                        {openDropdown === item.name && (
+                          <div className="pl-4 py-1">
+                            {item.dropdown.map((sub) => (
+                              <Link
+                                key={sub.name}
+                                to={sub.href}
+                                className="block px-2 py-2 text-sm text-gray-200 hover:bg-green-700 hover:text-white rounded"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        to={item.href}
+                        className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActive(item.href)
+                            ? 'text-green-400 bg-gray-800 rounded-md'
+                            : 'text-white hover:text-green-400'
+                        }`}
+                        onClick={() => setIsMenuOpen(false)}
                       >
                         {item.name}
-                        <ChevronDown className="w-4 h-4 ml-1" />
-                      </button>
-                      {openDropdown === item.name && (
-                        <div className="pl-4 py-1">
-                          {item.dropdown.map((sub) => (
-                            <Link
-                              key={sub.name}
-                              to={sub.href}
-                              className="block px-2 py-2 text-sm text-gray-200 hover:bg-green-700 hover:text-white rounded"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className={`block px-3 py-2 text-base font-medium transition-colors ${
-                        isActive(item.href)
-                          ? 'text-green-400 bg-gray-800 rounded-md'
-                          : 'text-white hover:text-green-400'
-                      }`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  )}
-                </div>
-              ))}
+                      </Link>
+                    )}
+                  </div>
+                ))
+              )}
               <div className="pt-4 pb-2">
                 {user ? (
                   <div className="space-y-2">
