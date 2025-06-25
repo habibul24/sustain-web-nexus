@@ -14,6 +14,7 @@ export interface UserProfile {
   service_needed?: string
   preferred_contact?: string
   role_id?: string
+  avatar_url?: string
   subscription_status: string
 }
 
