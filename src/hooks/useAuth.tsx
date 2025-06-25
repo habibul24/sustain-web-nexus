@@ -52,6 +52,7 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email)
         setUser(session?.user ?? null)
         
         if (session?.user) {
@@ -109,8 +110,25 @@ export const useAuth = () => {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      console.log('Starting sign out process...')
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('Supabase signOut error:', error)
+        return { error }
+      }
+      
+      // Clear local state immediately
+      setUser(null)
+      setProfile(null)
+      
+      console.log('Sign out completed successfully')
+      return { error: null }
+    } catch (error) {
+      console.error('Sign out catch error:', error)
+      return { error }
+    }
   }
 
   const isAdmin = profile?.role_id === 'admin'
