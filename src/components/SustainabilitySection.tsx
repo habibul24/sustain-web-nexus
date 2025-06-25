@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const SustainabilitySection = () => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -67,11 +68,14 @@ const SustainabilitySection = () => {
             </p>
             <div className="mt-8">
               <Button 
+                asChild
                 className="flex items-center gap-2 text-white text-lg md:text-xl px-8 py-4 rounded-lg font-semibold shadow-lg hover:scale-105 transition-all duration-300"
                 style={{ backgroundColor: '#ffb300', borderColor: '#ffb300' }}
               >
-                <Zap className="w-6 h-6 mr-2" />
-                Request a Demo
+                <Link to="/sign-up">
+                  <Zap className="w-6 h-6 mr-2" />
+                  Request a Demo
+                </Link>
               </Button>
             </div>
           </div>

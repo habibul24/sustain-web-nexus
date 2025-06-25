@@ -1,57 +1,96 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Users, Shield, TrendingUp, ArrowLeft, ArrowRight } from 'lucide-react';
+import React from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { HelpCircle } from 'lucide-react';
 
 const ESGCarousel = () => {
-  const [activeSlide, setActiveSlide] = useState(0);
+  const faqs = [
+    {
+      question: "Why is ESG important to businesses?",
+      answer: `The main reason why ESG is important to businesses is the mandatory regulations from government of various countries such as the European Union countries (EU), United Kingdom (UK), Hong Kong, Singapore, India and countries such as Japan, Canada, United States currently have voluntary disclosures and more companies are expected to introduce their regulations.
 
-  const slides = [
-    {
-      icon: <Leaf className="w-8 h-8 text-green-600" />,
-      title: "Environmental Impact",
-      description: "Comprehensive carbon footprint tracking and environmental sustainability metrics",
-      features: [
-        "Carbon emissions monitoring",
-        "Renewable energy tracking",
-        "Waste reduction analytics",
-        "Water usage optimization"
-      ],
-      bgGradient: "from-green-50 to-emerald-100"
+The regulations affect companies listed on the country's stock exchange; however, the requirements of ESG at their foundation also require these companies to obtain data from their subsidiary companies and other companies doing business with them, hence it is slowly affecting unlisted companies as well.
+
+Other reasons include:
+
+• Enhancing the Company's Reputation and Brand Value
+• Attracting and Retaining Talent
+• Improved Financial Performance
+• Increased Access to Capital
+• Enhanced Risk Management`
     },
     {
-      icon: <Users className="w-8 h-8 text-green-700" />,
-      title: "Social Responsibility", 
-      description: "Track social impact initiatives and community engagement programs",
-      features: [
-        "Employee diversity metrics",
-        "Community investment tracking",
-        "Safety performance indicators",
-        "Training and development programs"
-      ],
-      bgGradient: "from-green-50 to-green-100"
+      question: "What is the difference between ESG and Sustainability?",
+      answer: `The words ESG & sustainability are often used interchangeably but there is a subtle but important distinction:
+
+Sustainability is the broader, overarching principle that requires individuals and organizations to meeting the needs of the present without compromising the ability of future generations to meet their own needs i.e. ability to stay in business and existence for long. It considers the business from the financial (profit), environmental (planet), and social (people) angles to make a holistic determination.
+
+ESG is a more specific, measurable framework used to evaluate a company's sustainability performance, i.e. ESG is how we measure a Company's sustainability. It is the method that provides the criteria and data points that investors and stakeholders can use to assess a company's commitment to sustainable practices.
+
+In conclusion, think of sustainability as the ultimate goal, and ESG as the roadmap to achieve it.`
     },
     {
-      icon: <Shield className="w-8 h-8 text-green-800" />,
-      title: "Governance Excellence",
-      description: "Ensure transparency, accountability, and ethical business practices",
-      features: [
-        "Board diversity tracking",
-        "Ethics compliance monitoring",
-        "Risk management protocols",
-        "Stakeholder engagement"
-      ],
-      bgGradient: "from-green-50 to-green-200"
+      question: "What are the most common ESG reporting frameworks?",
+      answer: `ESG reporting frameworks could be general, industry specific, or even topic specifics, however the most commonly used frameworks and which you should read first are:
+
+• Greenhouse Gas (GHG) Protocol: This is not a reporting framework but a set of global standardized accounting standards for measuring and managing GHG emissions. It provides the "how-to" for calculating the emissions that are then reported through frameworks like GRI or TCFD. It is the foundation of carbon emission calculations.
+
+• Global Reporting Initiative (GRI): A comprehensive set of standards that can be used by any organisation to report on its economic, environmental, and social impacts.
+
+• International Sustainability Standards Board (ISSB): under the IFRS Foundation (which also houses SASB), has Its first standards, IFRS S1 (General Requirements) and IFRS S2 (Climate-related Disclosures)
+
+• Sustainability Accounting Standards Board (SASB): Provides industry-specific standards for reporting on financially material sustainability information to investors
+
+• Task Force on Climate-related Financial Disclosures (TCFD): A framework specifically focused on helping companies disclose climate-related financial risks and opportunities.`
+    },
+    {
+      question: "Which ESG framework applies to Hong Kong?",
+      answer: `Hong Kong Exchange (HKEX) has published the HKEX ESG Reporting Code, which is mandatory for listed companies. HKEX has aligned its climate-related rules with the ISSB standards (IFRS S2 – Climate-related Disclosures) so by extension, ISSB is also applicable.`
+    },
+    {
+      question: "Is ESG reporting mandatory in Hong Kong?",
+      answer: `All listed companies must mandatorily report their Scope 1 and Scope 2 greenhouse gas (GHG) emissions as of 1 January 2025. From 1 January 2026, all LargeCap issuers (constituents of the Hang Seng Composite LargeCap Index) will face mandatory disclosure for all new climate requirements, including Scope 3 emissions.`
+    },
+    {
+      question: "Which ESG certificate should I pursue?",
+      answer: `The certificate you choose to pursue should depend on your proposed field of employment i.e. banks, manufacturing companies, audit & consultancy, technology
+
+• For investment & banking professionals - Certified ESG Analyst (CESGA) by the European Federation of Financial Analysts Societies (EFFAS) or Sustainable Investing Certificate by CFA Institute
+
+• For professionals working in a companies - GreenData's How to Implement ESG course or Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation
+
+• For executive-level and risk professionals - Sustainability and Climate Risk (SCR®) Certificate by the Global Association of Risk Professionals (GARP)
+
+• For auditors & non-finance consultants: International Standard on Sustainability Assurance (ISSA) 5000, General Requirements for Sustainability Assurance Engagements trainings, Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation and GRI Professional Certification by the Global Reporting Initiative
+
+Choose based on your preferred career path.`
+    },
+    {
+      question: "Do I need an ESG report?",
+      answer: `All listed companies in the countries where ESG reporting is mandatory need to prepare an ESG report, with some jurisdictions also necessitating that the ESG report be certified by an audit company. If you are unlisted however, you should prepare an ESG report to showcase how your business runs sustainably and also to increase investor confidence in your operations, however, it is not mandatory.`
+    },
+    {
+      question: "How do I choose my reporting framework?",
+      answer: `To choose a reporting framework:
+
+1. Firstly, identify and use mandatory or principle-based requirements from your jurisdiction.
+2. Secondly, if there are no mandatory requirements in your jurisdiction, use the framework that your biggest customer uses.
+3. If you are a subsidiary, use the frameworks your parent company is using and in addition, the mandatory requirements in your jurisdiction if it applicable to you.
+4. If none of the above criteria apply, use the most commonly recognised frameworks, such as ISSB, GRI, SASB, and TCFD.`
+    },
+    {
+      question: "What does ESG stand for?",
+      answer: `Environmental, social and governance`
+    },
+    {
+      question: "Where can I find ESG courses to help me get started?",
+      answer: `Check out the courses here: https://www.edu.greendatabiz.com/`
     }
   ];
-
-  const nextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
 
   return (
     <section className="relative bg-white py-24">
@@ -65,92 +104,37 @@ const ESGCarousel = () => {
         <div className="absolute inset-0 bg-gray-900/80"></div>
       </div>
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
-            <TrendingUp className="w-4 h-4 mr-2" />
-            ESG Solutions
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Frequently Asked Questions
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight">
-            Comprehensive 
-            <span className="text-green-400"> ESG Platform</span>
+            ESG
+            <span className="text-green-400"> FAQs</span>
           </h2>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            Monitor, measure, and improve your environmental, social, and governance performance 
-            with our integrated sustainability platform.
+            Get answers to the most common questions about ESG reporting, frameworks, and sustainability practices.
           </p>
         </div>
 
-        {/* ESG Carousel with Navigation */}
-        <div className="relative">
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
-          >
-            <ArrowRight className="w-6 h-6" />
-          </button>
-
-          <div className="flex justify-center items-center space-x-4 mb-12">
-            {slides.map((slide, index) => (
-              <div
-                key={index}
-                className={`transition-all duration-500 cursor-pointer ${
-                  index === activeSlide 
-                    ? 'scale-100 z-10 opacity-100' 
-                    : 'scale-90 opacity-60'
-                } ${
-                  index === activeSlide 
-                    ? 'w-96' 
-                    : 'w-80'
-                }`}
-                onClick={() => setActiveSlide(index)}
-              >
-                <Card className={`h-96 bg-gradient-to-br ${slide.bgGradient} border-2 hover:border-green-300 shadow-xl hover:shadow-2xl transition-all duration-300`}>
-                  <CardHeader className="text-center pb-4">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      {slide.icon}
-                    </div>
-                    <CardTitle className="text-2xl text-gray-900 mb-2">{slide.title}</CardTitle>
-                    <CardDescription className="text-gray-700 text-base px-2">
-                      {slide.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="px-6">
-                    <div className="space-y-3">
-                      {slide.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-center text-sm text-gray-700">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+        {/* FAQ Accordion */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200 last:border-b-0">
+                <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors py-6">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-700 leading-relaxed pb-6">
+                  <div className="whitespace-pre-line">
+                    {faq.answer}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
-
-          <div className="flex justify-center space-x-3">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === activeSlide 
-                    ? 'bg-green-400 scale-125' 
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-              />
-            ))}
-          </div>
+          </Accordion>
         </div>
       </div>
     </section>
