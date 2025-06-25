@@ -1,16 +1,12 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 const SignIn = () => {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-      
       <section className="py-24 bg-gradient-to-b from-green-50 to-white">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">

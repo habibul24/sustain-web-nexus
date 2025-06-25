@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 const SignUp = () => {
@@ -52,18 +50,24 @@ const SignUp = () => {
         preferredContact: formData.preferredContact,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error creating account",
+          description: error.message || String(error),
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Account created successfully!",
         description: "Please check your email to verify your account.",
       });
-      
       navigate('/sign-in');
     } catch (error: any) {
       toast({
         title: "Error creating account",
-        description: error.message,
+        description: error.message || String(error),
         variant: "destructive",
       });
     } finally {
@@ -73,8 +77,6 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-      
       <section className="py-24 bg-gradient-to-b from-green-50 to-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">

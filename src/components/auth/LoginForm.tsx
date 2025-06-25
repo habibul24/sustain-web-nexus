@@ -1,18 +1,30 @@
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthContext } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
+import { useNavigate } from 'react-router-dom'
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   
-  const { signIn } = useAuthContext()
+  const { signIn, user } = useAuthContext()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user) {
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      })
+      navigate('/')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,10 +33,7 @@ export const LoginForm = () => {
     try {
       const { error } = await signIn(email, password)
       if (error) throw error
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      })
+      // Success toast and redirect will be handled by useEffect
     } catch (error: any) {
       toast({
         title: "Error",

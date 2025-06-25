@@ -1,5 +1,5 @@
 import React from 'react';
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import ImageTextSection from '@/components/ImageTextSection';
@@ -11,7 +11,6 @@ import FloatInOnView from '@/components/FloatInOnView';
 const Index = () => {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       <Hero />
       <FloatInOnView><ImageTextSection /></FloatInOnView>
       <OrganizationCards />

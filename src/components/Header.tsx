@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from '@/hooks/use-toast';
 
 const aboutDropdown = [
   { name: 'Mission', href: '/about/mission' },
@@ -25,11 +25,14 @@ const resourcesDropdown = [
 ];
 
 const Header = () => {
+  const { user } = useAuthContext();
+  if (user) return null; // Hide this header if logged in
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuthContext();
+  const { profile, signOut } = useAuthContext();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -42,16 +45,33 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
+    setIsSigningOut(true);
     try {
       const { error } = await signOut();
       if (error) {
         console.error('Error signing out:', error);
+        toast({
+          title: "Error signing out",
+          description: error.message || "Failed to sign out. Please try again.",
+          variant: "destructive",
+        });
       } else {
+        toast({
+          title: "Signed out successfully",
+          description: "You have been signed out of your account.",
+        });
         navigate('/');
         setIsMenuOpen(false);
       }
     } catch (error) {
       console.error('Error during sign out:', error);
+      toast({
+        title: "Error signing out",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -160,9 +180,10 @@ const Header = () => {
                   onClick={handleSignOut}
                   variant="ghost"
                   className="text-white hover:bg-gray-800 hover:text-white"
+                  disabled={isSigningOut}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
+                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                 </Button>
               </>
             ) : (
@@ -252,9 +273,10 @@ const Header = () => {
                       onClick={handleSignOut}
                       variant="ghost"
                       className="w-full text-white hover:bg-gray-800 justify-start"
+                      disabled={isSigningOut}
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
+                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                     </Button>
                   </div>
                 ) : (
