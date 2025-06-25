@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -108,7 +109,7 @@ export const useAuth = () => {
       
       // Add a reasonable timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout after 15 seconds')), 15000)
+        setTimeout(() => reject(new Error('Query timeout after 5 seconds')), 5000)
       );
       
       const queryPromise = supabase
