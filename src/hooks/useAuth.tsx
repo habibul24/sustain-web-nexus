@@ -35,23 +35,7 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Clear any existing session on page load/refresh
-    const clearSessionOnRefresh = async () => {
-      console.log('Clearing session on page refresh...')
-      await supabase.auth.signOut({ scope: 'local' })
-      setUser(null)
-      setProfile(null)
-      setLoading(false)
-    }
-
-    // Check if this is a page refresh by looking at performance navigation type
-    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-    if (navigation.type === 'reload') {
-      clearSessionOnRefresh()
-      return
-    }
-
-    // Get initial session only if not a page refresh
+    // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
@@ -128,18 +112,16 @@ export const useAuth = () => {
     try {
       console.log('Starting sign out process...')
       
-      // Clear local state first
-      setUser(null)
-      setProfile(null)
-      
-      const { error } = await supabase.auth.signOut({
-        scope: 'local'
-      })
+      const { error } = await supabase.auth.signOut()
       
       if (error) {
         console.error('Supabase signOut error:', error)
         return { error }
       }
+      
+      // Clear local state after successful sign out
+      setUser(null)
+      setProfile(null)
       
       console.log('Sign out completed successfully')
       return { error: null }
