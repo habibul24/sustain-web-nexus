@@ -39,14 +39,22 @@ export const useAuth = () => {
     // Get initial session
     const getSession = async () => {
       console.log('Calling supabase.auth.getSession...');
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session result:', session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session result:', session, 'Error:', error);
+        
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
+        console.log('setLoading(false) called in getSession');
       }
-      setLoading(false);
-      console.log('setLoading(false) called in getSession');
     };
 
     getSession();
@@ -56,11 +64,13 @@ export const useAuth = () => {
       async (event, session) => {
         console.log('Auth state changed:', event, session);
         setUser(session?.user ?? null);
+        
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
         }
+        
         setLoading(false);
         console.log('setLoading(false) called in onAuthStateChange');
       }
@@ -78,11 +88,18 @@ export const useAuth = () => {
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // Don't throw, just set profile to null and continue
+        setProfile(null);
+        return;
+      }
+      
       setProfile(data);
       console.log('fetchProfile success:', data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
+      setProfile(null);
     }
     console.log('fetchProfile finished');
   };
