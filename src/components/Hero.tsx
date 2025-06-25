@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-[120vh] flex items-center justify-center">
+    <section className="relative min-h-[120vh] flex items-start justify-center pt-40">
       {/* Hero Image Section */}
       <div className="absolute inset-0 overflow-hidden"> {/* Changed to absolute inset-0 to cover the full section */}
         <img
