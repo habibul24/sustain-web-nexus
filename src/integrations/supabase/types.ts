@@ -1128,6 +1128,7 @@ export type Database = {
       user_profiles: {
         Row: {
           avatar_url: string | null
+          business_registration_number: string | null
           company_name: string | null
           company_size: string | null
           created_at: string
@@ -1135,13 +1136,17 @@ export type Database = {
           full_name: string | null
           id: string
           industry: string | null
+          job_title: string | null
           phone: string | null
+          preferred_contact: string | null
           role_id: string | null
+          service_needed: string | null
           subscription_status: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          business_registration_number?: string | null
           company_name?: string | null
           company_size?: string | null
           created_at?: string
@@ -1149,13 +1154,17 @@ export type Database = {
           full_name?: string | null
           id: string
           industry?: string | null
+          job_title?: string | null
           phone?: string | null
+          preferred_contact?: string | null
           role_id?: string | null
+          service_needed?: string | null
           subscription_status?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          business_registration_number?: string | null
           company_name?: string | null
           company_size?: string | null
           created_at?: string
@@ -1163,8 +1172,11 @@ export type Database = {
           full_name?: string | null
           id?: string
           industry?: string | null
+          job_title?: string | null
           phone?: string | null
+          preferred_contact?: string | null
           role_id?: string | null
+          service_needed?: string | null
           subscription_status?: string | null
           updated_at?: string
         }
