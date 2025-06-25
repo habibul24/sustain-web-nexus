@@ -8,8 +8,25 @@ export interface UserProfile {
   email: string
   full_name?: string
   company_name?: string
+  business_registration_number?: string
+  job_title?: string
+  phone?: string
+  service_needed?: string
+  preferred_contact?: string
   role_id?: string
   subscription_status: string
+}
+
+export interface SignUpData {
+  email: string
+  password: string
+  fullName: string
+  companyName: string
+  businessRegistrationNumber?: string
+  jobTitle: string
+  phoneNumber: string
+  serviceNeeded?: string
+  preferredContact: string
 }
 
 export const useAuth = () => {
@@ -71,13 +88,19 @@ export const useAuth = () => {
     return { data, error }
   }
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (signUpData: SignUpData) => {
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: signUpData.email,
+      password: signUpData.password,
       options: {
         data: {
-          full_name: fullName,
+          full_name: signUpData.fullName,
+          company_name: signUpData.companyName,
+          business_registration_number: signUpData.businessRegistrationNumber,
+          job_title: signUpData.jobTitle,
+          phone: signUpData.phoneNumber,
+          service_needed: signUpData.serviceNeeded,
+          preferred_contact: signUpData.preferredContact,
         },
       },
     })

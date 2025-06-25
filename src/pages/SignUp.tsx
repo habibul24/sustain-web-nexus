@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -18,6 +18,7 @@ const SignUp = () => {
     name: '',
     surname: '',
     email: '',
+    password: '',
     companyName: '',
     businessRegistrationNumber: '',
     jobTitle: '',
@@ -25,15 +26,49 @@ const SignUp = () => {
     serviceNeeded: '',
     preferredContact: 'email'
   });
+  const [loading, setLoading] = useState(false);
+  
+  const { signUp } = useAuthContext();
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Here you would handle the form submission
+    setLoading(true);
+
+    try {
+      const { error } = await signUp({
+        email: formData.email,
+        password: formData.password,
+        fullName: `${formData.name} ${formData.surname}`,
+        companyName: formData.companyName,
+        businessRegistrationNumber: formData.businessRegistrationNumber,
+        jobTitle: formData.jobTitle,
+        phoneNumber: formData.phoneNumber,
+        serviceNeeded: formData.serviceNeeded,
+        preferredContact: formData.preferredContact,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Account created successfully!",
+        description: "Please check your email to verify your account.",
+      });
+      
+      navigate('/sign-in');
+    } catch (error: any) {
+      toast({
+        title: "Error creating account",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,7 +85,7 @@ const SignUp = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Link>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Request a Demo</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Create Your Account</h1>
           </div>
 
           <Card className="shadow-xl border-green-200">
@@ -123,6 +158,23 @@ const SignUp = () => {
                   </div>
 
                   <div>
+                    <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      Password*
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      required
+                      minLength={6}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
                     <Label htmlFor="companyName" className="text-sm font-medium text-gray-700">
                       Company Name*
                     </Label>
@@ -135,19 +187,19 @@ const SignUp = () => {
                       className="mt-1"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="businessRegistrationNumber" className="text-sm font-medium text-gray-700">
-                    Business Registration Number
-                  </Label>
-                  <Input
-                    id="businessRegistrationNumber"
-                    type="text"
-                    value={formData.businessRegistrationNumber}
-                    onChange={(e) => handleInputChange('businessRegistrationNumber', e.target.value)}
-                    className="mt-1"
-                  />
+                  <div>
+                    <Label htmlFor="businessRegistrationNumber" className="text-sm font-medium text-gray-700">
+                      Business Registration Number
+                    </Label>
+                    <Input
+                      id="businessRegistrationNumber"
+                      type="text"
+                      value={formData.businessRegistrationNumber}
+                      onChange={(e) => handleInputChange('businessRegistrationNumber', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -243,8 +295,9 @@ const SignUp = () => {
                     <Button 
                       type="submit"
                       className="btn-orange-gradient font-semibold px-8 py-3"
+                      disabled={loading}
                     >
-                      Book a Demo
+                      {loading ? 'Creating Account...' : 'Create Account'}
                     </Button>
                   </div>
                 </div>

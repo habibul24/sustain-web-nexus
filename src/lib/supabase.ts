@@ -15,9 +15,13 @@ export type Database = {
           email: string
           full_name: string | null
           company_name: string | null
+          business_registration_number: string | null
+          job_title: string | null
           role_id: string | null
           avatar_url: string | null
           phone: string | null
+          service_needed: string | null
+          preferred_contact: string | null
           industry: string | null
           company_size: string | null
           subscription_status: string
@@ -29,9 +33,13 @@ export type Database = {
           email: string
           full_name?: string | null
           company_name?: string | null
+          business_registration_number?: string | null
+          job_title?: string | null
           role_id?: string | null
           avatar_url?: string | null
           phone?: string | null
+          service_needed?: string | null
+          preferred_contact?: string | null
           industry?: string | null
           company_size?: string | null
           subscription_status?: string
@@ -41,9 +49,13 @@ export type Database = {
           email?: string
           full_name?: string | null
           company_name?: string | null
+          business_registration_number?: string | null
+          job_title?: string | null
           role_id?: string | null
           avatar_url?: string | null
           phone?: string | null
+          service_needed?: string | null
+          preferred_contact?: string | null
           industry?: string | null
           company_size?: string | null
           subscription_status?: string
