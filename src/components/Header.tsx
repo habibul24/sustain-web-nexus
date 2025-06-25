@@ -6,6 +6,24 @@ import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+const aboutDropdown = [
+  { name: 'Mission', href: '/about/mission' },
+  { name: 'Vision', href: '/about/vision' },
+  { name: 'Values', href: '/about/values' },
+];
+const servicesDropdown = [
+  { name: 'ESG & Sustainability Courses', href: '/services/courses' },
+  { name: 'GreenData software', href: '/services/software' },
+  { name: 'ESG & Sustainability Gap Assessments', href: '/services/gap-assessments' },
+  { name: 'ESG & Sustainability Materiality Assessment', href: '/services/materiality-assessment' },
+  { name: 'ESG & Sustainability Reporting', href: '/services/reporting' },
+  { name: 'ESG & Sustainability Advisory', href: '/services/advisory' },
+  { name: 'Business Sustainability Analytics', href: '/services/analytics' },
+];
+const resourcesDropdown = [
+  { name: 'Blogs', href: '/resources/blogs' },
+];
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -13,53 +31,13 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuthContext();
 
-  // Navigation for logged out users
-  const publicNavigation = [
+  const navigation = [
     { name: 'Home', href: '/' },
-    { 
-      name: 'About', 
-      href: '/about', 
-      dropdown: [
-        { name: 'Mission', href: '/about/mission' },
-        { name: 'Vision', href: '/about/vision' },
-        { name: 'Values', href: '/about/values' },
-      ]
-    },
-    { 
-      name: 'Services', 
-      href: '/services', 
-      dropdown: [
-        { name: 'ESG & Sustainability Courses', href: '/services/courses' },
-        { name: 'GreenData software', href: '/services/software' },
-        { name: 'ESG & Sustainability Gap Assessments', href: '/services/gap-assessments' },
-        { name: 'ESG & Sustainability Materiality Assessment', href: '/services/materiality-assessment' },
-        { name: 'ESG & Sustainability Reporting', href: '/services/reporting' },
-        { name: 'ESG & Sustainability Advisory', href: '/services/advisory' },
-        { name: 'Business Sustainability Analytics', href: '/services/analytics' },
-      ]
-    },
-    { 
-      name: 'Resources', 
-      href: '/resources', 
-      dropdown: [
-        { name: 'Blogs', href: '/resources/blogs' },
-      ]
-    },
+    { name: 'About', href: '/about', dropdown: aboutDropdown },
+    { name: 'Services', href: '/services', dropdown: servicesDropdown },
+    { name: 'Resources', href: '/resources', dropdown: resourcesDropdown },
     { name: 'Contact', href: '/contact' },
   ];
-
-  // Navigation for logged in users
-  const authenticatedNavigation = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Profile', href: '/profile' },
-    { name: 'Marketplace', href: '/marketplace' },
-    { name: 'Third Party Carbon Data', href: '/third-party-carbon-data' },
-    { name: 'My Data Requests', href: '/my-data-requests' },
-    { name: 'Educational Materials', href: '/educational-materials' },
-    { name: 'Funding Opportunities', href: '/funding-opportunities' },
-  ];
-
-  const navigation = user ? authenticatedNavigation : publicNavigation;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -107,9 +85,7 @@ const Header = () => {
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <span className="text-black font-bold text-sm">S</span>
               </div>
-              <span className="text-xl font-bold text-white">
-                {user ? 'GreenData' : 'SustainTech'}
-              </span>
+              <span className="text-xl font-bold text-white">SustainTech</span>
             </Link>
           </div>
 
@@ -177,7 +153,7 @@ const Header = () => {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-white text-sm font-medium">
-                    {getDisplayName()}
+                    Hello, {getDisplayName()}!
                   </span>
                 </div>
                 <Button 
@@ -269,7 +245,7 @@ const Header = () => {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-white text-sm font-medium">
-                        {getDisplayName()}
+                        Hello, {getDisplayName()}!
                       </span>
                     </div>
                     <Button 
