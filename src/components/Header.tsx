@@ -65,10 +65,12 @@ const Header = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log('Attempting to sign out...');
       const { error } = await signOut();
       if (error) {
         console.error('Error signing out:', error);
       } else {
+        console.log('Successfully signed out');
         navigate('/');
         setIsMenuOpen(false);
       }
@@ -114,7 +116,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 items-center">
+          <nav className={`hidden md:flex items-center ${user ? 'space-x-6 ml-8' : 'space-x-8'}`}>
             {user ? (
               // Authenticated user navigation (no dropdowns)
               authenticatedNavigation.map((item) => (
