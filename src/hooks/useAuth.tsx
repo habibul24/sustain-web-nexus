@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -36,7 +37,8 @@ export const useAuth = () => {
 
   useEffect(() => {
     // Check if this is a page refresh
-    const isPageRefresh = window.performance.getEntriesByType('navigation')[0]?.type === 'reload'
+    const navigation = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+    const isPageRefresh = navigation?.type === 'reload'
     
     if (isPageRefresh) {
       console.log('Page refresh detected, clearing session...')
