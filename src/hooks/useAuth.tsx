@@ -112,16 +112,19 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       console.log('Starting sign out process...')
-      const { error } = await supabase.auth.signOut()
+      
+      // Clear local state first
+      setUser(null)
+      setProfile(null)
+      
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
+      })
       
       if (error) {
         console.error('Supabase signOut error:', error)
         return { error }
       }
-      
-      // Clear local state immediately
-      setUser(null)
-      setProfile(null)
       
       console.log('Sign out completed successfully')
       return { error: null }
