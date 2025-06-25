@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -36,7 +35,23 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
+    // Clear any existing session on page load/refresh
+    const clearSessionOnRefresh = async () => {
+      console.log('Clearing session on page refresh...')
+      await supabase.auth.signOut({ scope: 'local' })
+      setUser(null)
+      setProfile(null)
+      setLoading(false)
+    }
+
+    // Check if this is a page refresh by looking at performance navigation type
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+    if (navigation.type === 'reload') {
+      clearSessionOnRefresh()
+      return
+    }
+
+    // Get initial session only if not a page refresh
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
