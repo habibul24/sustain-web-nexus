@@ -85,12 +85,21 @@ export const useAuth = () => {
     
     try {
       console.log('Making Supabase query...');
-      const { data, error } = await supabase
+      
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+      );
+      
+      const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-
+      
+      console.log('About to execute query with timeout...');
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+      
       console.log('Query completed. Data:', data, 'Error:', error);
 
       if (error) {
