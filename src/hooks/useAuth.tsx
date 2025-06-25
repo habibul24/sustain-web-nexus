@@ -35,7 +35,21 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
+    // Check if this is a page refresh
+    const isPageRefresh = window.performance.getEntriesByType('navigation')[0]?.type === 'reload'
+    
+    if (isPageRefresh) {
+      console.log('Page refresh detected, clearing session...')
+      // Clear session on page refresh
+      supabase.auth.signOut({ scope: 'local' }).then(() => {
+        setUser(null)
+        setProfile(null)
+        setLoading(false)
+      })
+      return
+    }
+
+    // Get initial session only if not a page refresh
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
