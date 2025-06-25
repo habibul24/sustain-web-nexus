@@ -29,8 +29,10 @@ export const LoginForm = () => {
         description: "You have successfully signed in.",
       })
       
-      // Redirect to profile page after successful sign-in
-      navigate('/profile')
+      // Add a small delay to ensure auth state is updated before redirect
+      setTimeout(() => {
+        navigate('/profile')
+      }, 100)
     } catch (error: any) {
       toast({
         title: "Error",
