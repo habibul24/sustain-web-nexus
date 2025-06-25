@@ -36,22 +36,7 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if this is a page refresh
-    const navigation = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-    const isPageRefresh = navigation?.type === 'reload'
-    
-    if (isPageRefresh) {
-      console.log('Page refresh detected, clearing session...')
-      // Clear session on page refresh
-      supabase.auth.signOut({ scope: 'local' }).then(() => {
-        setUser(null)
-        setProfile(null)
-        setLoading(false)
-      })
-      return
-    }
-
-    // Get initial session only if not a page refresh
+    // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
@@ -67,7 +52,6 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
         setUser(session?.user ?? null)
         
         if (session?.user) {
@@ -125,26 +109,8 @@ export const useAuth = () => {
   }
 
   const signOut = async () => {
-    try {
-      console.log('Starting sign out process...')
-      
-      const { error } = await supabase.auth.signOut()
-      
-      if (error) {
-        console.error('Supabase signOut error:', error)
-        return { error }
-      }
-      
-      // Clear local state after successful sign out
-      setUser(null)
-      setProfile(null)
-      
-      console.log('Sign out completed successfully')
-      return { error: null }
-    } catch (error) {
-      console.error('Sign out catch error:', error)
-      return { error }
-    }
+    const { error } = await supabase.auth.signOut()
+    return { error }
   }
 
   const isAdmin = profile?.role_id === 'admin'

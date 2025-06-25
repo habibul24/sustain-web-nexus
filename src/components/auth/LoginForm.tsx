@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +11,6 @@ export const LoginForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
   
   const { signIn } = useAuthContext()
 
@@ -23,16 +21,10 @@ export const LoginForm = () => {
     try {
       const { error } = await signIn(email, password)
       if (error) throw error
-      
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       })
-      
-      // Add a small delay to ensure auth state is updated before redirect
-      setTimeout(() => {
-        navigate('/profile')
-      }, 100)
     } catch (error: any) {
       toast({
         title: "Error",
