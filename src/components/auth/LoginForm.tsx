@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +22,7 @@ export const LoginForm = () => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       })
-      navigate('/')
+      navigate('/my-esg')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])

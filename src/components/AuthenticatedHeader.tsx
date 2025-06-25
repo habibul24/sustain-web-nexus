@@ -6,8 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 
 const navItems = [
-  { name: 'Dashboard', href: '/dashboard' },
   { name: "My Company's ESG", href: '/my-esg' },
+  { name: 'Dashboard', href: '/dashboard' },
   { name: 'Marketplace', href: '/marketplace' },
   { name: 'Third Party Carbon Data', href: '/third-party-carbon-data' },
   { name: 'My Data Requests', href: '/my-data-requests' },
@@ -101,4 +101,4 @@ const AuthenticatedHeader = () => {
   );
 };
 
-export default AuthenticatedHeader; 
+export default AuthenticatedHeader;

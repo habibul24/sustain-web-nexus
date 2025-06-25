@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,14 +32,14 @@ function AppRoutes() {
       <>
         <AuthenticatedHeader />
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/my-esg" element={<MyESG />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/third-party-carbon-data" element={<ThirdPartyCarbonData />} />
           <Route path="/my-data-requests" element={<MyDataRequests />} />
           <Route path="/funding-opportunities" element={<FundingOpportunities />} />
           <Route path="/team" element={<Team />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/my-esg" replace />} />
         </Routes>
       </>
     );
