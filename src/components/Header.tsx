@@ -1,7 +1,10 @@
+
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const aboutDropdown = [
   { name: 'Mission', href: '/about/mission' },
@@ -25,6 +28,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuthContext();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -35,6 +40,28 @@ const Header = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      navigate('/');
+    }
+  };
+
+  const getDisplayName = () => {
+    if (profile?.full_name) {
+      return profile.full_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  const getInitials = () => {
+    const name = getDisplayName();
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
     <header className="bg-black shadow-lg sticky top-0 z-50">
@@ -103,12 +130,36 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              asChild 
-              className="btn-orange-gradient"
-            >
-              <Link to="/sign-in">Sign In</Link>
-            </Button>
+            {user ? (
+              <>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarFallback className="bg-green-600 text-white text-sm">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-white text-sm font-medium">
+                    Hello, {getDisplayName()}!
+                  </span>
+                </div>
+                <Button 
+                  onClick={handleSignOut}
+                  variant="ghost"
+                  className="text-white hover:bg-gray-800 hover:text-white"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button 
+                asChild 
+                className="btn-orange-gradient"
+              >
+                <Link to="/sign-in">Sign In</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -171,14 +222,41 @@ const Header = () => {
                 </div>
               ))}
               <div className="pt-4 pb-2">
-                <Button 
-                  asChild 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                    Sign In
-                  </Link>
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-3 px-3 py-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={profile?.avatar_url || ''} />
+                        <AvatarFallback className="bg-green-600 text-white text-sm">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-white text-sm font-medium">
+                        Hello, {getDisplayName()}!
+                      </span>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      variant="ghost"
+                      className="w-full text-white hover:bg-gray-800 justify-start"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    asChild 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
