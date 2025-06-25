@@ -107,11 +107,13 @@ export const useAuth = () => {
       
       if (result.error) {
         console.error('Error signing out:', result.error)
-        // Restore state if sign out failed
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await handleFetchProfile(session.user.id)
+        // Only restore state if it's a real error, not session missing
+        if (result.error.message !== 'Auth session missing!') {
+          const { data: { session } } = await supabase.auth.getSession()
+          setUser(session?.user ?? null)
+          if (session?.user) {
+            await handleFetchProfile(session.user.id)
+          }
         }
         return result
       }

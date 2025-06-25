@@ -34,10 +34,24 @@ export const signUpUser = async (signUpData: SignUpData) => {
 
 export const signOutUser = async () => {
   try {
+    // Check if there's a current session before attempting to sign out
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      // No session exists, so we're already signed out
+      console.log('No active session found, user is already signed out')
+      return { error: null }
+    }
+    
     // Sign out from Supabase
     const { error } = await supabase.auth.signOut()
     
     if (error) {
+      // Handle specific auth session missing error
+      if (error.message === 'Auth session missing!') {
+        console.log('Session already expired, considering sign out successful')
+        return { error: null }
+      }
       console.error('Error signing out:', error)
       return { error }
     }
