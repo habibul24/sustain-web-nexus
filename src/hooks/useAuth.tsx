@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -110,27 +111,9 @@ export const useAuth = () => {
         },
       },
     });
-    // If sign up succeeded, create a profile row
-    if (data?.user && !error) {
-      const { id, email } = data.user;
-      const { error: profileError } = await supabase.from('user_profiles').insert({
-        id,
-        email,
-        full_name: signUpData.fullName,
-        company_name: signUpData.companyName,
-        business_registration_number: signUpData.businessRegistrationNumber,
-        job_title: signUpData.jobTitle,
-        phone: signUpData.phoneNumber,
-        service_needed: signUpData.serviceNeeded,
-        preferred_contact: signUpData.preferredContact,
-        subscription_status: 'free',
-      });
-      if (profileError) {
-        console.error('Error creating user profile:', profileError);
-        // Optionally, return this error to the UI
-        return { data, error: profileError };
-      }
-    }
+    
+    // The database trigger will automatically create the user profile
+    // No need for manual insertion here
     return { data, error };
   }
 
