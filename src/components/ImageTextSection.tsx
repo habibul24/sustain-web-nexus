@@ -10,24 +10,30 @@ const ImageTextSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1">
+            {/*
             <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
               <TrendingUp className="w-4 h-4 mr-2" />
               Leading Sustainability Platform
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-green-600 mb-8 leading-tight">
-              Building a Sustainable Future Together
+            
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight" style={{ color: '#294e36' }}>
+               Building a Sustainable Future Together
             </h2>
+            */}
             <p className="text-gray-700 text-xl mb-8 leading-relaxed">
-              We know that getting started with ESG and sustainability can feel complex, our job is to simplify the implementation process. Sustainability isn't just about being green, it's about building a stronger, more profitable business and we provide the practical tools, expertise and clear guidance to help you set and achieve your goals.<br /><br />
-              As your dedicated ESG partner, we guide you from the first step to full compliance, ensuring your business becomes more resilient and ready for the future. We handle the complexities of ESG regulations so you can make confident decisions. By providing user-friendly data technology, practical team training, and clear analytics that show you the path to growth.
+              Getting started with ESG and sustainability can be complex. We make the process clear and straightforward for faster implementation.<br /><br />
+              As your ESG consulting partner, we provide the practical tools, expertise and clear guidance from your first step to full compliance and handle the complexities of ESG regulations so you can make confident decisions.<br /><br />
+              We elevate your existing ESG process. Through trusted technology and expert training, we partner with you to build a resilient and future-ready business.
             </p>
             
+            {/*}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
                 Learn More About Our Impact
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </div>
+            */}
           </div>
           <div className="order-1 lg:order-2">
             <div className="relative">

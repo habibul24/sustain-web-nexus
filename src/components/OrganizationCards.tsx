@@ -52,17 +52,10 @@ const OrganizationCards = () => {
       background: 'linear-gradient(to bottom, #eaffb2, #c6e97a)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 mb-6">
-            <Sparkles className="w-4 h-4 text-green-700" />
-            <span className="text-sm font-medium text-green-800">Our Solutions</span>
+        <div className="flex justify-center mb-16">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg px-8 py-6 max-w-2xl w-full border border-green-100 text-center">
+            <h2 className="text-4xl font-bold text-orange-400 mb-2">Who We Serve</h2>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Who We Serve
-          </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            From individual consumers to enterprise corporations, we provide tailored sustainability solutions for every organization type
-          </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
