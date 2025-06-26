@@ -117,14 +117,14 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 items-center">
+          <nav className="hidden md:flex space-x-10 items-center ml-auto">
             {navigation.map((item) => (
               <div key={item.name} className="relative group">
                 {item.dropdown ? (
                   <>
                     <button
-                      className={`flex items-center text-sm font-medium transition-colors hover:text-green-600 focus:outline-none ${
-                        isActive(item.href) ? 'text-green-600' : 'text-gray-700'
+                      className={`flex items-center text-lg font-semibold transition-colors hover:text-green-600 focus:outline-none ${
+                        isActive(item.href) ? 'text-green-600' : 'text-gray-900'
                       }`}
                       tabIndex={0}
                       type="button"
@@ -133,7 +133,7 @@ const Header = () => {
                       <ChevronDown className="w-4 h-4 ml-1" />
                     </button>
                     {/* Dropdown menu */}
-                    <div className="absolute left-0 mt-2 min-w-[280px] bg-white rounded-lg shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
+                    <div className="absolute left-0 mt-2 min-w-[280px] bg-white rounded-lg shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200">
                       {item.dropdown.map((sub) => (
                         sub.external ? (
                           <a
@@ -141,7 +141,7 @@ const Header = () => {
                             href={sub.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block px-4 py-3 text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 transition-colors duration-150 mx-2 rounded-md"
+                            className="block px-4 py-3 text-lg text-gray-900 hover:bg-green-50 hover:text-green-600 transition-colors duration-150 mx-2 rounded-md"
                           >
                             {sub.name}
                           </a>
@@ -149,7 +149,7 @@ const Header = () => {
                           <Link
                             key={sub.name}
                             to={sub.href}
-                            className="block px-4 py-3 text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 transition-colors duration-150 mx-2 rounded-md"
+                            className="block px-4 py-3 text-lg text-gray-900 hover:bg-green-50 hover:text-green-600 transition-colors duration-150 mx-2 rounded-md"
                           >
                             {sub.name}
                           </Link>
@@ -160,8 +160,8 @@ const Header = () => {
                 ) : (
                   <Link
                     to={item.href}
-                    className={`text-sm font-medium transition-colors hover:text-green-600 ${
-                      isActive(item.href) ? 'text-green-600' : 'text-gray-700'
+                    className={`text-lg font-semibold transition-colors hover:text-green-600 ${
+                      isActive(item.href) ? 'text-green-600' : 'text-gray-900'
                     }`}
                   >
                     {item.name}
@@ -171,7 +171,7 @@ const Header = () => {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 ml-12">
             {user ? (
               <>
                 <div className="flex items-center space-x-3">

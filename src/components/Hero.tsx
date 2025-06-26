@@ -20,8 +20,8 @@ const Hero = () => {
           Navigate Your Sustainability Journey With Clarity
         </h1>
         <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-4xl mx-auto leading-relaxed font-medium">
-          Explore courses that equip you with the knowledge to drive positive
-          ESG practices within your business.
+          Master the complexities of ESG compliance and 
+          make sustainability the cornerstone of your competitive advantage
         </p>
         <div className="flex justify-center">
           <Button asChild className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
