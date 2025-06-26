@@ -62,6 +62,7 @@ const documentOptions = [
 
 const ConsultationForm = () => {
   const [form, setForm] = useState({
+    fullName: '',
     email: '',
     companyName: '',
     description: '',
@@ -96,8 +97,17 @@ const ConsultationForm = () => {
       <div className="flex-1">
         <section className="py-16">
           <div className="max-w-3xl mx-auto px-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-10">Consultation Form</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-center mb-10">Client Onboarding Questionnaire</h1>
+            <div className="text-center mb-8 p-6 bg-green-50 rounded-lg border border-green-200">
+              <h2 className="text-xl font-semibold text-[#183a1d] mb-2">Welcome to GreenData! 🌱</h2>
+              <p className="text-[#29443e]">Thank you for your interest in our sustainability and ESG services. This questionnaire helps us understand your organization better and provide you with the most relevant solutions. Please take a moment to fill out the following information.</p>
+            </div>
             <form className="space-y-8">
+              {/* 0. Full Name */}
+              <div>
+                <label className="block font-medium mb-2">Full Name<span className="text-red-500">*</span></label>
+                <input type="text" name="fullName" value={form.fullName} onChange={handleChange} required className="w-full border rounded px-4 py-2" />
+              </div>
               {/* 1. Email */}
               <div>
                 <label className="block font-medium mb-2">Email<span className="text-red-500">*</span></label>

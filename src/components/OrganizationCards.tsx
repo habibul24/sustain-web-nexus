@@ -1,13 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Building, Building2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const OrganizationCards = () => {
   const organizationCards = [
     {
-      icon: <User className="w-8 h-8 text-green-600" />,
+      image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80",
       title: "Individual",
       description: "Personal sustainability tracking for conscious consumers",
       features: [
@@ -20,7 +20,7 @@ const OrganizationCards = () => {
       bgColor: "bg-white"
     },
     {
-      icon: <Building className="w-8 h-8 text-green-700" />,
+      image: "/SP-HA_Blade-and-OFS-Opt-2-White_Frosted_Blue_Acrylic_Silver_Vectra_SP-scaled.jpg",
       title: "Business",
       description: "Comprehensive ESG solutions for growing companies",
       features: [
@@ -33,7 +33,7 @@ const OrganizationCards = () => {
       bgColor: "bg-white"
     },
     {
-      icon: <Building2 className="w-8 h-8 text-green-800" />,
+      image: "/istockphoto-479842074-612x612.jpg",
       title: "Large Organization",
       description: "Enterprise-grade sustainability platform for complex operations",
       features: [
@@ -67,11 +67,9 @@ const OrganizationCards = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {organizationCards.map((card, index) => (
-            <Card key={index} className={`${card.bgColor} border-2 border-green-300 hover:border-green-600 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col`}>
+            <Card key={index} className={`${card.bgColor} border-2 border-green-300 hover:border-green-600 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col rounded-3xl`}>
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  {card.icon}
-                </div>
+                <img src={card.image} alt={card.title + ' illustration'} className="w-36 h-36 object-cover rounded-full mx-auto mb-6 shadow-xl border-4 border-green-200" />
                 <CardTitle className="text-2xl text-gray-900 mb-2">{card.title}</CardTitle>
                 <CardDescription className="text-gray-700 text-base">
                   {card.description}

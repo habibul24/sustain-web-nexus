@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import FloatInOnView from '@/components/FloatInOnView';
+import { CheckCircle, Mail, Phone, MapPin } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -59,21 +60,21 @@ const Contact = () => {
                 
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 bg-secondary rounded-full flex-shrink-0 mt-1"></div>
+                    <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0 mt-1" />
                     <div>
                       <h3 className="text-lg font-semibold text-primary mb-2">Free Consultation</h3>
                       <p className="text-gray-600">Get personalized advice on your sustainability strategy</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 bg-accent rounded-full flex-shrink-0 mt-1"></div>
+                    <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0 mt-1" />
                     <div>
                       <h3 className="text-lg font-semibold text-primary mb-2">Custom Demo</h3>
                       <p className="text-gray-600">See our tools in action with your specific use cases</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 bg-accent-orange rounded-full flex-shrink-0 mt-1"></div>
+                    <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0 mt-1" />
                     <div>
                       <h3 className="text-lg font-semibold text-primary mb-2">Implementation Support</h3>
                       <p className="text-gray-600">Full support from planning to deployment and beyond</p>
@@ -133,7 +134,7 @@ const Contact = () => {
                         className="w-full"
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white">
+                    <Button type="submit" className="w-full btn-orange-gradient">
                       Send Message
                     </Button>
                   </form>
@@ -153,8 +154,8 @@ const Contact = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="text-center animate-fade-in">
                 <CardHeader>
-                  <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-8 h-8 bg-secondary rounded-full"></div>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-green-600" />
                   </div>
                   <CardTitle className="text-primary">Email Us</CardTitle>
                 </CardHeader>
@@ -165,8 +166,8 @@ const Contact = () => {
               
               <Card className="text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-8 h-8 bg-accent rounded-full"></div>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Phone className="w-8 h-8 text-green-600" />
                   </div>
                   <CardTitle className="text-primary">Call Us</CardTitle>
                 </CardHeader>
@@ -177,8 +178,8 @@ const Contact = () => {
               
               <Card className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-accent-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-8 h-8 bg-accent-orange rounded-full"></div>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MapPin className="w-8 h-8 text-green-600" />
                   </div>
                   <CardTitle className="text-primary">Visit Us</CardTitle>
                 </CardHeader>

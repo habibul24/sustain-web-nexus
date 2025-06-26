@@ -22,6 +22,8 @@ import MyDataRequests from "@/pages/MyDataRequests";
 import FundingOpportunities from "@/pages/FundingOpportunities";
 import Team from "@/pages/Team";
 import ConsultationForm from "./pages/ConsultationForm";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,8 @@ function AppRoutes() {
         <Route path="/consultation-form" element={<ConsultationForm />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

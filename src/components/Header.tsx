@@ -27,7 +27,7 @@ const servicesDropdown: DropdownItem[] = [
 ];
 const resourcesDropdown: DropdownItem[] = [
   { name: 'Blogs', href: '/resources/blogs' },
-  { name: 'Consultation Form', href: '/consultation-form' },
+  { name: 'Client Onboarding Questionnaire', href: '/consultation-form' },
 ];
 
 const Header = () => {
@@ -106,12 +106,12 @@ const Header = () => {
     <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center -ml-2">
+          <div className="flex items-center -ml-16">
             <Link to="/" className="flex items-center">
               <img 
                 src="/lovable-uploads/0944e168-7b64-403d-8c39-5976b7a5e5f7.png" 
                 alt="GreenData Logo" 
-                className="h-10 w-auto mr-6"
+                className="h-16 w-auto mr-8"
               />
             </Link>
           </div>

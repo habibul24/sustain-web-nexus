@@ -87,7 +87,7 @@ const SignUp = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Link>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Create Your Account</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Schedule a Consultation</h1>
           </div>
 
           <Card className="shadow-xl border-green-200">
