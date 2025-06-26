@@ -14,31 +14,14 @@ const ImageTextSection = () => {
               <TrendingUp className="w-4 h-4 mr-2" />
               Leading Sustainability Platform
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
-              Building a 
-              <span className="text-green-600"> Sustainable Future</span>
-              <br />Together
+            <h2 className="text-4xl md:text-5xl font-bold text-green-600 mb-8 leading-tight">
+              Building a Sustainable Future Together
             </h2>
             <p className="text-gray-700 text-xl mb-8 leading-relaxed">
-              Our platform empowers organizations of all sizes to measure, manage, and 
-              improve their environmental, social, and governance performance.
+              We know that getting started with ESG and sustainability can feel complex, our job is to simplify the implementation process. Sustainability isn't just about being green, it's about building a stronger, more profitable business and we provide the practical tools, expertise and clear guidance to help you set and achieve your goals.<br /><br />
+              As your dedicated ESG partner, we guide you from the first step to full compliance, ensuring your business becomes more resilient and ready for the future. We handle the complexities of ESG regulations so you can make confident decisions. By providing user-friendly data technology, practical team training, and clear analytics that show you the path to growth.
             </p>
             
-            <div className="space-y-4 mb-10">
-              <div className="flex items-center">
-                <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0" />
-                <span className="text-lg text-gray-700">Carbon footprint tracking and reduction strategies</span>
-              </div>
-              <div className="flex items-center">
-                <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0" />
-                <span className="text-lg text-gray-700">Comprehensive ESG reporting and compliance</span>
-              </div>
-              <div className="flex items-center">
-                <CheckCircle className="w-6 h-6 text-green-500 mr-4 flex-shrink-0" />
-                <span className="text-lg text-gray-700">Data-driven sustainability insights</span>
-              </div>
-            </div>
-
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
                 Learn More About Our Impact
@@ -50,8 +33,8 @@ const ImageTextSection = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur opacity-20"></div>
               <img
-                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                alt="People sitting down near table with assorted laptop computers"
+                src="/business-people-working-together.jpg"
+                alt="Business people working together"
                 className="relative w-full h-96 lg:h-[500px] object-cover rounded-3xl shadow-2xl"
               />
             </div>

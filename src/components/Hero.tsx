@@ -22,8 +22,7 @@ const Hero = () => {
           Clarity
         </h1>
         <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-4xl mx-auto font-medium" style={{ textShadow: '0 0 12px #7fae2e, 0 1px 8px #b6e36b' }}>
-          Master the complexities of ESG compliance and make sustainability the cornerstone<br />
-          of your competitive advantage
+          Master the complexities of ESG compliance and make sustainability the cornerstone of your competitive advantage
         </p>
         <div className="flex justify-center mt-16">
           <Button asChild className="btn-orange-gradient font-bold text-lg px-8 py-4 rounded-full shadow-xl transform hover:scale-105 transition-all duration-300">
