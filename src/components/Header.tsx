@@ -13,12 +13,9 @@ const aboutDropdown = [
 ];
 const servicesDropdown = [
   { name: 'ESG & Sustainability Courses', href: '/services/courses' },
-  { name: 'GreenData software', href: '/services/software' },
-  { name: 'ESG & Sustainability Gap Assessments', href: '/services/gap-assessments' },
-  { name: 'ESG & Sustainability Materiality Assessment', href: '/services/materiality-assessment' },
-  { name: 'ESG & Sustainability Reporting', href: '/services/reporting' },
-  { name: 'ESG & Sustainability Advisory', href: '/services/advisory' },
-  { name: 'Business Sustainability Analytics', href: '/services/analytics' },
+  { name: 'GreenData Software', href: '/services/software' },
+  { name: 'ESG & Sustainability: Gap & Materiality Assessment and Reporting', href: '/services/assessment-reporting' },
+  { name: 'ESG & Sustainability: Advisory and Analytics', href: '/services/advisory-analytics' },
 ];
 const resourcesDropdown = [
   { name: 'Blogs', href: '/resources/blogs' },

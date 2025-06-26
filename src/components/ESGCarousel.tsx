@@ -93,17 +93,7 @@ Choose based on your preferred career path.`
   ];
 
   return (
-    <section className="relative bg-white py-24">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-          alt="Business team meeting in modern office"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gray-900/80"></div>
-      </div>
-      
+    <section className="relative py-24" style={{ background: 'linear-gradient(to bottom, #7fae2e, #1e2e13)' }}>
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold text-sm mb-6">
@@ -112,22 +102,21 @@ Choose based on your preferred career path.`
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight">
             ESG
-            <span className="text-green-400"> FAQs</span>
+            <span className="text-green-200"> FAQs</span>
           </h2>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-green-50 max-w-3xl mx-auto leading-relaxed">
             Get answers to the most common questions about ESG reporting, frameworks, and sustainability practices.
           </p>
         </div>
-
         {/* FAQ Accordion */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
+        <div className="rounded-2xl shadow-2xl p-0">
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200 last:border-b-0">
-                <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors py-6">
+              <AccordionItem key={index} value={`item-${index}`} className="border-b border-green-900 last:border-b-0 bg-white">
+                <AccordionTrigger className="text-left text-lg font-semibold text-green-900 hover:text-green-700 transition-colors py-6 px-6">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700 leading-relaxed pb-6">
+                <AccordionContent className="text-gray-800 leading-relaxed pb-6 px-6">
                   <div className="whitespace-pre-line">
                     {faq.answer}
                   </div>

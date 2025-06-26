@@ -7,16 +7,15 @@ const Hero = () => {
   return (
     <section className="relative min-h-[120vh] flex items-start justify-center pt-40">
       {/* Hero Image Section */}
-      <div className="absolute inset-0 overflow-hidden"> {/* Changed to absolute inset-0 to cover the full section */}
+      <div className="absolute inset-0 overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=100&sharp=10"
           alt="Dark forest with mystical lighting"
-          className="w-full h-full object-cover object-center"
-          style={{ imageRendering: 'crisp-edges' }}
+          className="w-full h-full object-cover object-center blur-lg scale-105"
+          style={{ imageRendering: 'crisp-edges', filter: 'blur(16px) brightness(1.15)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-green-900/70 to-black/80"></div>
       </div>
-      <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto"> {/* Added relative z-10 to bring content to front */}
+      <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
           Navigate Your Sustainability Journey With Clarity
         </h1>
