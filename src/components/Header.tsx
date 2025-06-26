@@ -98,11 +98,12 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-black font-bold text-sm">S</span>
-              </div>
-              <span className="text-xl font-bold text-white">SustainTech</span>
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/lovable-uploads/b529b7f6-0fdb-4b8a-a0e9-163fdcc4604b.png" 
+                alt="GreenData Logo" 
+                className="h-10 w-auto mr-4"
+              />
             </Link>
           </div>
 
