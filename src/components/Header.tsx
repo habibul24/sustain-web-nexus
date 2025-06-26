@@ -6,18 +6,26 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 
-const aboutDropdown = [
-  { name: 'Mission', href: '/about/mission' },
-  { name: 'Vision', href: '/about/vision' },
-  { name: 'Values', href: '/about/values' },
+// Add this type above the dropdown definitions
+
+type DropdownItem = {
+  name: string;
+  href: string;
+  external?: boolean;
+};
+
+const aboutDropdown: DropdownItem[] = [
+  { name: 'Vision', href: '/about#vision' },
+  { name: 'Mission', href: '/about#mission' },
+  { name: 'Values', href: '/about#values' },
 ];
-const servicesDropdown = [
-  { name: 'ESG & Sustainability Courses', href: '/services/courses' },
-  { name: 'GreenData Software', href: '/services/software' },
+const servicesDropdown: DropdownItem[] = [
+  { name: 'ESG & Sustainability Courses', href: 'https://www.edu.greendatabiz.com/', external: true },
+  { name: 'GreenData Software', href: 'https://greendatabiz.com/', external: true },
   { name: 'ESG & Sustainability: Gap & Materiality Assessment and Reporting', href: '/services/assessment-reporting' },
   { name: 'ESG & Sustainability: Advisory and Analytics', href: '/services/advisory-analytics' },
 ];
-const resourcesDropdown = [
+const resourcesDropdown: DropdownItem[] = [
   { name: 'Blogs', href: '/resources/blogs' },
 ];
 
@@ -94,7 +102,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-black shadow-lg sticky top-0 z-50">
+    <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center -ml-2">
@@ -114,13 +122,9 @@ const Header = () => {
                 {item.dropdown ? (
                   <>
                     <button
-                      className={`flex items-center text-sm font-medium transition-colors hover:text-green-400 focus:outline-none ${
-                        isActive(item.href) ? 'text-green-400' : 'text-white'
+                      className={`flex items-center text-sm font-medium transition-colors hover:text-green-600 focus:outline-none ${
+                        isActive(item.href) ? 'text-green-600' : 'text-gray-700'
                       }`}
-                      onMouseEnter={() => setOpenDropdown(item.name)}
-                      onMouseLeave={() => setOpenDropdown(null)}
-                      onFocus={() => setOpenDropdown(item.name)}
-                      onBlur={() => setOpenDropdown(null)}
                       tabIndex={0}
                       type="button"
                     >
@@ -128,29 +132,35 @@ const Header = () => {
                       <ChevronDown className="w-4 h-4 ml-1" />
                     </button>
                     {/* Dropdown menu */}
-                    <div
-                      className={`absolute left-0 mt-2 min-w-[200px] bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-150 ${
-                        openDropdown === item.name ? 'block' : 'hidden'
-                      } group-hover:block`}
-                      onMouseEnter={() => setOpenDropdown(item.name)}
-                      onMouseLeave={() => setOpenDropdown(null)}
-                    >
+                    <div className="absolute left-0 mt-2 min-w-[280px] bg-white rounded-lg shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
                       {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.name}
-                          to={sub.href}
-                          className="block px-4 py-2 text-sm text-gray-800 hover:bg-green-50 hover:text-green-700 rounded"
-                        >
-                          {sub.name}
-                        </Link>
+                        sub.external ? (
+                          <a
+                            key={sub.name}
+                            href={sub.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-4 py-3 text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 transition-colors duration-150 mx-2 rounded-md"
+                          >
+                            {sub.name}
+                          </a>
+                        ) : (
+                          <Link
+                            key={sub.name}
+                            to={sub.href}
+                            className="block px-4 py-3 text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 transition-colors duration-150 mx-2 rounded-md"
+                          >
+                            {sub.name}
+                          </Link>
+                        )
                       ))}
                     </div>
                   </>
                 ) : (
                   <Link
                     to={item.href}
-                    className={`text-sm font-medium transition-colors hover:text-green-400 ${
-                      isActive(item.href) ? 'text-green-400' : 'text-white'
+                    className={`text-sm font-medium transition-colors hover:text-green-600 ${
+                      isActive(item.href) ? 'text-green-600' : 'text-gray-700'
                     }`}
                   >
                     {item.name}
@@ -170,14 +180,14 @@ const Header = () => {
                       {getInitials()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-white text-sm font-medium">
+                  <span className="text-gray-700 text-sm font-medium">
                     Hello, {getDisplayName()}!
                   </span>
                 </div>
                 <Button 
                   onClick={handleSignOut}
                   variant="ghost"
-                  className="text-white hover:bg-gray-800 hover:text-white"
+                  className="text-gray-700 hover:bg-green-50 hover:text-green-600"
                   disabled={isSigningOut}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
@@ -200,7 +210,7 @@ const Header = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:bg-gray-800"
+              className="text-gray-700 hover:bg-green-50 hover:text-green-600"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -210,13 +220,13 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
               {navigation.map((item) => (
                 <div key={item.name} className="relative">
                   {item.dropdown ? (
                     <>
                       <button
-                        className="flex items-center w-full text-left px-3 py-2 text-base font-medium text-white hover:text-green-400 focus:outline-none"
+                        className="flex items-center w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-green-600 focus:outline-none"
                         onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
                         type="button"
                       >
@@ -229,7 +239,7 @@ const Header = () => {
                             <Link
                               key={sub.name}
                               to={sub.href}
-                              className="block px-2 py-2 text-sm text-gray-200 hover:bg-green-700 hover:text-white rounded"
+                              className="block px-2 py-2 text-sm text-gray-600 hover:bg-green-50 hover:text-green-600 rounded"
                               onClick={() => setIsMenuOpen(false)}
                             >
                               {sub.name}
@@ -243,8 +253,8 @@ const Header = () => {
                       to={item.href}
                       className={`block px-3 py-2 text-base font-medium transition-colors ${
                         isActive(item.href)
-                          ? 'text-green-400 bg-gray-800 rounded-md'
-                          : 'text-white hover:text-green-400'
+                          ? 'text-green-600 bg-green-50 rounded-md'
+                          : 'text-gray-700 hover:text-green-600'
                       }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -263,14 +273,14 @@ const Header = () => {
                           {getInitials()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-white text-sm font-medium">
+                      <span className="text-gray-700 text-sm font-medium">
                         Hello, {getDisplayName()}!
                       </span>
                     </div>
                     <Button 
                       onClick={handleSignOut}
                       variant="ghost"
-                      className="w-full text-white hover:bg-gray-800 justify-start"
+                      className="w-full text-gray-700 hover:bg-green-50 hover:text-green-600 justify-start"
                       disabled={isSigningOut}
                     >
                       <LogOut className="w-4 h-4 mr-2" />
@@ -278,14 +288,21 @@ const Header = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button 
-                    asChild 
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                      Sign In
-                    </Link>
-                  </Button>
+                  <div className="space-y-2">
+                    <Button 
+                      asChild 
+                      className="w-full btn-orange-gradient"
+                    >
+                      <Link to="/sign-up">Sign Up</Link>
+                    </Button>
+                    <Button 
+                      asChild 
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Link to="/sign-in">Sign In</Link>
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
