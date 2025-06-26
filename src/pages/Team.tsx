@@ -6,9 +6,7 @@ import { AddTeamMember } from '@/components/team/AddTeamMember';
 import { PendingInvitations } from '@/components/team/PendingInvitations';
 
 const Team = () => {
-  const [pendingInvitations, setPendingInvitations] = useState([
-    { email: 'tj7279897@gmail.com', role: 'Administrator' }
-  ]);
+  const [pendingInvitations, setPendingInvitations] = useState([]);
 
   const handleAddMember = (email: string, role: string) => {
     // Add to pending invitations
@@ -35,13 +33,10 @@ const Team = () => {
           
           <div className="space-y-8">
             <AddTeamMember onAddMember={handleAddMember} />
-            
-            {pendingInvitations.length > 0 && (
-              <PendingInvitations 
-                invitations={pendingInvitations}
-                onCancelInvitation={handleCancelInvitation}
-              />
-            )}
+            <PendingInvitations 
+              invitations={pendingInvitations}
+              onCancelInvitation={handleCancelInvitation}
+            />
           </div>
         </div>
       </div>
