@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle, TrendingUp } from 'lucide-react';
 
 const ImageTextSection = () => {
   return (
-    <section className="relative py-24" style={{ 
+    <section className="relative py-12" style={{ 
       background: 'linear-gradient(to bottom, #ffffff, #eaffb2)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

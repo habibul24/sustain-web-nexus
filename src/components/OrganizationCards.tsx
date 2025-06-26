@@ -48,7 +48,7 @@ const OrganizationCards = () => {
   ];
 
   return (
-    <section className="py-24" style={{ 
+    <section className="py-12" style={{ 
       background: 'linear-gradient(to bottom, #eaffb2, #c6e97a)'
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
