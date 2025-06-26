@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,7 @@ import ThirdPartyCarbonData from "@/pages/ThirdPartyCarbonData";
 import MyDataRequests from "@/pages/MyDataRequests";
 import FundingOpportunities from "@/pages/FundingOpportunities";
 import Team from "@/pages/Team";
+import ConsultationForm from "./pages/ConsultationForm";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +67,7 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/consultation-form" element={<ConsultationForm />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="*" element={<NotFound />} />

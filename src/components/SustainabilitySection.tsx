@@ -73,8 +73,8 @@ const SustainabilitySection = () => {
                 style={{ backgroundColor: '#ffb300', borderColor: '#ffb300' }}
               >
                 <Link to="/sign-up">
-                  <Zap className="w-6 h-6 mr-2" />
-                  Request a Demo
+                <Zap className="w-6 h-6 mr-2" />
+                Request a Demo
                 </Link>
               </Button>
             </div>

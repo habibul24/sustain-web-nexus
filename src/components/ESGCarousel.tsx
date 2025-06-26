@@ -119,7 +119,7 @@ Choose based on your preferred career path.`
                 <AccordionContent className="text-gray-800 leading-relaxed pb-6 px-6">
                   <div className="whitespace-pre-line">
                     {faq.answer}
-                  </div>
+                    </div>
                 </AccordionContent>
               </AccordionItem>
             ))}
