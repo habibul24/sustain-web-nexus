@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -51,12 +52,12 @@ const AuthenticatedHeader = () => {
     <header className="bg-black shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center">
+          <div className="flex items-center -ml-2">
             <Link to="/dashboard" className="flex items-center">
               <img 
-                src="/lovable-uploads/b529b7f6-0fdb-4b8a-a0e9-163fdcc4604b.png" 
+                src="/lovable-uploads/0944e168-7b64-403d-8c39-5976b7a5e5f7.png" 
                 alt="GreenData Logo" 
-                className="h-10 w-auto mr-4"
+                className="h-10 w-auto mr-6"
               />
             </Link>
           </div>
