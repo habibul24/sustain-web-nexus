@@ -39,7 +39,7 @@ const ImageTextSection = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur opacity-20"></div>
               <img
-                src="/business-people-working-together.jpg"
+                src="https://d.newsweek.com/en/full/2138885/business-people-working-together.jpg"
                 alt="Business people working together"
                 className="relative w-full h-96 lg:h-[500px] object-cover rounded-3xl shadow-2xl"
               />

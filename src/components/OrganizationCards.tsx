@@ -20,7 +20,7 @@ const OrganizationCards = () => {
       bgColor: "bg-white"
     },
     {
-      image: "/SP-HA_Blade-and-OFS-Opt-2-White_Frosted_Blue_Acrylic_Silver_Vectra_SP-scaled.jpg",
+      image: "https://assets-blog.s3.amazonaws.com/office-furniture-blog/wp-content/uploads/2022/08/08004006/SP-HA_Blade-and-OFS-Opt-2-White_Frosted_Blue_Acrylic_Silver_Vectra_SP-scaled.jpg",
       title: "Business",
       description: "Comprehensive ESG solutions for growing companies",
       features: [
@@ -33,7 +33,7 @@ const OrganizationCards = () => {
       bgColor: "bg-white"
     },
     {
-      image: "/istockphoto-479842074-612x612.jpg",
+      image: "https://media.istockphoto.com/id/479842074/photo/empty-road-at-building-exterior.jpg?s=612x612&w=0&k=20&c=SbyfZGN0i2O_QPLCdBcu9vhuzbQvTz4bGEn-lIzrN0E=",
       title: "Large Organization",
       description: "Enterprise-grade sustainability platform for complex operations",
       features: [
