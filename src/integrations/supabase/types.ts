@@ -896,6 +896,246 @@ export type Database = {
           },
         ]
       }
+      metrics_targets_responses: {
+        Row: {
+          base_emissions: string | null
+          base_year: number | null
+          baseline_date: string | null
+          captive_power_gen: string | null
+          comparison_to_previous: string | null
+          created_at: string
+          emission_change: string | null
+          emission_comment: string | null
+          emission_scope1: string | null
+          emission_scope2_loc: string | null
+          emission_scope2_mkt: string | null
+          emission_target: string | null
+          end_date: string | null
+          goal_desc: string | null
+          goal_level: string[] | null
+          goal_motivation: string[] | null
+          goal_motivation_other: string | null
+          goal_other: string | null
+          goal_progress: string | null
+          id: string
+          initiative_active: string | null
+          intensity_base_figure: string | null
+          intensity_base_year: number | null
+          intensity_explanation: string | null
+          intensity_metric: string | null
+          intensity_other: string | null
+          intensity_reduction_percent: string | null
+          intensity_science_based: string | null
+          intensity_target_desc: string | null
+          intensity_target_year: number | null
+          intensity_year_set: number | null
+          metric_used_for_target_set: string | null
+          no_target_explanation: string | null
+          no_target_reason: string | null
+          org_ghg: string | null
+          percent_achieved: string | null
+          primary_reason: string | null
+          reduction_initiatives: string | null
+          reduction_percent: string | null
+          reporting_discrepancy: string | null
+          reporting_emissions: string | null
+          science_based: string | null
+          standard: string[] | null
+          start_date: string | null
+          target_desc: string | null
+          target_emissions: string | null
+          target_explanation: string | null
+          target_year: number | null
+          updated_at: string
+          user_id: string
+          waste_initiative: string | null
+          waste_initiative_desc: string | null
+          waste_metric: string | null
+          waste_metric_used: string | null
+          waste_target: string[] | null
+          waste_target_other: string | null
+          water_consumption: string | null
+          water_consumption_comparison: string | null
+          water_consumption_explain: string | null
+          water_discharges: string | null
+          water_discharges_comparison: string | null
+          water_discharges_explain: string | null
+          water_goal: string[] | null
+          water_goal_baseline_date: string | null
+          water_goal_desc: string | null
+          water_goal_end_date: string | null
+          water_goal_level: string[] | null
+          water_goal_level_other: string | null
+          water_goal_motivation: string[] | null
+          water_goal_motivation_other: string | null
+          water_goal_other: string | null
+          water_goal_progress: string | null
+          water_goal_start_date: string | null
+          water_withdrawals: string | null
+          water_withdrawals_comparison: string | null
+          water_withdrawals_explain: string | null
+          year_set: number | null
+        }
+        Insert: {
+          base_emissions?: string | null
+          base_year?: number | null
+          baseline_date?: string | null
+          captive_power_gen?: string | null
+          comparison_to_previous?: string | null
+          created_at?: string
+          emission_change?: string | null
+          emission_comment?: string | null
+          emission_scope1?: string | null
+          emission_scope2_loc?: string | null
+          emission_scope2_mkt?: string | null
+          emission_target?: string | null
+          end_date?: string | null
+          goal_desc?: string | null
+          goal_level?: string[] | null
+          goal_motivation?: string[] | null
+          goal_motivation_other?: string | null
+          goal_other?: string | null
+          goal_progress?: string | null
+          id?: string
+          initiative_active?: string | null
+          intensity_base_figure?: string | null
+          intensity_base_year?: number | null
+          intensity_explanation?: string | null
+          intensity_metric?: string | null
+          intensity_other?: string | null
+          intensity_reduction_percent?: string | null
+          intensity_science_based?: string | null
+          intensity_target_desc?: string | null
+          intensity_target_year?: number | null
+          intensity_year_set?: number | null
+          metric_used_for_target_set?: string | null
+          no_target_explanation?: string | null
+          no_target_reason?: string | null
+          org_ghg?: string | null
+          percent_achieved?: string | null
+          primary_reason?: string | null
+          reduction_initiatives?: string | null
+          reduction_percent?: string | null
+          reporting_discrepancy?: string | null
+          reporting_emissions?: string | null
+          science_based?: string | null
+          standard?: string[] | null
+          start_date?: string | null
+          target_desc?: string | null
+          target_emissions?: string | null
+          target_explanation?: string | null
+          target_year?: number | null
+          updated_at?: string
+          user_id: string
+          waste_initiative?: string | null
+          waste_initiative_desc?: string | null
+          waste_metric?: string | null
+          waste_metric_used?: string | null
+          waste_target?: string[] | null
+          waste_target_other?: string | null
+          water_consumption?: string | null
+          water_consumption_comparison?: string | null
+          water_consumption_explain?: string | null
+          water_discharges?: string | null
+          water_discharges_comparison?: string | null
+          water_discharges_explain?: string | null
+          water_goal?: string[] | null
+          water_goal_baseline_date?: string | null
+          water_goal_desc?: string | null
+          water_goal_end_date?: string | null
+          water_goal_level?: string[] | null
+          water_goal_level_other?: string | null
+          water_goal_motivation?: string[] | null
+          water_goal_motivation_other?: string | null
+          water_goal_other?: string | null
+          water_goal_progress?: string | null
+          water_goal_start_date?: string | null
+          water_withdrawals?: string | null
+          water_withdrawals_comparison?: string | null
+          water_withdrawals_explain?: string | null
+          year_set?: number | null
+        }
+        Update: {
+          base_emissions?: string | null
+          base_year?: number | null
+          baseline_date?: string | null
+          captive_power_gen?: string | null
+          comparison_to_previous?: string | null
+          created_at?: string
+          emission_change?: string | null
+          emission_comment?: string | null
+          emission_scope1?: string | null
+          emission_scope2_loc?: string | null
+          emission_scope2_mkt?: string | null
+          emission_target?: string | null
+          end_date?: string | null
+          goal_desc?: string | null
+          goal_level?: string[] | null
+          goal_motivation?: string[] | null
+          goal_motivation_other?: string | null
+          goal_other?: string | null
+          goal_progress?: string | null
+          id?: string
+          initiative_active?: string | null
+          intensity_base_figure?: string | null
+          intensity_base_year?: number | null
+          intensity_explanation?: string | null
+          intensity_metric?: string | null
+          intensity_other?: string | null
+          intensity_reduction_percent?: string | null
+          intensity_science_based?: string | null
+          intensity_target_desc?: string | null
+          intensity_target_year?: number | null
+          intensity_year_set?: number | null
+          metric_used_for_target_set?: string | null
+          no_target_explanation?: string | null
+          no_target_reason?: string | null
+          org_ghg?: string | null
+          percent_achieved?: string | null
+          primary_reason?: string | null
+          reduction_initiatives?: string | null
+          reduction_percent?: string | null
+          reporting_discrepancy?: string | null
+          reporting_emissions?: string | null
+          science_based?: string | null
+          standard?: string[] | null
+          start_date?: string | null
+          target_desc?: string | null
+          target_emissions?: string | null
+          target_explanation?: string | null
+          target_year?: number | null
+          updated_at?: string
+          user_id?: string
+          waste_initiative?: string | null
+          waste_initiative_desc?: string | null
+          waste_metric?: string | null
+          waste_metric_used?: string | null
+          waste_target?: string[] | null
+          waste_target_other?: string | null
+          water_consumption?: string | null
+          water_consumption_comparison?: string | null
+          water_consumption_explain?: string | null
+          water_discharges?: string | null
+          water_discharges_comparison?: string | null
+          water_discharges_explain?: string | null
+          water_goal?: string[] | null
+          water_goal_baseline_date?: string | null
+          water_goal_desc?: string | null
+          water_goal_end_date?: string | null
+          water_goal_level?: string[] | null
+          water_goal_level_other?: string | null
+          water_goal_motivation?: string[] | null
+          water_goal_motivation_other?: string | null
+          water_goal_other?: string | null
+          water_goal_progress?: string | null
+          water_goal_start_date?: string | null
+          water_withdrawals?: string | null
+          water_withdrawals_comparison?: string | null
+          water_withdrawals_explain?: string | null
+          year_set?: number | null
+        }
+        Relationships: []
+      }
       mobile_combustion: {
         Row: {
           assessment_period_end: string | null
@@ -1276,6 +1516,75 @@ export type Database = {
         }
         Relationships: []
       }
+      risk_assessment_responses: {
+        Row: {
+          created_at: string
+          financial_impact: string | null
+          has_process: string | null
+          id: string
+          last_assessment: string | null
+          likelihood: string | null
+          long_term: string | null
+          magnitude: string | null
+          medium_term: string | null
+          process_desc: string | null
+          review_frequency: string | null
+          risk_impact: string | null
+          risk_materialize: string | null
+          risk_type: string[] | null
+          risk1: string | null
+          short_term: string | null
+          time_horizon: string | null
+          updated_at: string
+          user_id: string
+          value_chain: string | null
+        }
+        Insert: {
+          created_at?: string
+          financial_impact?: string | null
+          has_process?: string | null
+          id?: string
+          last_assessment?: string | null
+          likelihood?: string | null
+          long_term?: string | null
+          magnitude?: string | null
+          medium_term?: string | null
+          process_desc?: string | null
+          review_frequency?: string | null
+          risk_impact?: string | null
+          risk_materialize?: string | null
+          risk_type?: string[] | null
+          risk1?: string | null
+          short_term?: string | null
+          time_horizon?: string | null
+          updated_at?: string
+          user_id: string
+          value_chain?: string | null
+        }
+        Update: {
+          created_at?: string
+          financial_impact?: string | null
+          has_process?: string | null
+          id?: string
+          last_assessment?: string | null
+          likelihood?: string | null
+          long_term?: string | null
+          magnitude?: string | null
+          medium_term?: string | null
+          process_desc?: string | null
+          review_frequency?: string | null
+          risk_impact?: string | null
+          risk_materialize?: string | null
+          risk_type?: string[] | null
+          risk1?: string | null
+          short_term?: string | null
+          time_horizon?: string | null
+          updated_at?: string
+          user_id?: string
+          value_chain?: string | null
+        }
+        Relationships: []
+      }
       stationary_combustion: {
         Row: {
           assessment_period_end: string | null
@@ -1347,6 +1656,102 @@ export type Database = {
           source_of_energy?: string
           unit_of_measurement?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strategy_responses: {
+        Row: {
+          activities: string[] | null
+          additional_info: string | null
+          board_training: string | null
+          carbon_targets: string | null
+          comments: string | null
+          committee: string | null
+          committee_name: string | null
+          communication: string | null
+          competency: string | null
+          created_at: string
+          id: string
+          incentive_position: string | null
+          incentive_type: string | null
+          incentives: string | null
+          integration: string | null
+          local_incentives: string | null
+          management_position: string[] | null
+          monitor_targets: string | null
+          other_incentive: string | null
+          other_position: string | null
+          policies: string | null
+          project_control: string | null
+          reassessment: string | null
+          responsible_member: string | null
+          training: string | null
+          training_details: string | null
+          updated_at: string
+          use_incentives: string | null
+          user_id: string
+        }
+        Insert: {
+          activities?: string[] | null
+          additional_info?: string | null
+          board_training?: string | null
+          carbon_targets?: string | null
+          comments?: string | null
+          committee?: string | null
+          committee_name?: string | null
+          communication?: string | null
+          competency?: string | null
+          created_at?: string
+          id?: string
+          incentive_position?: string | null
+          incentive_type?: string | null
+          incentives?: string | null
+          integration?: string | null
+          local_incentives?: string | null
+          management_position?: string[] | null
+          monitor_targets?: string | null
+          other_incentive?: string | null
+          other_position?: string | null
+          policies?: string | null
+          project_control?: string | null
+          reassessment?: string | null
+          responsible_member?: string | null
+          training?: string | null
+          training_details?: string | null
+          updated_at?: string
+          use_incentives?: string | null
+          user_id: string
+        }
+        Update: {
+          activities?: string[] | null
+          additional_info?: string | null
+          board_training?: string | null
+          carbon_targets?: string | null
+          comments?: string | null
+          committee?: string | null
+          committee_name?: string | null
+          communication?: string | null
+          competency?: string | null
+          created_at?: string
+          id?: string
+          incentive_position?: string | null
+          incentive_type?: string | null
+          incentives?: string | null
+          integration?: string | null
+          local_incentives?: string | null
+          management_position?: string[] | null
+          monitor_targets?: string | null
+          other_incentive?: string | null
+          other_position?: string | null
+          policies?: string | null
+          project_control?: string | null
+          reassessment?: string | null
+          responsible_member?: string | null
+          training?: string | null
+          training_details?: string | null
+          updated_at?: string
+          use_incentives?: string | null
           user_id?: string
         }
         Relationships: []

@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
 const yesNo = ['Yes', 'No'];
 const managementPositions = [
@@ -60,6 +63,10 @@ const incentiveTypes = [
 ];
 
 const Strategy = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [responseId, setResponseId] = useState(null);
   const [form, setForm] = useState({
     responsibleMember: '',
     managementPosition: [],
@@ -88,9 +95,67 @@ const Strategy = () => {
     comments: '',
   });
 
+  useEffect(() => {
+    if (user) {
+      fetchExistingResponse();
+    }
+  }, [user]);
+
+  const fetchExistingResponse = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('strategy_responses')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setResponseId(data.id);
+        setForm({
+          responsibleMember: data.responsible_member || '',
+          managementPosition: data.management_position || [],
+          otherPosition: data.other_position || '',
+          training: data.training || '',
+          competency: data.competency || '',
+          communication: data.communication || '',
+          committee: data.committee || '',
+          committeeName: data.committee_name || '',
+          incentives: data.incentives || '',
+          incentivePosition: data.incentive_position || '',
+          otherIncentive: data.other_incentive || '',
+          incentiveType: data.incentive_type || '',
+          activities: data.activities || [],
+          additionalInfo: data.additional_info || '',
+          localIncentives: data.local_incentives || '',
+          useIncentives: data.use_incentives || '',
+          policies: data.policies || '',
+          integration: data.integration || '',
+          reassessment: data.reassessment || '',
+          boardTraining: data.board_training || '',
+          trainingDetails: data.training_details || '',
+          carbonTargets: data.carbon_targets || '',
+          monitorTargets: data.monitor_targets || '',
+          projectControl: data.project_control || '',
+          comments: data.comments || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching strategy response:', error);
+      toast.error('Failed to load existing data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
   const handleCheckbox = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -99,10 +164,86 @@ const Strategy = () => {
         : [...prev[field], value],
     }));
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder: do nothing
+    
+    if (!user) {
+      toast.error('Please log in to save your response');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const formData = {
+        user_id: user.id,
+        responsible_member: form.responsibleMember,
+        management_position: form.managementPosition,
+        other_position: form.otherPosition,
+        training: form.training,
+        competency: form.competency,
+        communication: form.communication,
+        committee: form.committee,
+        committee_name: form.committeeName,
+        incentives: form.incentives,
+        incentive_position: form.incentivePosition,
+        other_incentive: form.otherIncentive,
+        incentive_type: form.incentiveType,
+        activities: form.activities,
+        additional_info: form.additionalInfo,
+        local_incentives: form.localIncentives,
+        use_incentives: form.useIncentives,
+        policies: form.policies,
+        integration: form.integration,
+        reassessment: form.reassessment,
+        board_training: form.boardTraining,
+        training_details: form.trainingDetails,
+        carbon_targets: form.carbonTargets,
+        monitor_targets: form.monitorTargets,
+        project_control: form.projectControl,
+        comments: form.comments,
+      };
+
+      let result;
+      if (responseId) {
+        result = await supabase
+          .from('strategy_responses')
+          .update(formData)
+          .eq('id', responseId)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('strategy_responses')
+          .insert(formData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      setResponseId(result.data.id);
+      toast.success('Strategy responses saved successfully!');
+    } catch (error) {
+      console.error('Error saving strategy response:', error);
+      toast.error('Failed to save strategy responses');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading strategy form...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="max-w-3xl mx-auto p-6" onSubmit={handleSubmit}>
@@ -247,10 +388,16 @@ const Strategy = () => {
         <textarea className="w-full border rounded px-3 py-2" value={form.comments} onChange={e => handleChange('comments', e.target.value)} required />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-8">Submit</Button>
+        <Button 
+          type="submit" 
+          className="bg-green-500 hover:bg-green-600 text-white px-8"
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : responseId ? 'Update' : 'Submit'}
+        </Button>
       </div>
     </form>
   );
 };
 
-export default Strategy; 
+export default Strategy;

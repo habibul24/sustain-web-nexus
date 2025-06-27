@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
 const yesNo = ['Yes', 'No'];
 const reviewFrequency = ['Quarterly', 'Bi-annually', 'Annually'];
@@ -35,6 +38,10 @@ const riskTypes = [
 ];
 
 const RiskAssessment = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [responseId, setResponseId] = useState(null);
   const [form, setForm] = useState({
     shortTerm: '',
     mediumTerm: '',
@@ -54,9 +61,58 @@ const RiskAssessment = () => {
     magnitude: '',
   });
 
+  useEffect(() => {
+    if (user) {
+      fetchExistingResponse();
+    }
+  }, [user]);
+
+  const fetchExistingResponse = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('risk_assessment_responses')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setResponseId(data.id);
+        setForm({
+          shortTerm: data.short_term || '',
+          mediumTerm: data.medium_term || '',
+          longTerm: data.long_term || '',
+          hasProcess: data.has_process || '',
+          processDesc: data.process_desc || '',
+          reviewFrequency: data.review_frequency || '',
+          lastAssessment: data.last_assessment || '',
+          risk1: data.risk1 || '',
+          valueChain: data.value_chain || '',
+          riskType: data.risk_type || [],
+          financialImpact: data.financial_impact || '',
+          riskMaterialize: data.risk_materialize || '',
+          riskImpact: data.risk_impact || '',
+          timeHorizon: data.time_horizon || '',
+          likelihood: data.likelihood || '',
+          magnitude: data.magnitude || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching risk assessment response:', error);
+      toast.error('Failed to load existing data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
   const handleCheckbox = (value) => {
     setForm((prev) => ({
       ...prev,
@@ -65,10 +121,77 @@ const RiskAssessment = () => {
         : [...prev.riskType, value],
     }));
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder: do nothing
+    
+    if (!user) {
+      toast.error('Please log in to save your response');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const formData = {
+        user_id: user.id,
+        short_term: form.shortTerm,
+        medium_term: form.mediumTerm,
+        long_term: form.longTerm,
+        has_process: form.hasProcess,
+        process_desc: form.processDesc,
+        review_frequency: form.reviewFrequency,
+        last_assessment: form.lastAssessment || null,
+        risk1: form.risk1,
+        value_chain: form.valueChain,
+        risk_type: form.riskType,
+        financial_impact: form.financialImpact,
+        risk_materialize: form.riskMaterialize,
+        risk_impact: form.riskImpact,
+        time_horizon: form.timeHorizon,
+        likelihood: form.likelihood,
+        magnitude: form.magnitude,
+      };
+
+      let result;
+      if (responseId) {
+        result = await supabase
+          .from('risk_assessment_responses')
+          .update(formData)
+          .eq('id', responseId)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('risk_assessment_responses')
+          .insert(formData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      setResponseId(result.data.id);
+      toast.success('Risk assessment responses saved successfully!');
+    } catch (error) {
+      console.error('Error saving risk assessment response:', error);
+      toast.error('Failed to save risk assessment responses');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading risk assessment form...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="max-w-3xl mx-auto p-6" onSubmit={handleSubmit}>
@@ -158,10 +281,16 @@ const RiskAssessment = () => {
         <Input value={form.magnitude} onChange={e => handleChange('magnitude', e.target.value)} required />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-8">Submit</Button>
+        <Button 
+          type="submit" 
+          className="bg-green-500 hover:bg-green-600 text-white px-8"
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : responseId ? 'Update' : 'Submit'}
+        </Button>
       </div>
     </form>
   );
 };
 
-export default RiskAssessment; 
+export default RiskAssessment;

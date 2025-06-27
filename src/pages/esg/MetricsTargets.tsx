@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
 const yesNo = ['Yes', 'No'];
 const emissionStandards = [
@@ -117,6 +120,10 @@ const metricUsedForTargetSet = [
 ];
 
 const MetricsTargets = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [responseId, setResponseId] = useState(null);
   const [form, setForm] = useState({
     orgGHG: '',
     standard: [],
@@ -193,9 +200,115 @@ const MetricsTargets = () => {
     wasteMetricUsed: '',
   });
 
+  useEffect(() => {
+    if (user) {
+      fetchExistingResponse();
+    }
+  }, [user]);
+
+  const fetchExistingResponse = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('metrics_targets_responses')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setResponseId(data.id);
+        setForm({
+          orgGHG: data.org_ghg || '',
+          standard: data.standard || [],
+          emissionScope1: data.emission_scope1 || '',
+          emissionScope2Loc: data.emission_scope2_loc || '',
+          emissionScope2Mkt: data.emission_scope2_mkt || '',
+          emissionComment: data.emission_comment || '',
+          reportingDiscrepancy: data.reporting_discrepancy || '',
+          emissionChange: data.emission_change || '',
+          emissionTarget: data.emission_target || '',
+          primaryReason: data.primary_reason || '',
+          initiativeActive: data.initiative_active || '',
+          comparisonToPrevious: data.comparison_to_previous || '',
+          goalLevel: data.goal_level || [],
+          goalMotivation: data.goal_motivation || [],
+          goalOther: data.goalOther || '',
+          goalMotivationOther: data.goal_motivation_other || '',
+          goalDesc: data.goal_desc || '',
+          baselineDate: data.baseline_date || '',
+          startDate: data.start_date || '',
+          endDate: data.end_date || '',
+          goalProgress: data.goal_progress || '',
+          wasteMetric: data.waste_metric || '',
+          wasteInitiative: data.waste_initiative || '',
+          wasteInitiativeDesc: data.waste_initiative_desc || '',
+          metricUsedForTargetSet: data.metric_used_for_target_set || '',
+          captivePowerGen: data.captive_power_gen || '',
+          targetDesc: data.target_desc || '',
+          yearSet: data.year_set?.toString() || '',
+          baseYear: data.base_year?.toString() || '',
+          baseEmissions: data.base_emissions || '',
+          targetYear: data.target_year?.toString() || '',
+          reductionPercent: data.reduction_percent || '',
+          targetEmissions: data.target_emissions || '',
+          reportingEmissions: data.reporting_emissions || '',
+          percentAchieved: data.percent_achieved || '',
+          scienceBased: data.science_based || '',
+          targetExplanation: data.target_explanation || '',
+          intensityTargetDesc: data.intensity_target_desc || '',
+          intensityYearSet: data.intensity_year_set?.toString() || '',
+          intensityMetric: data.intensity_metric || '',
+          intensityOther: data.intensity_other || '',
+          intensityBaseYear: data.intensity_base_year?.toString() || '',
+          intensityBaseFigure: data.intensity_base_figure || '',
+          intensityTargetYear: data.intensity_target_year?.toString() || '',
+          intensityReductionPercent: data.intensity_reduction_percent || '',
+          intensityScienceBased: data.intensity_science_based || '',
+          intensityExplanation: data.intensity_explanation || '',
+          noTargetReason: data.no_target_reason || '',
+          noTargetExplanation: data.no_target_explanation || '',
+          reductionInitiatives: data.reduction_initiatives || '',
+          waterWithdrawals: data.water_withdrawals || '',
+          waterWithdrawalsComparison: data.water_withdrawals_comparison || '',
+          waterWithdrawalsExplain: data.water_withdrawals_explain || '',
+          waterDischarges: data.water_discharges || '',
+          waterDischargesComparison: data.water_discharges_comparison || '',
+          waterDischargesExplain: data.water_discharges_explain || '',
+          waterConsumption: data.water_consumption || '',
+          waterConsumptionComparison: data.water_consumption_comparison || '',
+          waterConsumptionExplain: data.water_consumption_explain || '',
+          waterGoal: data.water_goal || [],
+          waterGoalOther: data.water_goal_other || '',
+          waterGoalLevel: data.water_goal_level || [],
+          waterGoalLevelOther: data.water_goal_level_other || '',
+          waterGoalMotivation: data.water_goal_motivation || [],
+          waterGoalMotivationOther: data.water_goal_motivation_other || '',
+          waterGoalDesc: data.water_goal_desc || '',
+          waterGoalBaselineDate: data.water_goal_baseline_date || '',
+          waterGoalStartDate: data.water_goal_start_date || '',
+          waterGoalEndDate: data.water_goal_end_date || '',
+          waterGoalProgress: data.water_goal_progress || '',
+          wasteTarget: data.waste_target || [],
+          wasteTargetOther: data.waste_target_other || '',
+          wasteMetricUsed: data.waste_metric_used || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching metrics targets response:', error);
+      toast.error('Failed to load existing data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
   const handleCheckbox = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -204,10 +317,134 @@ const MetricsTargets = () => {
         : [...prev[field], value],
     }));
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder: do nothing
+    
+    if (!user) {
+      toast.error('Please log in to save your response');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const formData = {
+        user_id: user.id,
+        org_ghg: form.orgGHG,
+        standard: form.standard,
+        emission_scope1: form.emissionScope1,
+        emission_scope2_loc: form.emissionScope2Loc,
+        emission_scope2_mkt: form.emissionScope2Mkt,
+        emission_comment: form.emissionComment,
+        reporting_discrepancy: form.reportingDiscrepancy,
+        emission_change: form.emissionChange,
+        emission_target: form.emissionTarget,
+        primary_reason: form.primaryReason,
+        initiative_active: form.initiativeActive,
+        comparison_to_previous: form.comparisonToPrevious,
+        goal_level: form.goalLevel,
+        goal_motivation: form.goalMotivation,
+        goal_other: form.goalOther,
+        goal_motivation_other: form.goalMotivationOther,
+        goal_desc: form.goalDesc,
+        baseline_date: form.baselineDate || null,
+        start_date: form.startDate || null,
+        end_date: form.endDate || null,
+        goal_progress: form.goalProgress,
+        waste_metric: form.wasteMetric,
+        waste_initiative: form.wasteInitiative,
+        waste_initiative_desc: form.wasteInitiativeDesc,
+        metric_used_for_target_set: form.metricUsedForTargetSet,
+        captive_power_gen: form.captivePowerGen,
+        target_desc: form.targetDesc,
+        year_set: form.yearSet ? parseInt(form.yearSet, 10) : null,
+        base_year: form.baseYear ? parseInt(form.baseYear, 10) : null,
+        base_emissions: form.baseEmissions,
+        target_year: form.targetYear ? parseInt(form.targetYear, 10) : null,
+        reduction_percent: form.reductionPercent,
+        target_emissions: form.targetEmissions,
+        reporting_emissions: form.reportingEmissions,
+        percent_achieved: form.percentAchieved,
+        science_based: form.scienceBased,
+        target_explanation: form.targetExplanation,
+        intensity_target_desc: form.intensityTargetDesc,
+        intensity_year_set: form.intensityYearSet ? parseInt(form.intensityYearSet, 10) : null,
+        intensity_metric: form.intensityMetric,
+        intensity_other: form.intensityOther,
+        intensity_base_year: form.intensityBaseYear ? parseInt(form.intensityBaseYear, 10) : null,
+        intensity_base_figure: form.intensityBaseFigure,
+        intensity_target_year: form.intensityTargetYear ? parseInt(form.intensityTargetYear, 10) : null,
+        intensity_reduction_percent: form.intensityReductionPercent,
+        intensity_science_based: form.intensityScienceBased,
+        intensity_explanation: form.intensityExplanation,
+        no_target_reason: form.noTargetReason,
+        no_target_explanation: form.noTargetExplanation,
+        reduction_initiatives: form.reductionInitiatives,
+        water_withdrawals: form.waterWithdrawals,
+        water_withdrawals_comparison: form.waterWithdrawalsComparison,
+        water_withdrawals_explain: form.waterWithdrawalsExplain,
+        water_discharges: form.waterDischarges,
+        water_discharges_comparison: form.waterDischargesComparison,
+        water_discharges_explain: form.waterDischargesExplain,
+        water_consumption: form.waterConsumption,
+        water_consumption_comparison: form.waterConsumptionComparison,
+        water_consumption_explain: form.waterConsumptionExplain,
+        water_goal: form.waterGoal,
+        water_goal_other: form.waterGoalOther,
+        water_goal_level: form.waterGoalLevel,
+        water_goal_level_other: form.waterGoalLevelOther,
+        water_goal_motivation: form.waterGoalMotivation,
+        water_goal_motivation_other: form.waterGoalMotivationOther,
+        water_goal_desc: form.waterGoalDesc,
+        water_goal_baseline_date: form.waterGoalBaselineDate || null,
+        water_goal_start_date: form.waterGoalStartDate || null,
+        water_goal_end_date: form.waterGoalEndDate || null,
+        water_goal_progress: form.waterGoalProgress,
+        waste_target: form.wasteTarget,
+        waste_target_other: form.wasteTargetOther,
+        waste_metric_used: form.wasteMetricUsed,
+      };
+
+      let result;
+      if (responseId) {
+        result = await supabase
+          .from('metrics_targets_responses')
+          .update(formData)
+          .eq('id', responseId)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('metrics_targets_responses')
+          .insert(formData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      setResponseId(result.data.id);
+      toast.success('Metrics & targets responses saved successfully!');
+    } catch (error) {
+      console.error('Error saving metrics targets response:', error);
+      toast.error('Failed to save metrics & targets responses');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading metrics & targets form...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="max-w-3xl mx-auto p-6" onSubmit={handleSubmit}>
@@ -639,10 +876,16 @@ const MetricsTargets = () => {
         <textarea className="w-full border rounded px-3 py-2" value={form.wasteInitiativeDesc || ''} onChange={e => handleChange('wasteInitiativeDesc', e.target.value)} required />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-8">Submit</Button>
+        <Button 
+          type="submit" 
+          className="bg-green-500 hover:bg-green-600 text-white px-8"
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : responseId ? 'Update' : 'Submit'}
+        </Button>
       </div>
     </form>
   );
 };
 
-export default MetricsTargets; 
+export default MetricsTargets;
