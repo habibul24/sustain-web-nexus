@@ -236,7 +236,7 @@ const MetricsTargets = () => {
           comparisonToPrevious: data.comparison_to_previous || '',
           goalLevel: data.goal_level || [],
           goalMotivation: data.goal_motivation || [],
-          goalOther: data.goalOther || '',
+          goalOther: data.goal_other || '',
           goalMotivationOther: data.goal_motivation_other || '',
           goalDesc: data.goal_desc || '',
           baselineDate: data.baseline_date || '',
