@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -49,10 +48,10 @@ const AuthenticatedHeader = () => {
   };
 
   return (
-    <header className="bg-black shadow-lg sticky top-0 z-50">
+    <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center -ml-2">
+          <div className="flex items-center ml-0">
             <Link to="/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/0944e168-7b64-403d-8c39-5976b7a5e5f7.png" 
@@ -66,21 +65,21 @@ const AuthenticatedHeader = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-sm font-medium transition-colors hover:text-green-400 ${location.pathname === item.href ? 'text-green-400' : 'text-white'}`}
+                className={`text-sm font-medium transition-colors hover:text-green-600 ${location.pathname === item.href ? 'text-green-600' : 'text-gray-900'}`}
               >
                 {item.name}
               </Link>
             ))}
             <Link
               to="/team"
-              className={`text-sm font-medium transition-colors hover:text-green-400 ${location.pathname === '/team' ? 'text-green-400' : 'text-white'}`}
+              className={`text-sm font-medium transition-colors hover:text-green-600 ${location.pathname === '/team' ? 'text-green-600' : 'text-gray-900'}`}
             >
               {getTeamLabel()}
             </Link>
             <Button
               onClick={handleSignOut}
               variant="ghost"
-              className="text-white hover:bg-gray-800 hover:text-white"
+              className="text-gray-900 hover:bg-gray-100 hover:text-green-600"
               disabled={isSigningOut}
             >
               {isSigningOut ? 'Signing Out...' : 'Sign Out'}
@@ -92,7 +91,7 @@ const AuthenticatedHeader = () => {
                   {getDisplayName().charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-white text-sm font-medium">
+              <span className="text-gray-900 text-sm font-medium">
                 {getDisplayName()}
               </span>
             </div>
