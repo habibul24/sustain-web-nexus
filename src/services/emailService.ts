@@ -36,7 +36,7 @@ export const logEmailSent = async (
     const { error } = await supabase.from('email_logs').insert({
       user_id: userId,
       to_email: email,
-      from_email: 'Green_data <onboarding@resend.dev>',
+      from_email: 'Green_data <hello@greendatabiz.com>',
       subject: templateType === 'welcome' ? 'Welcome to Green_data!' : 'Please verify your email address',
       status,
     });

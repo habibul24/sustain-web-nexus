@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, name, siteUrl }: WelcomeEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "Green_data <onboarding@resend.dev>",
+      from: "Green_data <hello@greendatabiz.com>",
       to: [email],
       subject: "Welcome to Green_data!",
       html: `
