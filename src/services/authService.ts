@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client'
 import type { SignUpData } from '@/types/auth'
+import { sendWelcomeEmail, logEmailSent } from './emailService'
 
 export const signInUser = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -15,6 +16,7 @@ export const signUpUser = async (signUpData: SignUpData) => {
     email: signUpData.email,
     password: signUpData.password,
     options: {
+      emailRedirectTo: `${window.location.origin}/`,
       data: {
         full_name: signUpData.fullName,
         company_name: signUpData.companyName,
@@ -27,8 +29,24 @@ export const signUpUser = async (signUpData: SignUpData) => {
     },
   });
   
-  // The database trigger will automatically create the user profile
-  // No need for manual insertion here
+  // Send welcome email if signup was successful
+  if (data.user && !error) {
+    try {
+      console.log('Sending welcome email to:', signUpData.email);
+      await sendWelcomeEmail({
+        email: signUpData.email,
+        name: signUpData.fullName.split(' ')[0] || signUpData.fullName,
+        siteUrl: window.location.origin,
+      });
+
+      // Log the email attempt
+      await logEmailSent(data.user.id, signUpData.email, 'welcome');
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail the signup if email fails
+    }
+  }
+  
   return { data, error };
 }
 
