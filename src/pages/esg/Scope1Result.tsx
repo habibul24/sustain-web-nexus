@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
+import { generatePDF, generateExcel } from '../../utils/exportUtils';
 
 interface EmissionData {
   source: string;
@@ -161,6 +161,36 @@ const Scope1Result = () => {
     return num.toFixed(4);
   };
 
+  const handleGeneratePDF = () => {
+    try {
+      const summary = {
+        totalQuantity,
+        totalActiveSources,
+        totalEmission
+      };
+      generatePDF(tableData, summary);
+      toast.success('PDF generated successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
+  const handleGenerateExcel = () => {
+    try {
+      const summary = {
+        totalQuantity,
+        totalActiveSources,
+        totalEmission
+      };
+      generateExcel(tableData, summary);
+      toast.success('Excel file generated successfully!');
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+      toast.error('Failed to generate Excel file');
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -221,9 +251,27 @@ const Scope1Result = () => {
         <a href="#" className="text-green-700 underline">Check Reference</a>
       </div>
       <div className="flex flex-col md:flex-row gap-4 justify-end">
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate PDF</Button>
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate Excel</Button>
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default" onClick={() => navigate('/my-esg/environmental/scope-2')}>Next &rarr;</Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={handleGeneratePDF}
+        >
+          Generate PDF
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={handleGenerateExcel}
+        >
+          Generate Excel
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default" 
+          onClick={() => navigate('/my-esg/environmental/scope-2')}
+        >
+          Next &rarr;
+        </Button>
       </div>
     </div>
   );
