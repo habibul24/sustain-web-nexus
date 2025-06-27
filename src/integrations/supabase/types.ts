@@ -836,6 +836,84 @@ export type Database = {
           },
         ]
       }
+      mobile_combustion: {
+        Row: {
+          assessment_period_end: string | null
+          assessment_period_start: string | null
+          carbon_dioxide_emitted_co2: number | null
+          created_at: string
+          data_source: string | null
+          emission_factor: number | null
+          emissions_kg_co2: number | null
+          fuel_per_vehicle: number | null
+          gwp_co2e: number | null
+          gwp_methane: number | null
+          gwp_nitrous_oxide: number | null
+          id: string
+          is_applicable: boolean | null
+          last_year_emission_figures: number | null
+          methane_emitted_ch4: number | null
+          nitrous_oxide_emitted_n2o: number | null
+          notes: string | null
+          source_of_emission: string | null
+          unit_of_measurement: string
+          updated_at: string
+          user_id: string
+          vehicle_fuel_type: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          fuel_per_vehicle?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          source_of_emission?: string | null
+          unit_of_measurement: string
+          updated_at?: string
+          user_id: string
+          vehicle_fuel_type: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          fuel_per_vehicle?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          source_of_emission?: string | null
+          unit_of_measurement?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_fuel_type?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_text: string | null
