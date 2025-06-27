@@ -19,7 +19,7 @@ const About = () => {
               </p>
             </div>
             <img
-              src="/1701189738351.jpg"
+              src="https://cdn.shopify.com/s/files/1/0669/1684/3771/files/Sustainable-Agriculture-and-Food-Systems.jpg"
               alt="Vision - ESG sustainability in hand"
               className="w-64 h-64 object-cover rounded-full shadow-2xl border-4 border-green-300 flex-shrink-0"
             />
