@@ -24,6 +24,19 @@ import Team from "@/pages/Team";
 import ConsultationForm from "./pages/ConsultationForm";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import ComingSoon from './components/ComingSoon';
+import Introduction from './pages/esg/Introduction';
+import StationaryCombustion from './pages/esg/StationaryCombustion';
+import ProcessEmissions from './pages/esg/ProcessEmissions';
+import MobileCombustion from './pages/esg/MobileCombustion';
+import RefrigerantEmissions from './pages/esg/RefrigerantEmissions';
+import Scope1Result from './pages/esg/Scope1Result';
+import Scope2 from './pages/esg/Scope2';
+import Scope2Result from './pages/esg/Scope2Result';
+import Governance from './pages/esg/Governance';
+import Strategy from './pages/esg/Strategy';
+import RiskAssessment from './pages/esg/RiskAssessment';
+import MetricsTargets from './pages/esg/MetricsTargets';
 
 const queryClient = new QueryClient();
 
@@ -49,7 +62,34 @@ function AppRoutes() {
       <>
         <AuthenticatedHeader />
         <Routes>
-          <Route path="/my-esg" element={<MyESG />} />
+          <Route path="/my-esg" element={<MyESG />}>
+            <Route index element={<Introduction />} />
+            <Route path="environmental">
+              <Route index element={<ComingSoon label="Environmental" />} />
+              <Route path="scope-1">
+                <Route index element={<ComingSoon label="Scope 1" />} />
+                <Route path="stationary-combustion" element={<StationaryCombustion />} />
+                <Route path="process-emissions" element={<ProcessEmissions />} />
+                <Route path="mobile-combustion" element={<MobileCombustion />} />
+                <Route path="refrigerant-emissions" element={<RefrigerantEmissions />} />
+              </Route>
+              <Route path="scope-1-result" element={<Scope1Result />} />
+              <Route path="scope-2" element={<Scope2 />} />
+              <Route path="scope-2-result" element={<Scope2Result />} />
+              <Route path="scope-3" element={<ComingSoon label="Scope 3" />} />
+              <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
+            </Route>
+            <Route path="social">
+              <Route index element={<ComingSoon label="Social" />} />
+              <Route path="employee-profile" element={<ComingSoon label="Employee Profile" />} />
+            </Route>
+            <Route path="governance">
+              <Route index element={<Governance />} />
+              <Route path="strategy" element={<Strategy />} />
+              <Route path="risk-assessment" element={<RiskAssessment />} />
+              <Route path="metrics-targets" element={<MetricsTargets />} />
+            </Route>
+          </Route>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/third-party-carbon-data" element={<ThirdPartyCarbonData />} />
