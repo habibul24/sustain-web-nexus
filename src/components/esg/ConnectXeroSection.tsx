@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Zap, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useXeroAuth } from '@/hooks/useXeroAuth';
 
 const features = [
   {
@@ -20,6 +22,25 @@ const features = [
 
 const ConnectXeroSection = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { connectToXero, handleXeroCallback } = useXeroAuth();
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    
+    if (code) {
+      console.log('Xero OAuth callback detected');
+      handleXeroCallback(code, state || undefined).then((success) => {
+        if (success) {
+          // Clean up URL parameters after successful connection
+          navigate('/my-esg', { replace: true });
+        }
+      });
+    }
+  }, [searchParams, handleXeroCallback, navigate]);
+
   return (
     <div className="w-full flex flex-col gap-8">
       <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center">
@@ -28,7 +49,11 @@ const ConnectXeroSection = () => {
           Connect to Xero to automatically import your energy consumption data and streamline your carbon emission calculations.
         </p>
         <div className="flex flex-col md:flex-row gap-4">
-          <Button variant="secondary" className="text-base px-6 py-3 flex items-center gap-2">
+          <Button 
+            variant="secondary" 
+            className="text-base px-6 py-3 flex items-center gap-2"
+            onClick={connectToXero}
+          >
             <Zap className="w-5 h-5" /> Connect to Xero
           </Button>
           <Button
@@ -55,4 +80,4 @@ const ConnectXeroSection = () => {
   );
 };
 
-export default ConnectXeroSection; 
+export default ConnectXeroSection;
