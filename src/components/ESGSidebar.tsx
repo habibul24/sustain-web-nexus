@@ -15,7 +15,7 @@ const ESGSidebar = () => (
       <ul className="space-y-2">
         <li>
           <NavLink to="/my-esg" end className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
-            Introduction
+            Connecting Software
           </NavLink>
         </li>
         <Accordion type="multiple" className="border-none">
