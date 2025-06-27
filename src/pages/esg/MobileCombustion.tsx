@@ -9,16 +9,23 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '..
 const VEHICLE_TYPES = [
   'Motorcycle - Unleaded petrol',
   'Passenger Car - Unleaded petrol',
-  'Passenger Car - Diesel Oil',
+  'Passenger Car - Diesel oil',
   'Private Van - Unleaded petrol',
-  'Private Van - Diesel Oil',
+  'Private Van - Diesel oil',
   'Private Van - Liquefied Petroleum Gas',
-  'Public light bus - Diesel Oil',
+  'Public light bus - Unleaded petrol',
+  'Public light bus - Diesel oil',
+  'Public light bus - Liquefied Petroleum Gas',
   'Light Goods Vehicle - Unleaded petrol',
+  'Light Goods Vehicle - Diesel oil',
   'Heavy goods vehicle - Diesel oil',
+  'Medium goods vehicle - Diesel oil',
   'Ships - Gas Oil',
   'Aviation - Jet Kerosene',
-  'Others - Diesel Oil',
+  'Others - Unleaded petrol',
+  'Others - Diesel oil',
+  'Others - Liquefied Petroleum Gas',
+  'Others - Kerosene',
 ];
 
 const defaultRecord = {
