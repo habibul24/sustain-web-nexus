@@ -18,8 +18,19 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { searchParams } = new URL(req.url)
-    const action = searchParams.get('action')
+    // Parse request body for POST requests
+    let requestBody;
+    let action;
+    
+    if (req.method === 'POST') {
+      requestBody = await req.json();
+      action = requestBody.action;
+    } else {
+      const { searchParams } = new URL(req.url);
+      action = searchParams.get('action');
+    }
+    
+    console.log('Processing action:', action);
     
     const XERO_CLIENT_ID = Deno.env.get('XERO_CLIENT_ID')
     const XERO_CLIENT_SECRET = Deno.env.get('XERO_CLIENT_SECRET')
@@ -59,7 +70,6 @@ Deno.serve(async (req) => {
       const state = crypto.randomUUID()
       const scope = 'accounting.transactions accounting.contacts accounting.settings'
       
-      // Store state in session or database for verification
       const authUrl = `https://login.xero.com/identity/connect/authorize?` +
         `response_type=code&` +
         `client_id=${XERO_CLIENT_ID}&` +
@@ -76,9 +86,9 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'callback') {
-      // Handle OAuth callback
-      const code = searchParams.get('code')
-      const state = searchParams.get('state')
+      // Handle OAuth callback - get code from either body or search params
+      const code = requestBody?.code || new URL(req.url).searchParams.get('code')
+      const state = requestBody?.state || new URL(req.url).searchParams.get('state')
       
       if (!code) {
         return new Response(
