@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'auth') {
-      // Generate OAuth URL
-      const redirectUri = `${req.headers.get('origin')}/my-esg`
+      // Use the configured redirect URI that matches your Xero app
+      const redirectUri = 'https://greendata-main-website.vercel.app/my-esg'
       const state = crypto.randomUUID()
       const scope = 'accounting.transactions accounting.contacts accounting.settings'
       
@@ -99,6 +99,9 @@ Deno.serve(async (req) => {
 
       console.log('Processing OAuth callback with code:', code)
 
+      // Use the same redirect URI for token exchange
+      const redirectUri = 'https://greendata-main-website.vercel.app/my-esg'
+
       // Exchange code for tokens
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
@@ -109,7 +112,7 @@ Deno.serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code: code,
-          redirect_uri: `${req.headers.get('origin')}/my-esg`,
+          redirect_uri: redirectUri,
         }),
       })
 
