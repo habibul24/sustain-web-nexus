@@ -1,17 +1,182 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
-const summary = [
-  { label: 'Total Quantity Till Date', value: '0.00' },
-  { label: 'Total Active Sources Of Emission', value: '0' },
-  { label: 'Total Emission', value: '0.00 kgCO2e' },
-];
-
-const tableData = [];
+interface EmissionData {
+  source: string;
+  quantity: number;
+  ghgFactor: number;
+  co2Emitted: number;
+}
 
 const Scope1Result = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [tableData, setTableData] = useState<EmissionData[]>([]);
+  const [totalQuantity, setTotalQuantity] = useState(0);
+  const [totalActiveSources, setTotalActiveSources] = useState(0);
+  const [totalEmission, setTotalEmission] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchAllEmissionData();
+    }
+  }, [user]);
+
+  const fetchAllEmissionData = async () => {
+    try {
+      setLoading(true);
+      const allData: EmissionData[] = [];
+      let totalQty = 0;
+      let totalSources = 0;
+      let totalCO2 = 0;
+
+      // Fetch Stationary Combustion data
+      const { data: stationaryData, error: stationaryError } = await supabase
+        .from('stationary_combustion')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (stationaryError) throw stationaryError;
+
+      if (stationaryData) {
+        stationaryData.forEach(row => {
+          const quantity = row.quantity_used || 0;
+          const ghgFactor = row.carbon_dioxide_emitted_co2 || 0;
+          const co2Emitted = quantity * ghgFactor;
+          
+          allData.push({
+            source: row.source_of_energy,
+            quantity,
+            ghgFactor,
+            co2Emitted
+          });
+          
+          totalQty += quantity;
+          totalSources += 1;
+          totalCO2 += co2Emitted;
+        });
+      }
+
+      // Fetch Process Emissions data
+      const { data: processData, error: processError } = await supabase
+        .from('process_emissions')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (processError) throw processError;
+
+      if (processData) {
+        processData.forEach(row => {
+          const quantity = row.quantity_used || 0;
+          const ghgFactor = row.carbon_dioxide_emitted_co2 || 0;
+          const co2Emitted = quantity * ghgFactor;
+          
+          allData.push({
+            source: row.source_of_energy,
+            quantity,
+            ghgFactor,
+            co2Emitted
+          });
+          
+          totalQty += quantity;
+          totalSources += 1;
+          totalCO2 += co2Emitted;
+        });
+      }
+
+      // Fetch Mobile Combustion data
+      const { data: mobileData, error: mobileError } = await supabase
+        .from('mobile_combustion')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (mobileError) throw mobileError;
+
+      if (mobileData) {
+        mobileData.forEach(row => {
+          const quantity = row.fuel_per_vehicle || 0;
+          const ghgFactor = row.carbon_dioxide_emitted_co2 || 0;
+          const co2Emitted = quantity * ghgFactor;
+          
+          allData.push({
+            source: `${row.vehicle_fuel_type} (${row.vehicle_no || 'Unknown'})`,
+            quantity,
+            ghgFactor,
+            co2Emitted
+          });
+          
+          totalQty += quantity;
+          totalSources += 1;
+          totalCO2 += co2Emitted;
+        });
+      }
+
+      // Fetch Refrigerant Emissions data
+      const { data: refrigerantData, error: refrigerantError } = await supabase
+        .from('refrigerant_emissions')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (refrigerantError) throw refrigerantError;
+
+      if (refrigerantData) {
+        refrigerantData.forEach(row => {
+          const quantity = row.quantity_used || 0;
+          const ghgFactor = row.carbon_dioxide_emitted_co2 || 0;
+          const co2Emitted = quantity * ghgFactor;
+          
+          allData.push({
+            source: row.refrigerant_type,
+            quantity,
+            ghgFactor,
+            co2Emitted
+          });
+          
+          totalQty += quantity;
+          totalSources += 1;
+          totalCO2 += co2Emitted;
+        });
+      }
+
+      setTableData(allData);
+      setTotalQuantity(totalQty);
+      setTotalActiveSources(totalSources);
+      setTotalEmission(totalCO2);
+
+    } catch (error) {
+      console.error('Error fetching emission data:', error);
+      toast.error('Failed to load emission data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    return num.toFixed(4);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading emission data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const summary = [
+    { label: 'Total Quantity Till Date', value: formatNumber(totalQuantity) },
+    { label: 'Total Active Sources Of Emission', value: totalActiveSources.toString() },
+    { label: 'Total Emission', value: `${formatNumber(totalEmission)} kgCO2e` },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Congratulations, your scope 1 carbon emission data is ready below</h1>
@@ -42,9 +207,9 @@ const Scope1Result = () => {
               tableData.map((row, idx) => (
                 <tr key={idx} className="border-b">
                   <td className="py-2 px-3">{row.source}</td>
-                  <td className="py-2 px-3">{row.quantity}</td>
-                  <td className="py-2 px-3">{row.factor}</td>
-                  <td className="py-2 px-3">{row.co2}</td>
+                  <td className="py-2 px-3">{formatNumber(row.quantity)}</td>
+                  <td className="py-2 px-3">{formatNumber(row.ghgFactor)}</td>
+                  <td className="py-2 px-3">{formatNumber(row.co2Emitted)}</td>
                 </tr>
               ))
             )}
@@ -64,4 +229,4 @@ const Scope1Result = () => {
   );
 };
 
-export default Scope1Result; 
+export default Scope1Result;
