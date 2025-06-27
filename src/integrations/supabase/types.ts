@@ -1066,6 +1066,156 @@ export type Database = {
           },
         ]
       }
+      process_emissions: {
+        Row: {
+          assessment_period_end: string | null
+          assessment_period_start: string | null
+          carbon_dioxide_emitted_co2: number | null
+          created_at: string
+          data_source: string | null
+          emission_factor: number | null
+          emissions_kg_co2: number | null
+          gwp_co2e: number | null
+          gwp_methane: number | null
+          gwp_nitrous_oxide: number | null
+          id: string
+          is_applicable: boolean | null
+          last_year_emission_figures: number | null
+          methane_emitted_ch4: number | null
+          nitrous_oxide_emitted_n2o: number | null
+          notes: string | null
+          quantity_used: number | null
+          source_of_emission: string | null
+          source_of_energy: string
+          unit_of_measurement: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          quantity_used?: number | null
+          source_of_emission?: string | null
+          source_of_energy: string
+          unit_of_measurement: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          quantity_used?: number | null
+          source_of_emission?: string | null
+          source_of_energy?: string
+          unit_of_measurement?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      refrigerant_emissions: {
+        Row: {
+          assessment_period_end: string | null
+          assessment_period_start: string | null
+          carbon_dioxide_emitted_co2: number | null
+          created_at: string
+          data_source: string | null
+          emission_factor: number | null
+          emissions_kg_co2: number | null
+          gwp_co2e: number | null
+          gwp_methane: number | null
+          gwp_nitrous_oxide: number | null
+          id: string
+          is_applicable: boolean | null
+          last_year_emission_figures: number | null
+          methane_emitted_ch4: number | null
+          nitrous_oxide_emitted_n2o: number | null
+          notes: string | null
+          quantity_used: number | null
+          refrigerant_type: string
+          source_of_emission: string | null
+          unit_of_measurement: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          quantity_used?: number | null
+          refrigerant_type: string
+          source_of_emission?: string | null
+          unit_of_measurement: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          quantity_used?: number | null
+          refrigerant_type?: string
+          source_of_emission?: string | null
+          unit_of_measurement?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stationary_combustion: {
         Row: {
           assessment_period_end: string | null
