@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
 const legalStructures = [
   'Sole proprietorship',
@@ -32,6 +36,9 @@ const reportingBoundaries = [
 ];
 
 const Governance = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     companyName: '',
     description: '',
@@ -48,10 +55,58 @@ const Governance = () => {
     logo: null,
   });
   const [logoName, setLogoName] = useState('');
+  const [responseId, setResponseId] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchExistingResponse();
+    }
+  }, [user]);
+
+  const fetchExistingResponse = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('governance_responses')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setResponseId(data.id);
+        setForm({
+          companyName: data.company_name || '',
+          description: data.description || '',
+          legalStructure: data.legal_structure || '',
+          reportingPeriod: data.reporting_period || '',
+          employees: data.employees?.toString() || '',
+          revenue: data.revenue?.toString() || '',
+          multipleLocations: data.multiple_locations || '',
+          countries: data.countries || '',
+          industries: data.industries || [],
+          investmentShares: data.investment_shares || '',
+          investmentAccounting: data.investment_accounting || '',
+          reportingBoundary: data.reporting_boundary || '',
+          logo: null,
+        });
+        setLogoName(data.logo_url ? 'Previously uploaded logo' : '');
+      }
+    } catch (error) {
+      console.error('Error fetching governance response:', error);
+      toast.error('Failed to load existing data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
   const handleCheckbox = (value) => {
     setForm((prev) => ({
       ...prev,
@@ -60,15 +115,109 @@ const Governance = () => {
         : [...prev.industries, value],
     }));
   };
+
   const handleFile = (e) => {
     const file = e.target.files[0];
     setForm((prev) => ({ ...prev, logo: file }));
     setLogoName(file ? file.name : '');
   };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Placeholder: do nothing
+
+  const uploadLogo = async (file) => {
+    if (!file) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `governance-logos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('governance')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('governance')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast.error('Please log in to save your response');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      let logoUrl = null;
+      if (form.logo) {
+        logoUrl = await uploadLogo(form.logo);
+      }
+
+      const formData = {
+        user_id: user.id,
+        company_name: form.companyName,
+        description: form.description,
+        legal_structure: form.legalStructure,
+        reporting_period: form.reportingPeriod || null,
+        employees: form.employees ? parseInt(form.employees, 10) : null,
+        revenue: form.revenue ? parseFloat(form.revenue) : null,
+        multiple_locations: form.multipleLocations,
+        countries: form.countries,
+        industries: form.industries,
+        investment_shares: form.investmentShares,
+        investment_accounting: form.investmentAccounting,
+        reporting_boundary: form.reportingBoundary,
+        logo_url: logoUrl,
+      };
+
+      let result;
+      if (responseId) {
+        // Update existing response
+        result = await supabase
+          .from('governance_responses')
+          .update(formData)
+          .eq('id', responseId)
+          .select()
+          .single();
+      } else {
+        // Create new response
+        result = await supabase
+          .from('governance_responses')
+          .insert(formData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      setResponseId(result.data.id);
+      toast.success('Governance responses saved successfully!');
+    } catch (error) {
+      console.error('Error saving governance response:', error);
+      toast.error('Failed to save governance responses');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading governance form...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="max-w-3xl mx-auto p-6" onSubmit={handleSubmit}>
@@ -155,7 +304,13 @@ const Governance = () => {
         </div>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-8">Submit</Button>
+        <Button 
+          type="submit" 
+          className="bg-green-500 hover:bg-green-600 text-white px-8"
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : responseId ? 'Update' : 'Submit'}
+        </Button>
       </div>
     </form>
   );

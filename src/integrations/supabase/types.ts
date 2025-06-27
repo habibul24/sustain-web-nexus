@@ -777,6 +777,66 @@ export type Database = {
           },
         ]
       }
+      governance_responses: {
+        Row: {
+          company_name: string | null
+          countries: string | null
+          created_at: string
+          description: string | null
+          employees: number | null
+          id: string
+          industries: string[] | null
+          investment_accounting: string | null
+          investment_shares: string | null
+          legal_structure: string | null
+          logo_url: string | null
+          multiple_locations: string | null
+          reporting_boundary: string | null
+          reporting_period: string | null
+          revenue: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          countries?: string | null
+          created_at?: string
+          description?: string | null
+          employees?: number | null
+          id?: string
+          industries?: string[] | null
+          investment_accounting?: string | null
+          investment_shares?: string | null
+          legal_structure?: string | null
+          logo_url?: string | null
+          multiple_locations?: string | null
+          reporting_boundary?: string | null
+          reporting_period?: string | null
+          revenue?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          countries?: string | null
+          created_at?: string
+          description?: string | null
+          employees?: number | null
+          id?: string
+          industries?: string[] | null
+          investment_accounting?: string | null
+          investment_shares?: string | null
+          legal_structure?: string | null
+          logo_url?: string | null
+          multiple_locations?: string | null
+          reporting_boundary?: string | null
+          reporting_period?: string | null
+          revenue?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount_due: number
