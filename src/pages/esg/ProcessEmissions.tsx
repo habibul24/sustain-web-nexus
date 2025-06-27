@@ -58,7 +58,6 @@ const ProcessEmissions = () => {
           <thead>
             <tr className="border-b">
               <th className="py-2 px-3 font-semibold">Source Of Energy</th>
-              <th className="py-2 px-3 font-semibold">Applicable To Business</th>
               <th className="py-2 px-3 font-semibold">Quantity Used Till Date</th>
               <th className="py-2 px-3 font-semibold">Last Year Emission Figures</th>
               <th className="py-2 px-3 font-semibold">Unit Of Measurement</th>
@@ -69,9 +68,6 @@ const ProcessEmissions = () => {
             {CHEMICAL_SOURCES.map((src, idx) => (
               <tr key={src.name} className="border-b">
                 <td className="py-2 px-3">{src.name}</td>
-                <td className="py-2 px-3">
-                  <Switch checked={rows[idx].applicable} onCheckedChange={v => handleRowChange(idx, 'applicable', v)} />
-                </td>
                 <td className="py-2 px-3">
                   <Input type="number" min="0" value={rows[idx].quantity} onChange={e => handleRowChange(idx, 'quantity', e.target.value)} className="w-28" />
                 </td>
