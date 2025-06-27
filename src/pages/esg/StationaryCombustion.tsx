@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Select } from '../../components/ui/select';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion';
 
 const ENERGY_SOURCES = [
@@ -24,7 +24,7 @@ const StationaryCombustion = () => {
       applicable: false,
       quantity: '',
       lastYear: '',
-      unit: src.unit || '',
+      unit: '',
     }))
   );
 
@@ -75,8 +75,12 @@ const StationaryCombustion = () => {
                 </td>
                 <td className="py-2 px-3">
                   <Select value={rows[idx].unit} onValueChange={v => handleRowChange(idx, 'unit', v)}>
-                    <option value="">Select an option</option>
-                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </td>
                 <td className="py-2 px-3 text-green-600 font-semibold cursor-pointer">Connect</td>
