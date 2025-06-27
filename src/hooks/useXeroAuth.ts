@@ -27,8 +27,8 @@ export const useXeroAuth = () => {
       }
 
       if (data?.authUrl) {
-        console.log('Redirecting to Xero auth URL');
-        window.location.href = data.authUrl;
+        console.log('Opening Xero auth URL in new tab');
+        window.open(data.authUrl, '_blank');
       } else {
         toast.error('Failed to generate Xero authorization URL');
       }
