@@ -777,6 +777,57 @@ export type Database = {
           },
         ]
       }
+      funding_opportunities: {
+        Row: {
+          amount: number | null
+          amount_currency: string | null
+          category: string
+          created_at: string
+          deadline: string | null
+          eligibility: string | null
+          expected_use: string | null
+          id: string
+          link: string | null
+          name: string
+          organizing_body: string | null
+          other_criteria: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          amount_currency?: string | null
+          category: string
+          created_at?: string
+          deadline?: string | null
+          eligibility?: string | null
+          expected_use?: string | null
+          id?: string
+          link?: string | null
+          name: string
+          organizing_body?: string | null
+          other_criteria?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          amount_currency?: string | null
+          category?: string
+          created_at?: string
+          deadline?: string | null
+          eligibility?: string | null
+          expected_use?: string | null
+          id?: string
+          link?: string | null
+          name?: string
+          organizing_body?: string | null
+          other_criteria?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       governance_responses: {
         Row: {
           company_name: string | null
