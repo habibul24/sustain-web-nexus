@@ -947,6 +947,48 @@ export type Database = {
           },
         ]
       }
+      marketplace_companies: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          id: string
+          industry: string
+          introduction: string | null
+          location: string
+          name: string
+          phone_contact: string | null
+          sustainability_service: string
+          updated_at: string
+          website_link: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          industry: string
+          introduction?: string | null
+          location: string
+          name: string
+          phone_contact?: string | null
+          sustainability_service: string
+          updated_at?: string
+          website_link?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          industry?: string
+          introduction?: string | null
+          location?: string
+          name?: string
+          phone_contact?: string | null
+          sustainability_service?: string
+          updated_at?: string
+          website_link?: string | null
+        }
+        Relationships: []
+      }
       metrics_targets_responses: {
         Row: {
           base_emissions: string | null
