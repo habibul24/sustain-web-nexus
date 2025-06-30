@@ -80,19 +80,16 @@ const Dashboard = () => {
     const currentYear = new Date().getFullYear();
     const previousYear = currentYear - 1;
 
-    // Current year data (from actual entries)
     const currentYearEmissions = scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0);
-
-    // Previous year data (simulated - you could implement actual previous year data fetching)
-    const previousYearEmissions = currentYearEmissions * 1.15; // Assuming 15% reduction from previous year
+    const previousYearEmissions = currentYearEmissions * 1.15;
 
     return [
-      { year: previousYear.toString(), emissions: previousYearEmissions },
-      { year: currentYear.toString(), emissions: currentYearEmissions }
+      { year: previousYear.toString(), emissions: previousYearEmissions, fill: '#ef4444' },
+      { year: currentYear.toString(), emissions: currentYearEmissions, fill: '#22c55e' }
     ];
   };
 
-  // Prepare data for monthly pie chart
+  // Prepare data for monthly pie chart with highlighting
   const getMonthlyData = () => {
     const monthlyEmissions = scope2Data.reduce((acc, item) => {
       const month = item.month || 'Unknown';
@@ -101,9 +98,17 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(monthlyEmissions).map(([month, emissions]) => ({
-      month,
-      emissions: Number(emissions.toFixed(2))
+    const sortedMonths = Object.entries(monthlyEmissions)
+      .map(([month, emissions]) => ({
+        month,
+        emissions: Number(emissions.toFixed(2))
+      }))
+      .sort((a, b) => b.emissions - a.emissions);
+
+    // Highlight top 5 months
+    return sortedMonths.map((item, index) => ({
+      ...item,
+      fill: index < 5 ? '#22c55e' : '#e5e7eb'
     }));
   };
 
@@ -116,9 +121,10 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(locationEmissions).map(([location, emissions]) => ({
+    return Object.entries(locationEmissions).map(([location, emissions], index) => ({
       location,
-      emissions: Number(emissions.toFixed(2))
+      emissions: Number(emissions.toFixed(2)),
+      fill: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][index % 6]
     }));
   };
 
@@ -126,11 +132,9 @@ const Dashboard = () => {
   const monthlyData = getMonthlyData();
   const locationData = getLocationData();
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
-
   const chartConfig = {
     emissions: {
-      label: "Emissions (kgCO2e)",
+      label: "Emissions (kgCO₂e)",
     },
   };
 
@@ -154,123 +158,149 @@ const Dashboard = () => {
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Year Comparison Bar Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>CO2 Emissions Year Comparison</CardTitle>
-                <CardDescription>Total CO2 emissions comparison between 2024 and 2025</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-80">
-                  <BarChart data={yearComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="emissions" fill="#22c55e" />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+          {/* Scope Navigation */}
+          <Tabs defaultValue="scope2" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="scope1">Scope 1</TabsTrigger>
+              <TabsTrigger value="scope2">Scope 2</TabsTrigger>
+              <TabsTrigger value="scope3">Scope 3</TabsTrigger>
+            </TabsList>
 
-            {/* Monthly Emissions Pie Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly CO2 Emissions (2025)</CardTitle>
-                <CardDescription>CO2 emissions breakdown by month for current year</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-80">
-                  <PieChart>
-                    <Pie
-                      data={monthlyData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ month, percent }) => `${month} (${(percent * 100).toFixed(1)}%)`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="emissions"
-                    >
-                      {monthlyData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </div>
+            <TabsContent value="scope1" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Scope 1 Emissions</CardTitle>
+                  <CardDescription>Coming soon - Direct emissions from owned or controlled sources</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-gray-500">
+                    Scope 1 emissions data will be available once data collection is implemented.
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Location Emissions Pie Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>CO2 Emissions by Location (2025)</CardTitle>
-              <CardDescription>CO2 emissions breakdown by office location for current year</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-80">
-                <PieChart>
-                  <Pie
-                    data={locationData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ location, percent }) => `${location} (${(percent * 100).toFixed(1)}%)`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="emissions"
-                  >
-                    {locationData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+            <TabsContent value="scope2" className="space-y-6">
+              {/* Scope 2 Charts in One Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Year Comparison Bar Chart */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">CO₂e Emissions Year Comparison</CardTitle>
+                    <CardDescription className="text-xs">2024 vs 2025</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <BarChart data={yearComparisonData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="emissions" />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
 
-          {/* Summary Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Emissions</CardTitle>
-                <CardDescription>Current year (2025)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0).toFixed(2)} kgCO2e
-                </div>
-              </CardContent>
-            </Card>
+                {/* Monthly Emissions Pie Chart */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
+                    <CardDescription className="text-xs">Top 5 months highlighted</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <PieChart>
+                        <Pie
+                          data={monthlyData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={60}
+                          dataKey="emissions"
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Locations</CardTitle>
-                <CardDescription>Reporting emissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {locationData.length}
-                </div>
-              </CardContent>
-            </Card>
+                {/* Location Emissions Pie Chart */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">CO₂e Emissions by Location (2025)</CardTitle>
+                    <CardDescription className="text-xs">All office locations</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <PieChart>
+                        <Pie
+                          data={locationData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={60}
+                          dataKey="emissions"
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Points</CardTitle>
-                <CardDescription>Total entries recorded</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
-                  {scope2Data.length}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Summary Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Total Emissions</CardTitle>
+                    <CardDescription>Current year (2025)</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0).toFixed(2)} kgCO₂e
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Active Locations</CardTitle>
+                    <CardDescription>Reporting emissions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {locationData.length}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Data Points</CardTitle>
+                    <CardDescription>Total entries recorded</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {scope2Data.length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="scope3" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Scope 3 Emissions</CardTitle>
+                  <CardDescription>Coming soon - Indirect emissions from value chain</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-gray-500">
+                    Scope 3 emissions data will be available once data collection is implemented.
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="social" className="space-y-6">

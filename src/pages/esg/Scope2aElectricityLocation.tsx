@@ -1,597 +1,487 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Input } from '../../components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { ExternalLink, Info, Upload, Trash2 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
-import { supabase } from '../../integrations/supabase/client';
+import { Textarea } from '../../components/ui/textarea';
+import { useToast } from '../../components/ui/use-toast';
 import { useAuthContext } from '../../contexts/AuthContext';
-import { useToast } from '../../hooks/use-toast';
+import { supabase } from '../../integrations/supabase/client';
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
-const SERVICE_PROVIDERS = [
-  { 
-    name: 'Hong Kong Electric', 
-    factor: 0.6, 
-    source: 'https://www.hkelectric.com/documents/en/InvestorRelations/InvestorRelations_GLNCS/Documents/2025/ESR2024%20full%20version.pdf',
-    factorPriorYear: 0.66,
-    sourcePriorYear: 'https://www.hkelectric.com/documents/en/CorporateSocialResponsibility/CorporateSocialResponsibility_CDD/Documents/SR2023E.pdf'
-  },
-  { 
-    name: 'CLP Power Hong Kong Limited (CLP)', 
-    factor: 0.38, 
-    source: 'https://sustainability.clpgroup.com/en/2024/esg-data-hub',
-    factorPriorYear: 0.39,
-    sourcePriorYear: 'https://www.clp.com.cn/wp-content/uploads/2024/03/CLP_Sustainability_Report_2023_en-1.pdf'
-  }
-];
-
-interface OfficeLocation {
+interface Scope2Data {
   id: string;
-  name: string;
-  address: string;
+  source_of_energy: string;
+  quantity_used: number | null;
+  quantity_used_prior_year: number | null;
+  emission_factor: number | null;
+  emission_factor_prior_year: number | null;
+  emissions_kg_co2: number | null;
+  organization_area: number | null;
+  total_building_area: number | null;
+  office_location_id: string;
+  office_location_name?: string;
+  month: string | null;
+  invoice_file_url: string | null;
 }
 
 const Scope2aElectricityLocation = () => {
-  const { locationId } = useParams<{ locationId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { toast } = useToast();
-  const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
-  
-  // New state for questionnaire
-  const [serviceProvider, setServiceProvider] = useState<string>('');
-  const [receivesBillsDirectly, setReceivesBillsDirectly] = useState<string>('');
-  const [providePriorYear, setProvidePriorYear] = useState<string>('');
-  const [organizationArea, setOrganizationArea] = useState<string>('');
-  const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
-  
-  const [data, setData] = useState(
-    MONTHS.map((month) => ({
-      month,
-      invoiceQuantity: '',
-      invoiceQuantityPriorYear: '',
-      totalBuildingElectricity: '',
-      emissionFactor: 0,
-      sourceLink: '',
-      invoiceFile: null as File | null,
-      invoiceFileUrl: ''
-    }))
-  );
-  
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState<{[key: string]: boolean}>({});
+  const [scope2Data, setScope2Data] = useState<Scope2Data[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [sourceOfEnergy, setSourceOfEnergy] = useState('');
+	const [quantityUsed, setQuantityUsed] = useState<number | null>(null);
+	const [quantityUsedPriorYear, setQuantityUsedPriorYear] = useState<number | null>(null);
+  const [emissionFactor, setEmissionFactor] = useState<number | null>(null);
+  const [emissionFactorPriorYear, setEmissionFactorPriorYear] = useState<number | null>(null);
+  const [organizationArea, setOrganizationArea] = useState<number | null>(null);
+  const [totalBuildingArea, setTotalBuildingArea] = useState<number | null>(null);
+  const [officeLocation, setOfficeLocation] = useState('');
+  const [month, setMonth] = useState('');
+  const [officeLocations, setOfficeLocations] = useState<{ id: string; name: string; }[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (user && locationId) {
-      loadOfficeLocation();
-      loadExistingData();
+    if (user) {
+      fetchScope2Data();
+      fetchOfficeLocations();
     }
-  }, [user, locationId]);
+  }, [user]);
 
-  useEffect(() => {
-    if (serviceProvider) {
-      const provider = SERVICE_PROVIDERS.find(p => p.name === serviceProvider);
-      if (provider) {
-        setData(prev => prev.map(row => ({
-          ...row,
-          emissionFactor: provider.factor,
-          sourceLink: provider.source
-        })));
-      }
-    }
-  }, [serviceProvider]);
-
-  const loadOfficeLocation = async () => {
+  const fetchScope2Data = async () => {
     try {
-      const { data: location, error } = await supabase
-        .from('office_locations')
-        .select('*')
-        .eq('id', locationId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-      setOfficeLocation(location);
-    } catch (error) {
-      console.error('Error loading office location:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load office location",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadExistingData = async () => {
-    if (!locationId) return;
-    
-    setLoading(true);
-    try {
-      const { data: existingData, error } = await supabase
+      const { data, error } = await supabase
         .from('scope2a_electricity')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('office_location_id', locationId);
+        .select(`
+          id,
+          source_of_energy,
+          quantity_used,
+		  quantity_used_prior_year,
+          emission_factor,
+		  emission_factor_prior_year,
+          emissions_kg_co2,
+          organization_area,
+          total_building_area,
+          month,
+          office_location_id,
+          invoice_file_url,
+          office_locations!inner(name)
+        `)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
-      if (existingData && existingData.length > 0) {
-        const updatedData = MONTHS.map((month) => {
-          const existing = existingData.find(d => d.month === month);
-          if (existing) {
-            const provider = SERVICE_PROVIDERS.find(p => p.name === existing.source_of_energy);
-            return {
-              month,
-              invoiceQuantity: existing.quantity_used?.toString() || '',
-              invoiceQuantityPriorYear: (existing as any).invoice_quantity_prior_year?.toString() || '',
-              totalBuildingElectricity: (existing as any).total_building_electricity?.toString() || '',
-              emissionFactor: provider?.factor || 0,
-              sourceLink: provider?.source || '',
-              invoiceFile: null,
-              invoiceFileUrl: (existing as any).invoice_file_url || ''
-            };
-          }
-          return {
-            month,
-            invoiceQuantity: '',
-            invoiceQuantityPriorYear: '',
-            totalBuildingElectricity: '',
-            emissionFactor: 0,
-            sourceLink: '',
-            invoiceFile: null,
-            invoiceFileUrl: ''
-          };
-        });
-        setData(updatedData);
-        
-        // Load questionnaire answers if they exist
-        if (existingData[0]) {
-          setServiceProvider(existingData[0].source_of_energy || '');
-          setReceivesBillsDirectly((existingData[0] as any).receives_bills_directly || '');
-          setProvidePriorYear((existingData[0] as any).provide_prior_year ? 'Yes' : 'No');
-          setOrganizationArea((existingData[0] as any).organization_area?.toString() || '');
-          setTotalBuildingArea((existingData[0] as any).total_building_area?.toString() || '');
-        }
-      }
+      const formattedData = data?.map(item => ({
+        ...item,
+        office_location_name: item.office_locations?.name || 'Unknown Location'
+      })) || [];
+
+      setScope2Data(formattedData);
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load existing data",
-        variant: "destructive",
-      });
+      console.error('Error fetching Scope 2 data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (monthIndex, field, value) => {
-    setData(prev => prev.map((row, index) => {
-      if (index === monthIndex) {
-        return { ...row, [field]: value };
-      }
-      return row;
-    }));
-  };
-
-  const handleFileUpload = async (monthIndex: number, file: File) => {
-    if (!user || !locationId) return;
-    
-    const monthName = MONTHS[monthIndex];
-    setUploading(prev => ({ ...prev, [monthName]: true }));
-    
+  const fetchOfficeLocations = async () => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${locationId}/${monthName}_${Date.now()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('invoice-uploads')
-        .upload(fileName, file);
+      const { data, error } = await supabase
+        .from('office_locations')
+        .select('id, name')
+        .eq('user_id', user.id);
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('invoice-uploads')
-        .getPublicUrl(fileName);
-
-      setData(prev => prev.map((row, index) => {
-        if (index === monthIndex) {
-          return { ...row, invoiceFile: file, invoiceFileUrl: publicUrl };
-        }
-        return row;
-      }));
-
-      toast({
-        title: "Success",
-        description: "Invoice uploaded successfully",
-      });
+      setOfficeLocations(data || []);
     } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload invoice",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(prev => ({ ...prev, [monthName]: false }));
+      console.error('Error fetching office locations:', error);
     }
   };
 
-  const handleFileDelete = async (monthIndex: number) => {
-    const monthName = MONTHS[monthIndex];
-    const row = data[monthIndex];
+  const calculateCO2Emission = (item: Scope2Data) => {
+    if (!item.quantity_used || !item.emission_factor) return 0;
     
-    if (row.invoiceFileUrl) {
-      try {
-        // Extract file path from URL
-        const urlParts = row.invoiceFileUrl.split('/');
-        const fileName = urlParts.slice(-3).join('/'); // user_id/location_id/filename
-        
-        const { error } = await supabase.storage
-          .from('invoice-uploads')
-          .remove([fileName]);
-
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error deleting file:', error);
-      }
+    if (item.organization_area && item.total_building_area) {
+      return (item.organization_area / item.total_building_area) * item.quantity_used * item.emission_factor;
     }
-
-    setData(prev => prev.map((row, index) => {
-      if (index === monthIndex) {
-        return { ...row, invoiceFile: null, invoiceFileUrl: '' };
-      }
-      return row;
-    }));
-
-    toast({
-      title: "Success",
-      description: "Invoice deleted successfully",
-    });
+    
+    return item.quantity_used * item.emission_factor;
   };
 
-  const handleSave = async () => {
-    if (!user || !locationId) {
-      toast({
-        title: "Error",
-        description: "You must be logged in and select an office location to save data",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleEdit = (row: Scope2Data) => {
+    setEditingRow(row.id);
+    setSourceOfEnergy(row.source_of_energy);
+	setQuantityUsed(row.quantity_used);
+	setQuantityUsedPriorYear(row.quantity_used_prior_year);
+    setEmissionFactor(row.emission_factor);
+	setEmissionFactorPriorYear(row.emission_factor_prior_year);
+    setOrganizationArea(row.organization_area);
+    setTotalBuildingArea(row.total_building_area);
+    setOfficeLocation(row.office_location_id);
+    setMonth(row.month || '');
+  };
 
-    if (!serviceProvider || !receivesBillsDirectly || !providePriorYear) {
-      toast({
-        title: "Error",
-        description: "Please answer all questionnaire questions before saving",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleCancel = () => {
+    setEditingRow(null);
+    setSourceOfEnergy('');
+	setQuantityUsed(null);
+	setQuantityUsedPriorYear(null);
+    setEmissionFactor(null);
+	setEmissionFactorPriorYear(null);
+    setOrganizationArea(null);
+    setTotalBuildingArea(null);
+    setOfficeLocation('');
+    setMonth('');
+  };
 
-    setSaving(true);
+  const handleSave = async (id: string) => {
     try {
-      // Delete existing data for this user and location
-      await supabase
+      const { error } = await supabase
         .from('scope2a_electricity')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('office_location_id', locationId);
+        .update({
+          source_of_energy: sourceOfEnergy,
+          quantity_used: quantityUsed,
+		  quantity_used_prior_year: quantityUsedPriorYear,
+          emission_factor: emissionFactor,
+		  emission_factor_prior_year: emissionFactorPriorYear,
+          organization_area: organizationArea,
+          total_building_area: totalBuildingArea,
+          office_location_id: officeLocation,
+          month: month
+        })
+        .eq('id', id);
 
-      // Insert new data
-      const dataToInsert = data
-        .filter(row => row.invoiceQuantity || row.totalBuildingElectricity || row.invoiceQuantityPriorYear)
-        .map(row => ({
-          user_id: user.id,
-          office_location_id: locationId,
-          month: row.month,
-          source_of_energy: serviceProvider,
-          unit_of_measurement: 'KWh',
-          quantity_used: row.invoiceQuantity ? parseFloat(row.invoiceQuantity) : null,
-          total_building_electricity: row.totalBuildingElectricity ? parseFloat(row.totalBuildingElectricity) : null,
-          invoice_quantity_prior_year: row.invoiceQuantityPriorYear ? parseFloat(row.invoiceQuantityPriorYear) : null,
-          receives_bills_directly: receivesBillsDirectly,
-          provide_prior_year: providePriorYear === 'Yes',
-          organization_area: organizationArea ? parseFloat(organizationArea) : null,
-          total_building_area: totalBuildingArea ? parseFloat(totalBuildingArea) : null,
-          invoice_file_url: row.invoiceFileUrl || null,
-          is_applicable: true,
-          data_source: 'manual'
-        }));
+      if (error) throw error;
 
-      if (dataToInsert.length > 0) {
-        const { error } = await supabase
-          .from('scope2a_electricity')
-          .insert(dataToInsert);
-
-        if (error) throw error;
-      }
-
+      fetchScope2Data();
+      setEditingRow(null);
       toast({
         title: "Success",
-        description: "Data saved successfully",
-      });
+        description: "Scope 2 data updated successfully.",
+      })
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.error('Error updating Scope 2 data:', error);
       toast({
-        title: "Error",
-        description: "Failed to save data",
         variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
+        title: "Error",
+        description: "Failed to update Scope 2 data.",
+      })
     }
   };
 
-  const currentEmissionFactor = SERVICE_PROVIDERS.find(p => p.name === serviceProvider)?.factor || 0;
-  const currentSourceLink = SERVICE_PROVIDERS.find(p => p.name === serviceProvider)?.source || '';
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, rowId: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  if (loading || !officeLocation) {
-    return <div className="max-w-6xl mx-auto p-6">Loading...</div>;
-  }
+    setSelectedFile(file);
 
-  const showTable = serviceProvider && receivesBillsDirectly && providePriorYear;
-  const showAreaInputs = receivesBillsDirectly === 'No';
+    try {
+      // Delete the old file if it exists
+      const rowData = scope2Data.find(row => row.id === rowId);
+      if (rowData?.invoice_file_url) {
+        await supabase.storage.from('invoice-uploads').remove([rowData.invoice_file_url.split('/').pop()!]);
+      }
+
+      // Upload the new file
+      const filePath = `${user?.id}/${rowId}/${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('invoice-uploads')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Update the database record with the new file URL
+      const fileUrl = `https://your-supabase-url.supabase.co/storage/v1/object/public/${data.Key}`; // Replace with your actual Supabase URL
+      const { error: dbError } = await supabase
+        .from('scope2a_electricity')
+        .update({ invoice_file_url: filePath })
+        .eq('id', rowId);
+
+      if (dbError) throw dbError;
+
+      fetchScope2Data();
+      toast({
+        title: "Success",
+        description: "Invoice uploaded successfully.",
+      })
+    } catch (error) {
+      console.error('Error uploading invoice:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to upload invoice.",
+      })
+    }
+  };
+
+  const handleViewFile = (fileUrl: string) => {
+    const completeFileUrl = `https://your-supabase-url.supabase.co/storage/v1/object/public/invoice-uploads/${fileUrl}`; // Replace with your actual Supabase URL
+    window.open(completeFileUrl, '_blank');
+  };
+
+  const handleDeleteFile = async (rowId: string, fileUrl: string) => {
+    try {
+      // Delete the file from storage
+      await supabase.storage.from('invoice-uploads').remove([fileUrl.split('/').pop()!]);
+
+      // Update the database record to remove the file URL
+      const { error: dbError } = await supabase
+        .from('scope2a_electricity')
+        .update({ invoice_file_url: null })
+        .eq('id', rowId);
+
+      if (dbError) throw dbError;
+
+      fetchScope2Data();
+      toast({
+        title: "Success",
+        description: "Invoice deleted successfully.",
+      })
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete invoice.",
+      })
+    }
+  };
 
   return (
-    <TooltipProvider>
-      <div className="max-w-6xl mx-auto p-6">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4">
-          Scope 2a Electricity Carbon Emission Calculations - {officeLocation.name}
-        </h1>
-        
-        <Accordion type="single" collapsible defaultValue="info" className="mb-6">
-          <AccordionItem value="info">
-            <AccordionTrigger className="text-base font-semibold">What are Scope 2a emissions?</AccordionTrigger>
-            <AccordionContent>
-              <div className="text-gray-700">
-                Scope 2a emissions are GHG emissions from the generation of purchased electricity that is consumed in your Company's owned or controlled equipment. These emissions are considered indirect because they occur at the facility where the electricity is generated, but the energy produced is used by you.
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Questionnaire Section */}
-        <div className="bg-white rounded-xl shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Electricity Information for {officeLocation.name}</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                What is your electricity service provider?
-              </label>
-              <Select value={serviceProvider} onValueChange={setServiceProvider}>
-                <SelectTrigger className="w-full max-w-md">
-                  <SelectValue placeholder="Select service provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_PROVIDERS.map((provider) => (
-                    <SelectItem key={provider.name} value={provider.name}>
-                      {provider.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Do you receive electricity bills directly?
-              </label>
-              <Select value={receivesBillsDirectly} onValueChange={setReceivesBillsDirectly}>
-                <SelectTrigger className="w-full max-w-md">
-                  <SelectValue placeholder="Select Yes or No" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Do you want to provide prior year's Carbon Emission equivalent?
-              </label>
-              <Select value={providePriorYear} onValueChange={setProvidePriorYear}>
-                <SelectTrigger className="w-full max-w-md">
-                  <SelectValue placeholder="Select Yes or No" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {showAreaInputs && (
-              <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-800">Provide the following information:</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    1. Area of Organization Space
-                  </label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={organizationArea}
-                    onChange={(e) => setOrganizationArea(e.target.value)}
-                    className="w-full max-w-md"
-                    placeholder="Enter area in square meters"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    2. Total Building Area
-                  </label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={totalBuildingArea}
-                    onChange={(e) => setTotalBuildingArea(e.target.value)}
-                    className="w-full max-w-md"
-                    placeholder="Enter total building area"
-                  />
-                  <div className="flex items-center mt-2">
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-blue-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request the monthly total electricity figures of the building from the facility manager.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <span className="ml-2 text-sm text-gray-600">Request the monthly total electricity figures of the building from the facility manager.</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showTable && (
-          <div className="bg-white rounded-xl shadow p-4 overflow-x-auto mb-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Month</TableHead>
-                  {receivesBillsDirectly === 'No' && <TableHead>Total Building Electricity</TableHead>}
-                  <TableHead>Invoice Quantity</TableHead>
-                  <TableHead>Unit Of Measurement</TableHead>
-                  {providePriorYear === 'Yes' && <TableHead>Invoice Quantity: Prior Year</TableHead>}
-                  <TableHead>Upload Monthly Invoice</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((row, index) => (
-                  <TableRow key={row.month}>
-                    <TableCell className="font-medium">{row.month}</TableCell>
-                    {receivesBillsDirectly === 'No' && (
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={row.totalBuildingElectricity}
-                          onChange={(e) => handleInputChange(index, 'totalBuildingElectricity', e.target.value)}
-                          className="w-32"
-                        />
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={row.invoiceQuantity}
-                        onChange={(e) => handleInputChange(index, 'invoiceQuantity', e.target.value)}
-                        className="w-32"
-                      />
-                    </TableCell>
-                    <TableCell>KWh</TableCell>
-                    {providePriorYear === 'Yes' && (
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={row.invoiceQuantityPriorYear}
-                          onChange={(e) => handleInputChange(index, 'invoiceQuantityPriorYear', e.target.value)}
-                          className="w-32"
-                        />
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {!row.invoiceFileUrl ? (
-                          <div className="relative">
-                            <input
-                              type="file"
-                              accept=".pdf,.jpg,.jpeg,.png"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleFileUpload(index, file);
-                              }}
-                              className="hidden"
-                              id={`file-${index}`}
-                            />
-                            <label
-                              htmlFor={`file-${index}`}
-                              className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 text-sm"
-                            >
-                              <Upload className="h-3 w-3" />
-                              {uploading[row.month] ? 'Uploading...' : 'Upload'}
-                            </label>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <a
-                              href={row.invoiceFileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-800 text-sm"
-                            >
-                              View Invoice
-                            </a>
-                            <button
-                              onClick={() => handleFileDelete(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {currentSourceLink && (
-              <div className="mt-4 flex items-center">
-                <button
-                  onClick={() => window.open(currentSourceLink, '_blank')}
-                  className="flex items-center gap-2 text-green-600 hover:text-green-800 text-sm"
-                >
-                  <Info className="h-4 w-4" />
-                  Click here for source of emission factor
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <Button 
-            onClick={handleSave} 
-            disabled={saving || !showTable}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-8"
-          >
-            {saving ? 'Saving...' : 'Save Data'}
-          </Button>
-          
-          <Button 
-            className="bg-green-500 hover:bg-green-600 text-white px-8" 
-            onClick={() => navigate('/my-esg/environmental/scope-2/other-energy')}
-          >
-            Next
-          </Button>
-        </div>
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">Scope 2a Electricity Location-Based</h1>
+      
+      <div className="mb-4">
+        <Label htmlFor="source">Source of Energy</Label>
+        <Input
+          type="text"
+          id="source"
+          placeholder="Enter source of energy"
+          value={sourceOfEnergy}
+          onChange={(e) => setSourceOfEnergy(e.target.value)}
+        />
       </div>
-    </TooltipProvider>
+      
+      <div className="mb-4">
+        <Label htmlFor="quantity">Invoice Quantity</Label>
+        <Input
+          type="number"
+          id="quantity"
+          placeholder="Enter invoice quantity"
+          value={quantityUsed !== null ? quantityUsed.toString() : ''}
+          onChange={(e) => setQuantityUsed(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+
+	  <div className="mb-4">
+        <Label htmlFor="quantity_used_prior_year">Invoice Quantity Prior Year</Label>
+        <Input
+          type="number"
+          id="quantity_used_prior_year"
+          placeholder="Enter invoice quantity prior year"
+          value={quantityUsedPriorYear !== null ? quantityUsedPriorYear.toString() : ''}
+          onChange={(e) => setQuantityUsedPriorYear(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+      
+      <div className="mb-4">
+        <Label htmlFor="emission">GHG Emission Factor</Label>
+        <Input
+          type="number"
+          id="emission"
+          placeholder="Enter GHG emission factor"
+          value={emissionFactor !== null ? emissionFactor.toString() : ''}
+          onChange={(e) => setEmissionFactor(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+
+	  <div className="mb-4">
+        <Label htmlFor="emission_factor_prior_year">GHG Emission Factor Prior Year</Label>
+        <Input
+          type="number"
+          id="emission_factor_prior_year"
+          placeholder="Enter GHG emission factor prior year"
+          value={emissionFactorPriorYear !== null ? emissionFactorPriorYear.toString() : ''}
+          onChange={(e) => setEmissionFactorPriorYear(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="organization_area">Organization Area</Label>
+        <Input
+          type="number"
+          id="organization_area"
+          placeholder="Enter organization area"
+          value={organizationArea !== null ? organizationArea.toString() : ''}
+          onChange={(e) => setOrganizationArea(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="total_building_area">Total Building Area</Label>
+        <Input
+          type="number"
+          id="total_building_area"
+          placeholder="Enter total building area"
+          value={totalBuildingArea !== null ? totalBuildingArea.toString() : ''}
+          onChange={(e) => setTotalBuildingArea(e.target.value === '' ? null : parseFloat(e.target.value))}
+        />
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="office_location">Office Location</Label>
+        <Select onValueChange={setOfficeLocation}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select location" />
+          </SelectTrigger>
+          <SelectContent>
+            {officeLocations.map(location => (
+              <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="month">Month</Label>
+        <Select onValueChange={setMonth}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select month" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="January">January</SelectItem>
+            <SelectItem value="February">February</SelectItem>
+            <SelectItem value="March">March</SelectItem>
+            <SelectItem value="April">April</SelectItem>
+            <SelectItem value="May">May</SelectItem>
+            <SelectItem value="June">June</SelectItem>
+            <SelectItem value="July">July</SelectItem>
+            <SelectItem value="August">August</SelectItem>
+            <SelectItem value="September">September</SelectItem>
+            <SelectItem value="October">October</SelectItem>
+            <SelectItem value="November">November</SelectItem>
+            <SelectItem value="December">December</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="bg-white rounded-xl shadow p-4 mb-4 overflow-x-auto">
+        <table className="min-w-full text-left">
+          <thead>
+            <tr className="border-b">
+              <th className="py-2 px-3 font-semibold">Description Of Sources</th>
+              <th className="py-2 px-3 font-semibold">Location</th>
+              <th className="py-2 px-3 font-semibold">Month</th>
+              <th className="py-2 px-3 font-semibold">Invoice Quantity</th>
+              <th className="py-2 px-3 font-semibold">Upload Monthly Invoice</th>
+              <th className="py-2 px-3 font-semibold">Unit Of Measurement</th>
+              <th className="py-2 px-3 font-semibold">Invoice Quantity: Prior Year</th>
+              <th className="py-2 px-3 font-semibold">Organization Area</th>
+              <th className="py-2 px-3 font-semibold">Total Building Area</th>
+              <th className="py-2 px-3 font-semibold">GHG Emission Factor</th>
+              <th className="py-2 px-3 font-semibold">GHG Emission Factor: Prior Year</th>
+              <th className="py-2 px-3 font-semibold">Co2e Carbon Emitted</th>
+              <th className="py-2 px-3 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {scope2Data.length === 0 ? (
+              <tr>
+                <td colSpan={13} className="text-center py-8 text-gray-500">No data available</td>
+              </tr>
+            ) : (
+              scope2Data.map((row) => (
+                <tr key={row.id} className="border-b">
+                  <td className="py-2 px-3">{row.source_of_energy}</td>
+                  <td className="py-2 px-3">{row.office_location_name}</td>
+                  <td className="py-2 px-3">{row.month || 'N/A'}</td>
+                  <td className="py-2 px-3">{row.quantity_used?.toFixed(2) || '0'}</td>
+                  <td className="py-2 px-3">
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileUpload(e, row.id)}
+                        className="text-xs"
+                      />
+                      {row.invoice_file_url && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewFile(row.invoice_file_url!)}
+                            className="text-xs"
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteFile(row.id, row.invoice_file_url!)}
+                            className="text-xs text-red-600"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">kWh</td>
+                  <td className="py-2 px-3">{row.quantity_used_prior_year?.toFixed(2) || 'N/A'}</td>
+                  <td className="py-2 px-3">{row.organization_area?.toFixed(2) || 'N/A'}</td>
+                  <td className="py-2 px-3">{row.total_building_area?.toFixed(2) || 'N/A'}</td>
+                  <td className="py-2 px-3">{row.emission_factor?.toFixed(3) || '0'}</td>
+                  <td className="py-2 px-3">{row.emission_factor_prior_year?.toFixed(3) || 'N/A'}</td>
+                  <td className="py-2 px-3">{calculateCO2Emission(row).toFixed(2)}</td>
+                  <td className="py-2 px-3">
+                    {editingRow === row.id ? (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSave(row.id)}
+                          className="text-xs"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancel}
+                          className="text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(row)}
+                        className="text-xs"
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      
+      <Button variant="default" onClick={() => navigate('/my-esg/environmental/scope-2-result')}>
+        Next &rarr;
+      </Button>
+    </div>
   );
 };
 
