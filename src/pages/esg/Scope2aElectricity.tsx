@@ -1,34 +1,179 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { ExternalLink } from 'lucide-react';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuthContext } from '../../contexts/AuthContext';
+import { useToast } from '../../hooks/use-toast';
 
-const ELECTRICITY_SOURCES = [
-  { name: 'Hong Kong Electric', unit: 'KWh' },
-  { name: 'CLP Power Hong Kong Limited (CLP)', unit: 'KWh' },
-  { name: 'Towngas', unit: 'units' },
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const SERVICE_PROVIDERS = [
+  { name: 'Hong Kong Electric', factor: 0.66, source: 'https://www.hkelectric.com/documents/en/CorporateSocialResponsibility/CorporateSocialResponsibility_CDD/Documents/SR2023E.pdf' },
+  { name: 'CLP Power Hong Kong Limited (CLP)', factor: 0.39, source: 'https://www.clp.com.cn/wp-content/uploads/2024/03/CLP_Sustainability_Report_2023_en-1.pdf' }
 ];
 
 const Scope2aElectricity = () => {
   const navigate = useNavigate();
-  const [rows, setRows] = useState(
-    ELECTRICITY_SOURCES.map((src) => ({
-      applicable: false,
-      quantity: '',
-      lastYear: '',
+  const { user } = useAuthContext();
+  const { toast } = useToast();
+  const [data, setData] = useState(
+    MONTHS.map((month) => ({
+      month,
+      quantityUsed: '',
+      serviceProvider: '',
+      lastYearEmission: '',
+      emissionFactor: 0,
+      sourceLink: ''
     }))
   );
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleRowChange = (idx, field, value) => {
-    setRows((prev) => prev.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+  useEffect(() => {
+    if (user) {
+      loadExistingData();
+    }
+  }, [user]);
+
+  const loadExistingData = async () => {
+    setLoading(true);
+    try {
+      const { data: existingData, error } = await supabase
+        .from('scope2a_electricity')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (existingData && existingData.length > 0) {
+        const updatedData = MONTHS.map((month) => {
+          const existing = existingData.find(d => d.month === month);
+          if (existing) {
+            const provider = SERVICE_PROVIDERS.find(p => p.name === existing.source_of_energy);
+            return {
+              month,
+              quantityUsed: existing.quantity_used?.toString() || '',
+              serviceProvider: existing.source_of_energy || '',
+              lastYearEmission: existing.last_year_emission_figures?.toString() || '',
+              emissionFactor: provider?.factor || 0,
+              sourceLink: provider?.source || ''
+            };
+          }
+          return {
+            month,
+            quantityUsed: '',
+            serviceProvider: '',
+            lastYearEmission: '',
+            emissionFactor: 0,
+            sourceLink: ''
+          };
+        });
+        setData(updatedData);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load existing data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleInputChange = (monthIndex, field, value) => {
+    setData(prev => prev.map((row, index) => {
+      if (index === monthIndex) {
+        const updated = { ...row, [field]: value };
+        
+        if (field === 'serviceProvider') {
+          const provider = SERVICE_PROVIDERS.find(p => p.name === value);
+          if (provider) {
+            updated.emissionFactor = provider.factor;
+            updated.sourceLink = provider.source;
+          }
+        }
+        
+        return updated;
+      }
+      return row;
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Delete existing data for this user
+      await supabase
+        .from('scope2a_electricity')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Insert new data
+      const dataToInsert = data
+        .filter(row => row.quantityUsed || row.serviceProvider || row.lastYearEmission)
+        .map(row => ({
+          user_id: user.id,
+          month: row.month,
+          source_of_energy: row.serviceProvider,
+          unit_of_measurement: 'KWh',
+          quantity_used: row.quantityUsed ? parseFloat(row.quantityUsed) : null,
+          last_year_emission_figures: row.lastYearEmission ? parseFloat(row.lastYearEmission) : null,
+          is_applicable: true,
+          data_source: 'manual'
+        }));
+
+      if (dataToInsert.length > 0) {
+        const { error } = await supabase
+          .from('scope2a_electricity')
+          .insert(dataToInsert);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Data saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save data",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="max-w-6xl mx-auto p-6">Loading...</div>;
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Scope 2a Electricity Carbon Emission Calculations</h1>
+      
       <Accordion type="single" collapsible defaultValue="info" className="mb-6">
         <AccordionItem value="info">
           <AccordionTrigger className="text-base font-semibold">What are Scope 2a emissions?</AccordionTrigger>
@@ -39,40 +184,94 @@ const Scope2aElectricity = () => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <div className="bg-white rounded-xl shadow p-4 overflow-x-auto">
-        <table className="min-w-full text-left">
-          <thead>
-            <tr className="border-b">
-              <th className="py-2 px-3 font-semibold">Source Of Energy</th>
-              <th className="py-2 px-3 font-semibold">Applicable To Business</th>
-              <th className="py-2 px-3 font-semibold">Quantity Used Till Date</th>
-              <th className="py-2 px-3 font-semibold">Last Year Emission Figures</th>
-              <th className="py-2 px-3 font-semibold">Unit Of Measurement</th>
-              <th className="py-2 px-3 font-semibold"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {ELECTRICITY_SOURCES.map((src, idx) => (
-              <tr key={src.name} className="border-b">
-                <td className="py-2 px-3">{src.name}</td>
-                <td className="py-2 px-3">
-                  <Switch checked={rows[idx].applicable} onCheckedChange={v => handleRowChange(idx, 'applicable', v)} />
-                </td>
-                <td className="py-2 px-3">
-                  <Input type="number" min="0" value={rows[idx].quantity} onChange={e => handleRowChange(idx, 'quantity', e.target.value)} className="w-28" />
-                </td>
-                <td className="py-2 px-3">
-                  <Input type="number" min="0" value={rows[idx].lastYear} onChange={e => handleRowChange(idx, 'lastYear', e.target.value)} className="w-28" />
-                </td>
-                <td className="py-2 px-3">{src.unit}</td>
-                <td className="py-2 px-3 text-green-600 font-semibold cursor-pointer">Connect</td>
-              </tr>
+
+      <div className="bg-white rounded-xl shadow p-4 overflow-x-auto mb-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Month</TableHead>
+              <TableHead>Quantity Used</TableHead>
+              <TableHead>Service Provider</TableHead>
+              <TableHead>GHG Emission Factor</TableHead>
+              <TableHead>Last Year Emission Figure</TableHead>
+              <TableHead>Unit Of Measurement</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((row, index) => (
+              <TableRow key={row.month}>
+                <TableCell className="font-medium">{row.month}</TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={row.quantityUsed}
+                    onChange={(e) => handleInputChange(index, 'quantityUsed', e.target.value)}
+                    className="w-32"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Select value={row.serviceProvider} onValueChange={(value) => handleInputChange(index, 'serviceProvider', value)}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_PROVIDERS.map((provider) => (
+                        <SelectItem key={provider.name} value={provider.name}>
+                          {provider.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{row.emissionFactor}</span>
+                    {row.sourceLink && (
+                      <a 
+                        href={row.sourceLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={row.lastYearEmission}
+                    onChange={(e) => handleInputChange(index, 'lastYearEmission', e.target.value)}
+                    className="w-32"
+                  />
+                </TableCell>
+                <TableCell>KWh</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-      <div className="flex justify-end mt-6">
-        <Button className="bg-green-500 hover:bg-green-600 text-white px-8" onClick={() => navigate('/my-esg/environmental/scope-2/other-energy')}>Next</Button>
+
+      <div className="flex justify-between items-center">
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-8"
+        >
+          {saving ? 'Saving...' : 'Save Data'}
+        </Button>
+        
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white px-8" 
+          onClick={() => navigate('/my-esg/environmental/scope-2/other-energy')}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

@@ -1694,6 +1694,7 @@ export type Database = {
           is_applicable: boolean | null
           last_year_emission_figures: number | null
           methane_emitted_ch4: number | null
+          month: string | null
           nitrous_oxide_emitted_n2o: number | null
           notes: string | null
           quantity_used: number | null
@@ -1718,6 +1719,7 @@ export type Database = {
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
           methane_emitted_ch4?: number | null
+          month?: string | null
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           quantity_used?: number | null
@@ -1742,6 +1744,7 @@ export type Database = {
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
           methane_emitted_ch4?: number | null
+          month?: string | null
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           quantity_used?: number | null
