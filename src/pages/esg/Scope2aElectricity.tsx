@@ -141,7 +141,7 @@ const Scope2aElectricity = () => {
             return {
               month,
               companyElectricityQuantity: existing.quantity_used?.toString() || '',
-              totalBuildingElectricity: existing.total_building_electricity?.toString() || '',
+              totalBuildingElectricity: (existing as any).total_building_electricity?.toString() || '',
               lastYearEmission: existing.last_year_emission_figures?.toString() || '',
               emissionFactor: provider?.factor || 0,
               sourceLink: provider?.source || ''
@@ -161,9 +161,9 @@ const Scope2aElectricity = () => {
         // Load questionnaire answers if they exist
         if (existingData[0]) {
           setServiceProvider(existingData[0].source_of_energy || '');
-          setReceivesBillsDirectly(existingData[0].receives_bills_directly || '');
-          setOrganizationArea(existingData[0].organization_area?.toString() || '');
-          setTotalBuildingArea(existingData[0].total_building_area?.toString() || '');
+          setReceivesBillsDirectly((existingData[0] as any).receives_bills_directly || '');
+          setOrganizationArea((existingData[0] as any).organization_area?.toString() || '');
+          setTotalBuildingArea((existingData[0] as any).total_building_area?.toString() || '');
         }
       } else {
         // Reset all data if no existing data for this location
