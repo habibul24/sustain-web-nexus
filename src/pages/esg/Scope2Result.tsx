@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuthContext } from '../../contexts/AuthContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface Scope2Data {
   id: string;
@@ -86,6 +89,77 @@ const Scope2Result = () => {
     return scope2Data.length;
   };
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text('Scope 2 Carbon Emission Results', 14, 22);
+    
+    // Summary data
+    doc.setFontSize(12);
+    doc.text(`Total Quantity Till Date: ${getTotalQuantity().toFixed(2)} kWh`, 14, 40);
+    doc.text(`Total Active Sources: ${getActiveSources()}`, 14, 48);
+    doc.text(`Total Emission: ${getTotalEmissions().toFixed(2)} kgCO2e`, 14, 56);
+    
+    // Table data
+    const tableData = scope2Data.map(row => [
+      row.source_of_energy,
+      row.office_location_name,
+      row.month || 'N/A',
+      row.quantity_used?.toFixed(2) || '0',
+      row.emission_factor?.toFixed(3) || '0',
+      calculateCO2Emission(row).toFixed(2)
+    ]);
+
+    autoTable(doc, {
+      startY: 70,
+      head: [['Description Of Sources', 'Location', 'Month', 'Invoice Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']],
+      body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [34, 197, 94] }
+    });
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    doc.setFontSize(10);
+    doc.text('Emission Factor Source: View Reference', 14, doc.internal.pageSize.height - 10);
+    
+    doc.save('scope2-carbon-emissions.pdf');
+  };
+
+  const generateExcel = () => {
+    // Summary data
+    const summaryData = [
+      ['Scope 2 Carbon Emission Results'],
+      [''],
+      ['Total Quantity Till Date', `${getTotalQuantity().toFixed(2)} kWh`],
+      ['Total Active Sources', getActiveSources().toString()],
+      ['Total Emission', `${getTotalEmissions().toFixed(2)} kgCO2e`],
+      [''],
+      ['Description Of Sources', 'Location', 'Month', 'Invoice Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']
+    ];
+
+    // Table data
+    const tableData = scope2Data.map(row => [
+      row.source_of_energy,
+      row.office_location_name,
+      row.month || 'N/A',
+      row.quantity_used?.toFixed(2) || '0',
+      row.emission_factor?.toFixed(3) || '0',
+      calculateCO2Emission(row).toFixed(2)
+    ]);
+
+    const allData = [...summaryData, ...tableData];
+    
+    const ws = XLSX.utils.aoa_to_sheet(allData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Scope 2 Results');
+    
+    XLSX.writeFile(wb, 'scope2-carbon-emissions.xlsx');
+  };
+
   const summary = [
     { label: 'Total Quantity Till Date', value: `${getTotalQuantity().toFixed(2)} kWh` },
     { label: 'Total Active Sources', value: getActiveSources().toString() },
@@ -151,9 +225,27 @@ const Scope2Result = () => {
       </div>
       
       <div className="flex flex-col md:flex-row gap-4 justify-end">
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate PDF</Button>
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate Excel</Button>
-        <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default" onClick={() => navigate('/my-esg/environmental/scope-3')}>Next &rarr;</Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={generatePDF}
+        >
+          Generate PDF
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={generateExcel}
+        >
+          Generate Excel
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default" 
+          onClick={() => navigate('/my-esg/environmental/scope-3')}
+        >
+          Next &rarr;
+        </Button>
       </div>
     </div>
   );

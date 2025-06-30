@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
@@ -6,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { ExternalLink, Info } from 'lucide-react';
+import { ExternalLink, Info, Upload, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -61,12 +60,15 @@ const Scope2aElectricity = () => {
       invoiceQuantityPriorYear: '',
       totalBuildingElectricity: '',
       emissionFactor: 0,
-      sourceLink: ''
+      sourceLink: '',
+      invoiceFile: null as File | null,
+      invoiceFileUrl: ''
     }))
   );
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     if (user) {
@@ -157,7 +159,9 @@ const Scope2aElectricity = () => {
               invoiceQuantityPriorYear: (existing as any).invoice_quantity_prior_year?.toString() || '',
               totalBuildingElectricity: (existing as any).total_building_electricity?.toString() || '',
               emissionFactor: provider?.factor || 0,
-              sourceLink: provider?.source || ''
+              sourceLink: provider?.source || '',
+              invoiceFile: null,
+              invoiceFileUrl: (existing as any).invoice_file_url || ''
             };
           }
           return {
@@ -166,7 +170,9 @@ const Scope2aElectricity = () => {
             invoiceQuantityPriorYear: '',
             totalBuildingElectricity: '',
             emissionFactor: 0,
-            sourceLink: ''
+            sourceLink: '',
+            invoiceFile: null,
+            invoiceFileUrl: ''
           };
         });
         setData(updatedData);
@@ -187,7 +193,9 @@ const Scope2aElectricity = () => {
           invoiceQuantityPriorYear: '',
           totalBuildingElectricity: '',
           emissionFactor: 0,
-          sourceLink: ''
+          sourceLink: '',
+          invoiceFile: null,
+          invoiceFileUrl: ''
         })));
         setServiceProvider('');
         setReceivesBillsDirectly('');
@@ -214,6 +222,82 @@ const Scope2aElectricity = () => {
       }
       return row;
     }));
+  };
+
+  const handleFileUpload = async (monthIndex: number, file: File) => {
+    if (!user || !selectedLocation) return;
+    
+    const monthName = MONTHS[monthIndex];
+    setUploading(prev => ({ ...prev, [monthName]: true }));
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${selectedLocation}/${monthName}_${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('invoice-uploads')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('invoice-uploads')
+        .getPublicUrl(fileName);
+
+      setData(prev => prev.map((row, index) => {
+        if (index === monthIndex) {
+          return { ...row, invoiceFile: file, invoiceFileUrl: publicUrl };
+        }
+        return row;
+      }));
+
+      toast({
+        title: "Success",
+        description: "Invoice uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload invoice",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(prev => ({ ...prev, [monthName]: false }));
+    }
+  };
+
+  const handleFileDelete = async (monthIndex: number) => {
+    const monthName = MONTHS[monthIndex];
+    const row = data[monthIndex];
+    
+    if (row.invoiceFileUrl) {
+      try {
+        // Extract file path from URL
+        const urlParts = row.invoiceFileUrl.split('/');
+        const fileName = urlParts.slice(-3).join('/'); // user_id/location_id/filename
+        
+        const { error } = await supabase.storage
+          .from('invoice-uploads')
+          .remove([fileName]);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error deleting file:', error);
+      }
+    }
+
+    setData(prev => prev.map((row, index) => {
+      if (index === monthIndex) {
+        return { ...row, invoiceFile: null, invoiceFileUrl: '' };
+      }
+      return row;
+    }));
+
+    toast({
+      title: "Success",
+      description: "Invoice deleted successfully",
+    });
   };
 
   const handleSave = async () => {
@@ -260,6 +344,7 @@ const Scope2aElectricity = () => {
           provide_prior_year: providePriorYear === 'Yes',
           organization_area: organizationArea ? parseFloat(organizationArea) : null,
           total_building_area: totalBuildingArea ? parseFloat(totalBuildingArea) : null,
+          invoice_file_url: row.invoiceFileUrl || null,
           is_applicable: true,
           data_source: 'manual'
         }));
@@ -442,8 +527,9 @@ const Scope2aElectricity = () => {
                   <TableHead>Month</TableHead>
                   {receivesBillsDirectly === 'No' && <TableHead>Total Building Electricity</TableHead>}
                   <TableHead>Invoice Quantity</TableHead>
-                  {providePriorYear === 'Yes' && <TableHead>Invoice Quantity: Prior Year</TableHead>}
                   <TableHead>Unit Of Measurement</TableHead>
+                  {providePriorYear === 'Yes' && <TableHead>Invoice Quantity: Prior Year</TableHead>}
+                  <TableHead>Upload Monthly Invoice</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -472,6 +558,7 @@ const Scope2aElectricity = () => {
                         className="w-32"
                       />
                     </TableCell>
+                    <TableCell>KWh</TableCell>
                     {providePriorYear === 'Yes' && (
                       <TableCell>
                         <Input
@@ -484,7 +571,48 @@ const Scope2aElectricity = () => {
                         />
                       </TableCell>
                     )}
-                    <TableCell>KWh</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {!row.invoiceFileUrl ? (
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(index, file);
+                              }}
+                              className="hidden"
+                              id={`file-${index}`}
+                            />
+                            <label
+                              htmlFor={`file-${index}`}
+                              className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 text-sm"
+                            >
+                              <Upload className="h-3 w-3" />
+                              {uploading[row.month] ? 'Uploading...' : 'Upload'}
+                            </label>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={row.invoiceFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-800 text-sm"
+                            >
+                              View Invoice
+                            </a>
+                            <button
+                              onClick={() => handleFileDelete(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
