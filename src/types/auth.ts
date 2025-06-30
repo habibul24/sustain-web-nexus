@@ -19,8 +19,11 @@ export interface UserProfile {
   operations_description?: string
   first_year_reporting?: boolean
   applicable_framework?: string
-  number_of_locations?: string
-  linking_subsidiaries?: boolean
+  has_multiple_locations?: boolean
+  office_locations?: any[]
+  has_subsidiaries?: boolean
+  number_of_subsidiaries?: number
+  gathering_data_via_app?: boolean
   onboarding_completed?: boolean
 }
 

@@ -8,10 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trash2, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+interface OfficeLocation {
+  name: string;
+  address: string;
+}
 
 const Onboarding = () => {
   const [formData, setFormData] = useState({
@@ -19,13 +25,30 @@ const Onboarding = () => {
     operations: '',
     firstYearReporting: '',
     framework: '',
-    numberOfLocations: '',
-    linkingSubsidiaries: false
+    hasMultipleLocations: '',
+    hasSubsidiaries: '',
+    numberOfSubsidiaries: '',
+    gatheringDataViaApp: false
   });
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([{ name: '', address: '' }]);
   const [loading, setLoading] = useState(false);
   
   const { user, refreshProfile } = useAuthContext();
   const navigate = useNavigate();
+
+  const addOfficeLocation = () => {
+    setOfficeLocations([...officeLocations, { name: '', address: '' }]);
+  };
+
+  const removeOfficeLocation = (index: number) => {
+    setOfficeLocations(officeLocations.filter((_, i) => i !== index));
+  };
+
+  const updateOfficeLocation = (index: number, field: keyof OfficeLocation, value: string) => {
+    const updated = [...officeLocations];
+    updated[index][field] = value;
+    setOfficeLocations(updated);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,26 +56,53 @@ const Onboarding = () => {
 
     try {
       // Update user profile with onboarding data
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
           software_used: formData.software,
           operations_description: formData.operations,
           first_year_reporting: formData.firstYearReporting === 'yes',
           applicable_framework: formData.framework,
-          number_of_locations: formData.numberOfLocations,
-          linking_subsidiaries: formData.linkingSubsidiaries,
+          has_multiple_locations: formData.hasMultipleLocations === 'yes',
+          has_subsidiaries: formData.hasSubsidiaries === 'yes',
+          number_of_subsidiaries: formData.numberOfSubsidiaries ? parseInt(formData.numberOfSubsidiaries) : null,
+          gathering_data_via_app: formData.gatheringDataViaApp,
           onboarding_completed: true
         })
         .eq('id', user?.id);
 
-      if (error) {
+      if (profileError) {
         toast({
           title: "Error saving information",
-          description: error.message,
+          description: profileError.message,
           variant: "destructive",
         });
         return;
+      }
+
+      // Save office locations if user has multiple locations
+      if (formData.hasMultipleLocations === 'yes') {
+        const validLocations = officeLocations.filter(loc => loc.name.trim() && loc.address.trim());
+        if (validLocations.length > 0) {
+          const { error: locationsError } = await supabase
+            .from('office_locations')
+            .insert(
+              validLocations.map(location => ({
+                user_id: user?.id,
+                name: location.name,
+                address: location.address
+              }))
+            );
+
+          if (locationsError) {
+            toast({
+              title: "Error saving office locations",
+              description: locationsError.message,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
       }
 
       toast({
@@ -162,41 +212,126 @@ const Onboarding = () => {
               </div>
 
               <div>
-                <Label htmlFor="locations" className="text-sm font-medium text-gray-700">
-                  Do you have multiple company locations/subsidiaries?
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  Do you have multiple office locations?
                 </Label>
-                <div className="mt-3 space-y-4">
-                  <div>
-                    <Label className="text-sm text-gray-600 mb-2 block">
-                      Number of company locations:
-                    </Label>
-                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, numberOfLocations: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select number of locations" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2-5">2-5</SelectItem>
-                        <SelectItem value="6-10">6-10</SelectItem>
-                        <SelectItem value="11-50">11-50</SelectItem>
-                        <SelectItem value="50+">50+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
+                <RadioGroup 
+                  value={formData.hasMultipleLocations}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, hasMultipleLocations: value }))}
+                  className="space-y-2"
+                >
                   <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="linking-subsidiaries"
-                      checked={formData.linkingSubsidiaries}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({ ...prev, linkingSubsidiaries: checked === true }))
-                      }
-                    />
-                    <Label htmlFor="linking-subsidiaries" className="text-sm">
-                      I will be linking subsidiaries to the platform
-                    </Label>
+                    <RadioGroupItem value="yes" id="multiple-locations-yes" />
+                    <Label htmlFor="multiple-locations-yes" className="text-sm">Yes</Label>
                   </div>
-                </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="multiple-locations-no" />
+                    <Label htmlFor="multiple-locations-no" className="text-sm">No</Label>
+                  </div>
+                </RadioGroup>
+
+                {formData.hasMultipleLocations === 'yes' && (
+                  <div className="mt-4 space-y-4">
+                    <Label className="text-sm font-medium text-gray-700">
+                      How many office locations do you operate?
+                    </Label>
+                    
+                    {officeLocations.map((location, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-sm font-medium">Office Location {index + 1}</Label>
+                          {officeLocations.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeOfficeLocation(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">Office Name</Label>
+                          <Input
+                            placeholder="e.g., Main Office, Branch Office"
+                            value={location.name}
+                            onChange={(e) => updateOfficeLocation(index, 'name', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">Address</Label>
+                          <Textarea
+                            placeholder="Enter full address"
+                            value={location.address}
+                            onChange={(e) => updateOfficeLocation(index, 'address', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addOfficeLocation}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Another Office Location
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  Do you have subsidiary companies?
+                </Label>
+                <RadioGroup 
+                  value={formData.hasSubsidiaries}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, hasSubsidiaries: value }))}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="subsidiaries-yes" />
+                    <Label htmlFor="subsidiaries-yes" className="text-sm">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="subsidiaries-no" />
+                    <Label htmlFor="subsidiaries-no" className="text-sm">No</Label>
+                  </div>
+                </RadioGroup>
+
+                {formData.hasSubsidiaries === 'yes' && (
+                  <div className="mt-4">
+                    <Label className="text-sm text-gray-600 mb-2 block">
+                      How many subsidiary companies do you have?
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Enter number of subsidiaries"
+                      value={formData.numberOfSubsidiaries}
+                      onChange={(e) => setFormData(prev => ({ ...prev, numberOfSubsidiaries: e.target.value }))}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="gathering-data-via-app"
+                  checked={formData.gatheringDataViaApp}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, gatheringDataViaApp: checked === true }))
+                  }
+                />
+                <Label htmlFor="gathering-data-via-app" className="text-sm">
+                  I will be gathering the data from my offices/subsidiaries using the GreenData app.
+                </Label>
               </div>
 
               <div className="pt-6">

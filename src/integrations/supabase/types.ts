@@ -1349,6 +1349,33 @@ export type Database = {
         }
         Relationships: []
       }
+      office_locations: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           brand: string | null
@@ -1697,6 +1724,7 @@ export type Database = {
           month: string | null
           nitrous_oxide_emitted_n2o: number | null
           notes: string | null
+          office_location_id: string | null
           quantity_used: number | null
           source_of_emission: string | null
           source_of_energy: string
@@ -1722,6 +1750,7 @@ export type Database = {
           month?: string | null
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
+          office_location_id?: string | null
           quantity_used?: number | null
           source_of_emission?: string | null
           source_of_energy: string
@@ -1747,6 +1776,7 @@ export type Database = {
           month?: string | null
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
+          office_location_id?: string | null
           quantity_used?: number | null
           source_of_emission?: string | null
           source_of_energy?: string
@@ -1754,7 +1784,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scope2a_electricity_office_location_id_fkey"
+            columns: ["office_location_id"]
+            isOneToOne: false
+            referencedRelation: "office_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stationary_combustion: {
         Row: {
@@ -2075,11 +2113,16 @@ export type Database = {
           email: string
           first_year_reporting: boolean | null
           full_name: string | null
+          gathering_data_via_app: boolean | null
+          has_multiple_locations: boolean | null
+          has_subsidiaries: boolean | null
           id: string
           industry: string | null
           job_title: string | null
           linking_subsidiaries: boolean | null
           number_of_locations: string | null
+          number_of_subsidiaries: number | null
+          office_locations: Json | null
           onboarding_completed: boolean | null
           operations_description: string | null
           phone: string | null
@@ -2100,11 +2143,16 @@ export type Database = {
           email: string
           first_year_reporting?: boolean | null
           full_name?: string | null
+          gathering_data_via_app?: boolean | null
+          has_multiple_locations?: boolean | null
+          has_subsidiaries?: boolean | null
           id: string
           industry?: string | null
           job_title?: string | null
           linking_subsidiaries?: boolean | null
           number_of_locations?: string | null
+          number_of_subsidiaries?: number | null
+          office_locations?: Json | null
           onboarding_completed?: boolean | null
           operations_description?: string | null
           phone?: string | null
@@ -2125,11 +2173,16 @@ export type Database = {
           email?: string
           first_year_reporting?: boolean | null
           full_name?: string | null
+          gathering_data_via_app?: boolean | null
+          has_multiple_locations?: boolean | null
+          has_subsidiaries?: boolean | null
           id?: string
           industry?: string | null
           job_title?: string | null
           linking_subsidiaries?: boolean | null
           number_of_locations?: string | null
+          number_of_subsidiaries?: number | null
+          office_locations?: Json | null
           onboarding_completed?: boolean | null
           operations_description?: string | null
           phone?: string | null

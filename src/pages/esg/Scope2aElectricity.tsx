@@ -21,10 +21,18 @@ const SERVICE_PROVIDERS = [
   { name: 'CLP Power Hong Kong Limited (CLP)', factor: 0.39, source: 'https://www.clp.com.cn/wp-content/uploads/2024/03/CLP_Sustainability_Report_2023_en-1.pdf' }
 ];
 
+interface OfficeLocation {
+  id: string;
+  name: string;
+  address: string;
+}
+
 const Scope2aElectricity = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { toast } = useToast();
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [data, setData] = useState(
     MONTHS.map((month) => ({
       month,
@@ -40,17 +48,66 @@ const Scope2aElectricity = () => {
 
   useEffect(() => {
     if (user) {
-      loadExistingData();
+      loadOfficeLocations();
     }
   }, [user]);
 
+  useEffect(() => {
+    if (selectedLocation) {
+      loadExistingData();
+    }
+  }, [selectedLocation]);
+
+  const loadOfficeLocations = async () => {
+    try {
+      const { data: locations, error } = await supabase
+        .from('office_locations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) throw error;
+
+      if (locations && locations.length > 0) {
+        setOfficeLocations(locations);
+        setSelectedLocation(locations[0].id);
+      } else {
+        // If no office locations, create a default "Main Office" entry
+        const { data: newLocation, error: createError } = await supabase
+          .from('office_locations')
+          .insert({
+            user_id: user.id,
+            name: 'Main Office',
+            address: 'Default Location'
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        
+        setOfficeLocations([newLocation]);
+        setSelectedLocation(newLocation.id);
+      }
+    } catch (error) {
+      console.error('Error loading office locations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load office locations",
+        variant: "destructive",
+      });
+    }
+  };
+
   const loadExistingData = async () => {
+    if (!selectedLocation) return;
+    
     setLoading(true);
     try {
       const { data: existingData, error } = await supabase
         .from('scope2a_electricity')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('office_location_id', selectedLocation);
 
       if (error) throw error;
 
@@ -78,6 +135,16 @@ const Scope2aElectricity = () => {
           };
         });
         setData(updatedData);
+      } else {
+        // Reset data if no existing data for this location
+        setData(MONTHS.map((month) => ({
+          month,
+          quantityUsed: '',
+          serviceProvider: '',
+          lastYearEmission: '',
+          emissionFactor: 0,
+          sourceLink: ''
+        })));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -111,10 +178,10 @@ const Scope2aElectricity = () => {
   };
 
   const handleSave = async () => {
-    if (!user) {
+    if (!user || !selectedLocation) {
       toast({
         title: "Error",
-        description: "You must be logged in to save data",
+        description: "You must be logged in and select an office location to save data",
         variant: "destructive",
       });
       return;
@@ -122,17 +189,19 @@ const Scope2aElectricity = () => {
 
     setSaving(true);
     try {
-      // Delete existing data for this user
+      // Delete existing data for this user and location
       await supabase
         .from('scope2a_electricity')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('office_location_id', selectedLocation);
 
       // Insert new data
       const dataToInsert = data
         .filter(row => row.quantityUsed || row.serviceProvider || row.lastYearEmission)
         .map(row => ({
           user_id: user.id,
+          office_location_id: selectedLocation,
           month: row.month,
           source_of_energy: row.serviceProvider,
           unit_of_measurement: 'KWh',
@@ -184,6 +253,26 @@ const Scope2aElectricity = () => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {officeLocations.length > 1 && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Office Location
+          </label>
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select office location" />
+            </SelectTrigger>
+            <SelectContent>
+              {officeLocations.map((location) => (
+                <SelectItem key={location.id} value={location.id}>
+                  {location.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow p-4 overflow-x-auto mb-6">
         <Table>
