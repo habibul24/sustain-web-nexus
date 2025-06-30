@@ -80,7 +80,7 @@ const Scope2aElectricity = () => {
 
       const formattedData = data?.map(item => ({
         ...item,
-        office_location_name: item.office_locations?.name || 'Unknown Location'
+        office_location_name: (item as any).office_locations?.name || 'Unknown Location'
       })) || [];
 
       setScope2Data(formattedData);
@@ -187,7 +187,7 @@ const Scope2aElectricity = () => {
       // Update database record
       const { error: dbError } = await supabase
         .from('scope2a_electricity')
-        .update({ invoice_file_url: filePath })
+        .update({ invoice_file_url: filePath } as any)
         .eq('id', rowId);
 
       if (dbError) {
@@ -230,7 +230,7 @@ const Scope2aElectricity = () => {
       // Update database record
       const { error: dbError } = await supabase
         .from('scope2a_electricity')
-        .update({ invoice_file_url: null })
+        .update({ invoice_file_url: null } as any)
         .eq('id', rowId);
 
       if (dbError) {

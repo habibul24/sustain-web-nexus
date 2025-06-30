@@ -1719,6 +1719,7 @@ export type Database = {
           gwp_methane: number | null
           gwp_nitrous_oxide: number | null
           id: string
+          invoice_file_url: string | null
           invoice_quantity_prior_year: number | null
           is_applicable: boolean | null
           last_year_emission_figures: number | null
@@ -1730,6 +1731,7 @@ export type Database = {
           organization_area: number | null
           provide_prior_year: boolean | null
           quantity_used: number | null
+          quantity_used_prior_year: number | null
           receives_bills_directly: string | null
           source_of_emission: string | null
           source_of_emission_prior_year: string | null
@@ -1753,6 +1755,7 @@ export type Database = {
           gwp_methane?: number | null
           gwp_nitrous_oxide?: number | null
           id?: string
+          invoice_file_url?: string | null
           invoice_quantity_prior_year?: number | null
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
@@ -1764,6 +1767,7 @@ export type Database = {
           organization_area?: number | null
           provide_prior_year?: boolean | null
           quantity_used?: number | null
+          quantity_used_prior_year?: number | null
           receives_bills_directly?: string | null
           source_of_emission?: string | null
           source_of_emission_prior_year?: string | null
@@ -1787,6 +1791,7 @@ export type Database = {
           gwp_methane?: number | null
           gwp_nitrous_oxide?: number | null
           id?: string
+          invoice_file_url?: string | null
           invoice_quantity_prior_year?: number | null
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
@@ -1798,6 +1803,7 @@ export type Database = {
           organization_area?: number | null
           provide_prior_year?: boolean | null
           quantity_used?: number | null
+          quantity_used_prior_year?: number | null
           receives_bills_directly?: string | null
           source_of_emission?: string | null
           source_of_emission_prior_year?: string | null
