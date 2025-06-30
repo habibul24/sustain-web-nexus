@@ -40,6 +40,7 @@ import Governance from './pages/esg/Governance';
 import Strategy from './pages/esg/Strategy';
 import RiskAssessment from './pages/esg/RiskAssessment';
 import MetricsTargets from './pages/esg/MetricsTargets';
+import EmployeeProfile from './pages/esg/EmployeeProfile';
 
 const queryClient = new QueryClient();
 
@@ -98,7 +99,7 @@ function AppRoutes() {
               <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
             </Route>
             <Route path="social">
-              <Route path="employee-profile" element={<ComingSoon label="Employee Profile" />} />
+              <Route path="employee-profile" element={<EmployeeProfile />} />
             </Route>
             <Route path="governance">
               <Route index element={<Governance />} />
