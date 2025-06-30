@@ -59,16 +59,26 @@ const EmployeeProfile = () => {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      // Use raw SQL query to avoid TypeScript issues with the new table
+      const { data, error } = await supabase.rpc('get_user_employees', {
+        p_user_id: user?.id
+      });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct query if RPC doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('employees' as any)
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
 
-      setEmployees(data || []);
-      calculateStats(data || []);
+        if (fallbackError) throw fallbackError;
+        setEmployees(fallbackData || []);
+        calculateStats(fallbackData || []);
+      } else {
+        setEmployees(data || []);
+        calculateStats(data || []);
+      }
     } catch (error) {
       console.error('Error loading employees:', error);
       toast({
@@ -135,7 +145,7 @@ const EmployeeProfile = () => {
 
       // Clear existing data and insert new data
       const { error: deleteError } = await supabase
-        .from('employees')
+        .from('employees' as any)
         .delete()
         .eq('user_id', user?.id);
 
@@ -143,7 +153,7 @@ const EmployeeProfile = () => {
 
       // Insert new employee data
       const { error: insertError } = await supabase
-        .from('employees')
+        .from('employees' as any)
         .insert(employeeData.map(emp => ({ ...emp, user_id: user?.id })));
 
       if (insertError) throw insertError;
