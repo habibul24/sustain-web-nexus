@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -57,11 +58,25 @@ const ESGSidebar = () => (
                     Scope 1 Result
                   </NavLink>
                 </li>
-                <li>
-                  <NavLink to="/my-esg/environmental/scope-2" className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
-                    Scope 2
-                  </NavLink>
-                </li>
+                <Accordion type="single" collapsible className="border-none">
+                  <AccordionItem value="scope-2">
+                    <AccordionTrigger className={triggerClass + ' text-base font-semibold pl-4'}>Scope 2</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="pl-2 space-y-1">
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-2/electricity" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            2.a) Electricity
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-2/other-energy" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            2.b) Other Energy
+                          </NavLink>
+                        </li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
                 <li>
                   <NavLink to="/my-esg/environmental/scope-2-result" className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
                     Scope 2 Result
@@ -130,4 +145,4 @@ const ESGSidebar = () => (
   </aside>
 );
 
-export default ESGSidebar; 
+export default ESGSidebar;
