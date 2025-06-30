@@ -11,11 +11,11 @@ const ESGCarousel = () => {
   const faqs = [
     {
       question: "Why is ESG important to businesses?",
-      answer: `The main reason why ESG is important to businesses is the mandatory regulations from government of various countries such as the European Union countries (EU), United Kingdom (UK), Hong Kong, Singapore, India and countries such as Japan, Canada, United States currently have voluntary disclosures and more companies are expected to introduce their regulations.
+      answer: `ESG is important to businesses primarily due to mandatory regulations from governments in various countries. The European Union (EU), United Kingdom (UK), Hong Kong, Singapore, India, and countries such as Japan, Canada, and the United States currently have voluntary disclosures, with more companies expected to introduce regulations.
 
-The regulations affect companies listed on the country's stock exchange; however, the requirements of ESG at their foundation also require these companies to obtain data from their subsidiary companies and other companies doing business with them, hence it is slowly affecting unlisted companies as well.
+These regulations primarily affect companies listed on their respective stock exchanges. However, ESG requirements at their foundation also require these companies to obtain data from their subsidiary companies and business partners, gradually affecting unlisted companies as well.
 
-Other reasons include:
+Additional reasons include:
 
 • Enhancing the Company's Reputation and Brand Value
 • Attracting and Retaining Talent
@@ -25,70 +25,70 @@ Other reasons include:
     },
     {
       question: "What is the difference between ESG and Sustainability?",
-      answer: `The words ESG & sustainability are often used interchangeably but there is a subtle but important distinction:
+      answer: `The terms ESG and sustainability are often used interchangeably, but there is a subtle yet important distinction:
 
-Sustainability is the broader, overarching principle that requires individuals and organizations to meeting the needs of the present without compromising the ability of future generations to meet their own needs i.e. ability to stay in business and existence for long. It considers the business from the financial (profit), environmental (planet), and social (people) angles to make a holistic determination.
+Sustainability is the broader, overarching principle that requires individuals and organizations to meet the needs of the present without compromising the ability of future generations to meet their own needs—essentially, the ability to maintain business operations and existence over the long term. It considers business from financial (profit), environmental (planet), and social (people) perspectives to make a holistic determination.
 
-ESG is a more specific, measurable framework used to evaluate a company's sustainability performance, i.e. ESG is how we measure a Company's sustainability. It is the method that provides the criteria and data points that investors and stakeholders can use to assess a company's commitment to sustainable practices.
+ESG is a more specific, measurable framework used to evaluate a company's sustainability performance. In other words, ESG is how we measure a company's sustainability. It provides the criteria and data points that investors and stakeholders can use to assess a company's commitment to sustainable practices.
 
-In conclusion, think of sustainability as the ultimate goal, and ESG as the roadmap to achieve it.`
+In conclusion, think of sustainability as the ultimate goal and ESG as the roadmap to achieve it.`
     },
     {
       question: "What are the most common ESG reporting frameworks?",
-      answer: `ESG reporting frameworks could be general, industry specific, or even topic specifics, however the most commonly used frameworks and which you should read first are:
+      answer: `ESG reporting frameworks can be general, industry-specific, or topic-specific. However, the most commonly used frameworks that you should familiarize yourself with first are:
 
-• Greenhouse Gas (GHG) Protocol: This is not a reporting framework but a set of global standardized accounting standards for measuring and managing GHG emissions. It provides the "how-to" for calculating the emissions that are then reported through frameworks like GRI or TCFD. It is the foundation of carbon emission calculations.
+• Greenhouse Gas (GHG) Protocol: This is not a reporting framework but a set of global standardized accounting standards for measuring and managing GHG emissions. It provides the "how-to" methodology for calculating emissions that are then reported through frameworks like GRI or TCFD. It serves as the foundation for carbon emission calculations.
 
-• Global Reporting Initiative (GRI): A comprehensive set of standards that can be used by any organisation to report on its economic, environmental, and social impacts.
+• Global Reporting Initiative (GRI): A comprehensive set of standards that can be used by any organization to report on its economic, environmental, and social impacts.
 
-• International Sustainability Standards Board (ISSB): under the IFRS Foundation (which also houses SASB), has Its first standards, IFRS S1 (General Requirements) and IFRS S2 (Climate-related Disclosures)
+• International Sustainability Standards Board (ISSB): Under the IFRS Foundation (which also houses SASB), has published its first standards: IFRS S1 (General Requirements) and IFRS S2 (Climate-related Disclosures).
 
-• Sustainability Accounting Standards Board (SASB): Provides industry-specific standards for reporting on financially material sustainability information to investors
+• Sustainability Accounting Standards Board (SASB): Provides industry-specific standards for reporting on financially material sustainability information to investors.
 
 • Task Force on Climate-related Financial Disclosures (TCFD): A framework specifically focused on helping companies disclose climate-related financial risks and opportunities.`
     },
     {
       question: "Which ESG framework applies to Hong Kong?",
-      answer: `Hong Kong Exchange (HKEX) has published the HKEX ESG Reporting Code, which is mandatory for listed companies. HKEX has aligned its climate-related rules with the ISSB standards (IFRS S2 – Climate-related Disclosures) so by extension, ISSB is also applicable.`
+      answer: `The Hong Kong Exchange (HKEX) has published the HKEX ESG Reporting Code, which is mandatory for listed companies. HKEX has aligned its climate-related rules with the ISSB standards (IFRS S2 – Climate-related Disclosures), so by extension, ISSB is also applicable to Hong Kong companies.`
     },
     {
       question: "Is ESG reporting mandatory in Hong Kong?",
-      answer: `All listed companies must mandatorily report their Scope 1 and Scope 2 greenhouse gas (GHG) emissions as of 1 January 2025. From 1 January 2026, all LargeCap issuers (constituents of the Hang Seng Composite LargeCap Index) will face mandatory disclosure for all new climate requirements, including Scope 3 emissions.`
+      answer: `Yes, ESG reporting is mandatory in Hong Kong. All listed companies must report their Scope 1 and Scope 2 greenhouse gas (GHG) emissions as of January 1, 2025. From January 1, 2026, all LargeCap issuers (constituents of the Hang Seng Composite LargeCap Index) will face mandatory disclosure for all new climate requirements, including Scope 3 emissions.`
     },
     {
       question: "Which ESG certificate should I pursue?",
-      answer: `The certificate you choose to pursue should depend on your proposed field of employment i.e. banks, manufacturing companies, audit & consultancy, technology
+      answer: `The certificate you choose should depend on your proposed field of employment:
 
-• For investment & banking professionals - Certified ESG Analyst (CESGA) by the European Federation of Financial Analysts Societies (EFFAS) or Sustainable Investing Certificate by CFA Institute
+• For investment & banking professionals: Certified ESG Analyst (CESGA) by the European Federation of Financial Analysts Societies (EFFAS) or Sustainable Investing Certificate by CFA Institute
 
-• For professionals working in a companies - GreenData's How to Implement ESG course or Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation
+• For professionals working in companies: GreenData's How to Implement ESG course or Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation
 
-• For executive-level and risk professionals - Sustainability and Climate Risk (SCR®) Certificate by the Global Association of Risk Professionals (GARP)
+• For executive-level and risk professionals: Sustainability and Climate Risk (SCR®) Certificate by the Global Association of Risk Professionals (GARP)
 
-• For auditors & non-finance consultants: International Standard on Sustainability Assurance (ISSA) 5000, General Requirements for Sustainability Assurance Engagements trainings, Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation and GRI Professional Certification by the Global Reporting Initiative
+• For auditors & non-finance consultants: International Standard on Sustainability Assurance (ISSA) 5000, General Requirements for Sustainability Assurance Engagements trainings, Fundamentals of Sustainability Accounting (FSA) Credential by the IFRS Foundation, and GRI Professional Certification by the Global Reporting Initiative
 
 Choose based on your preferred career path.`
     },
     {
       question: "Do I need an ESG report?",
-      answer: `All listed companies in the countries where ESG reporting is mandatory need to prepare an ESG report, with some jurisdictions also necessitating that the ESG report be certified by an audit company. If you are unlisted however, you should prepare an ESG report to showcase how your business runs sustainably and also to increase investor confidence in your operations, however, it is not mandatory.`
+      answer: `All listed companies in countries where ESG reporting is mandatory need to prepare an ESG report, with some jurisdictions also requiring that the ESG report be certified by an audit company. If you are unlisted, you should prepare an ESG report to showcase how your business operates sustainably and to increase investor confidence in your operations, although it is not mandatory.`
     },
     {
       question: "How do I choose my reporting framework?",
       answer: `To choose a reporting framework:
 
-1. Firstly, identify and use mandatory or principle-based requirements from your jurisdiction.
-2. Secondly, if there are no mandatory requirements in your jurisdiction, use the framework that your biggest customer uses.
-3. If you are a subsidiary, use the frameworks your parent company is using and in addition, the mandatory requirements in your jurisdiction if it applicable to you.
-4. If none of the above criteria apply, use the most commonly recognised frameworks, such as ISSB, GRI, SASB, and TCFD.`
+1. First, identify and use mandatory or principle-based requirements from your jurisdiction.
+2. If there are no mandatory requirements in your jurisdiction, use the framework that your biggest customer uses.
+3. If you are a subsidiary, use the frameworks your parent company is using, in addition to any mandatory requirements in your jurisdiction if applicable.
+4. If none of the above criteria apply, use the most commonly recognized frameworks, such as ISSB, GRI, SASB, and TCFD.`
     },
     {
       question: "What does ESG stand for?",
-      answer: `Environmental, social and governance`
+      answer: `ESG stands for Environmental, Social, and Governance.`
     },
     {
       question: "Where can I find ESG courses to help me get started?",
-      answer: `Check out the courses here: https://www.edu.greendatabiz.com/`
+      answer: `You can find ESG courses at: https://www.edu.greendatabiz.com/`
     }
   ];
 
