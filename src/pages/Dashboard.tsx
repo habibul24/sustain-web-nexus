@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -105,13 +104,17 @@ const Dashboard = () => {
       }))
       .sort((a, b) => b.emissions - a.emissions);
 
-    // Color palette for months - top 5 get bright colors, others get dull colors
-    const brightColors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-    const dullColors = ['#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827'];
+    // Color palette for months - each month gets a unique color
+    const colors = [
+      '#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', 
+      '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1',
+      '#14b8a6', '#f43f5e'
+    ];
 
     return sortedMonths.map((item, index) => ({
       ...item,
-      fill: index < 5 ? brightColors[index] : dullColors[index - 5] || '#9ca3af'
+      fill: colors[index % colors.length],
+      isTop5: index < 5
     }));
   };
 
@@ -153,6 +156,32 @@ const Dashboard = () => {
         fontWeight="bold"
       >
         {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  // Custom label function for monthly pie chart with external labels
+  const renderMonthlyLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, month, isTop5
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 20; // Position labels outside the pie
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    if (percent < 0.05) return null; // Don't show label for very small slices
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="#374151" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize={isTop5 ? "12" : "10"}
+        fontWeight={isTop5 ? "bold" : "normal"}
+      >
+        {`${month} (${(percent * 100).toFixed(0)}%)`}
       </text>
     );
   };
@@ -245,7 +274,7 @@ const Dashboard = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={renderCustomizedLabel}
+                          label={renderMonthlyLabel}
                           outerRadius={60}
                           dataKey="emissions"
                         >
