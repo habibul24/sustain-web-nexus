@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,6 +33,8 @@ import MobileCombustion from './pages/esg/MobileCombustion';
 import RefrigerantEmissions from './pages/esg/RefrigerantEmissions';
 import Scope1Result from './pages/esg/Scope1Result';
 import Scope2 from './pages/esg/Scope2';
+import Scope2aElectricity from './pages/esg/Scope2aElectricity';
+import Scope2bOtherEnergy from './pages/esg/Scope2bOtherEnergy';
 import Scope2Result from './pages/esg/Scope2Result';
 import Governance from './pages/esg/Governance';
 import Strategy from './pages/esg/Strategy';
@@ -74,7 +77,11 @@ function AppRoutes() {
                 <Route path="refrigerant-emissions" element={<RefrigerantEmissions />} />
               </Route>
               <Route path="scope-1-result" element={<Scope1Result />} />
-              <Route path="scope-2" element={<Scope2 />} />
+              <Route path="scope-2">
+                <Route index element={<Scope2 />} />
+                <Route path="electricity" element={<Scope2aElectricity />} />
+                <Route path="other-energy" element={<Scope2bOtherEnergy />} />
+              </Route>
               <Route path="scope-2-result" element={<Scope2Result />} />
               <Route path="scope-3" element={<ComingSoon label="Scope 3" />} />
               <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
