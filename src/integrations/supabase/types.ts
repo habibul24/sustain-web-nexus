@@ -436,6 +436,72 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          age: number | null
+          category_department: string | null
+          country_of_assignment: string | null
+          created_at: string
+          date_of_employment: string | null
+          date_of_exit: string | null
+          employee_number: string | null
+          factory_of_assignment: string | null
+          id: string
+          is_executive: boolean | null
+          level_designation: string | null
+          name: string
+          position: string | null
+          salary: number | null
+          serial_number: number | null
+          sex: string | null
+          updated_at: string
+          user_id: string
+          work_mode: string | null
+        }
+        Insert: {
+          age?: number | null
+          category_department?: string | null
+          country_of_assignment?: string | null
+          created_at?: string
+          date_of_employment?: string | null
+          date_of_exit?: string | null
+          employee_number?: string | null
+          factory_of_assignment?: string | null
+          id?: string
+          is_executive?: boolean | null
+          level_designation?: string | null
+          name: string
+          position?: string | null
+          salary?: number | null
+          serial_number?: number | null
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+          work_mode?: string | null
+        }
+        Update: {
+          age?: number | null
+          category_department?: string | null
+          country_of_assignment?: string | null
+          created_at?: string
+          date_of_employment?: string | null
+          date_of_exit?: string | null
+          employee_number?: string | null
+          factory_of_assignment?: string | null
+          id?: string
+          is_executive?: boolean | null
+          level_designation?: string | null
+          name?: string
+          position?: string | null
+          salary?: number | null
+          serial_number?: number | null
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+          work_mode?: string | null
+        }
+        Relationships: []
+      }
       esg_assessments: {
         Row: {
           assessment_period_end: string | null

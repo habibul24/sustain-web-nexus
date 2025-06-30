@@ -60,7 +60,7 @@ const EmployeeProfile = () => {
   const loadEmployees = async () => {
     try {
       const { data, error } = await supabase
-        .from('employees' as any)
+        .from('employees')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
@@ -75,7 +75,7 @@ const EmployeeProfile = () => {
         return;
       }
 
-      const employeeData = (data || []) as Employee[];
+      const employeeData = data || [];
       setEmployees(employeeData);
       calculateStats(employeeData);
     } catch (error) {
@@ -144,7 +144,7 @@ const EmployeeProfile = () => {
 
       // Clear existing data and insert new data
       const { error: deleteError } = await supabase
-        .from('employees' as any)
+        .from('employees')
         .delete()
         .eq('user_id', user?.id);
 
@@ -152,7 +152,7 @@ const EmployeeProfile = () => {
 
       // Insert new employee data
       const { error: insertError } = await supabase
-        .from('employees' as any)
+        .from('employees')
         .insert(employeeData.map(emp => ({ ...emp, user_id: user?.id })));
 
       if (insertError) throw insertError;
