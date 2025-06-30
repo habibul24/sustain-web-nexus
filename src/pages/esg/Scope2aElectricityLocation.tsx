@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -72,6 +71,7 @@ const Scope2aElectricity = () => {
           emissions_kg_co2,
           month,
           invoice_file_url,
+          office_location_id,
           office_locations!inner(name)
         `)
         .eq('user_id', user.id);
