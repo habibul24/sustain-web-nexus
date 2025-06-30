@@ -59,26 +59,25 @@ const EmployeeProfile = () => {
 
   const loadEmployees = async () => {
     try {
-      // Use raw SQL query to avoid TypeScript issues with the new table
-      const { data, error } = await supabase.rpc('get_user_employees', {
-        p_user_id: user?.id
-      });
+      const { data, error } = await supabase
+        .from('employees' as any)
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
 
       if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('employees' as any)
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false });
-
-        if (fallbackError) throw fallbackError;
-        setEmployees(fallbackData || []);
-        calculateStats(fallbackData || []);
-      } else {
-        setEmployees(data || []);
-        calculateStats(data || []);
+        console.error('Error loading employees:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load employee data",
+          variant: "destructive",
+        });
+        return;
       }
+
+      const employeeData = (data || []) as Employee[];
+      setEmployees(employeeData);
+      calculateStats(employeeData);
     } catch (error) {
       console.error('Error loading employees:', error);
       toast({
