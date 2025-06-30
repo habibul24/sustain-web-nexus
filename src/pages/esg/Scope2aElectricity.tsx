@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -182,8 +183,6 @@ const Scope2aElectricity = () => {
       if (error) {
         throw error;
       }
-
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.Key}`;
 
       // Update database record
       const { error: dbError } = await supabase

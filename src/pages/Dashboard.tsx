@@ -89,7 +89,7 @@ const Dashboard = () => {
     ];
   };
 
-  // Prepare data for monthly pie chart with highlighting
+  // Prepare data for monthly pie chart with different colors and highlighting
   const getMonthlyData = () => {
     const monthlyEmissions = scope2Data.reduce((acc, item) => {
       const month = item.month || 'Unknown';
@@ -105,10 +105,13 @@ const Dashboard = () => {
       }))
       .sort((a, b) => b.emissions - a.emissions);
 
-    // Highlight top 5 months
+    // Color palette for months - top 5 get bright colors, others get dull colors
+    const brightColors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const dullColors = ['#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827'];
+
     return sortedMonths.map((item, index) => ({
       ...item,
-      fill: index < 5 ? '#22c55e' : '#e5e7eb'
+      fill: index < 5 ? brightColors[index] : dullColors[index - 5] || '#9ca3af'
     }));
   };
 
@@ -126,6 +129,32 @@ const Dashboard = () => {
       emissions: Number(emissions.toFixed(2)),
       fill: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][index % 6]
     }));
+  };
+
+  // Custom label function for pie charts
+  const renderCustomizedLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    if (percent < 0.05) return null; // Don't show label for very small slices
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
   };
 
   const yearComparisonData = getYearComparisonData();
@@ -215,9 +244,15 @@ const Dashboard = () => {
                           data={monthlyData}
                           cx="50%"
                           cy="50%"
+                          labelLine={false}
+                          label={renderCustomizedLabel}
                           outerRadius={60}
                           dataKey="emissions"
-                        />
+                        >
+                          {monthlyData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
                         <ChartTooltip content={<ChartTooltipContent />} />
                       </PieChart>
                     </ChartContainer>
@@ -237,9 +272,15 @@ const Dashboard = () => {
                           data={locationData}
                           cx="50%"
                           cy="50%"
+                          labelLine={false}
+                          label={renderCustomizedLabel}
                           outerRadius={60}
                           dataKey="emissions"
-                        />
+                        >
+                          {locationData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
                         <ChartTooltip content={<ChartTooltipContent />} />
                       </PieChart>
                     </ChartContainer>
