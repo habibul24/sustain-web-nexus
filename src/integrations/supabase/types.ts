@@ -1727,11 +1727,15 @@ export type Database = {
           nitrous_oxide_emitted_n2o: number | null
           notes: string | null
           office_location_id: string | null
+          organization_area: number | null
           provide_prior_year: boolean | null
           quantity_used: number | null
+          receives_bills_directly: string | null
           source_of_emission: string | null
           source_of_emission_prior_year: string | null
           source_of_energy: string
+          total_building_area: number | null
+          total_building_electricity: number | null
           unit_of_measurement: string
           updated_at: string
           user_id: string
@@ -1757,11 +1761,15 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           office_location_id?: string | null
+          organization_area?: number | null
           provide_prior_year?: boolean | null
           quantity_used?: number | null
+          receives_bills_directly?: string | null
           source_of_emission?: string | null
           source_of_emission_prior_year?: string | null
           source_of_energy: string
+          total_building_area?: number | null
+          total_building_electricity?: number | null
           unit_of_measurement: string
           updated_at?: string
           user_id: string
@@ -1787,11 +1795,15 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           office_location_id?: string | null
+          organization_area?: number | null
           provide_prior_year?: boolean | null
           quantity_used?: number | null
+          receives_bills_directly?: string | null
           source_of_emission?: string | null
           source_of_emission_prior_year?: string | null
           source_of_energy?: string
+          total_building_area?: number | null
+          total_building_electricity?: number | null
           unit_of_measurement?: string
           updated_at?: string
           user_id?: string
