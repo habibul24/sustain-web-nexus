@@ -175,7 +175,7 @@ const Dashboard = () => {
   };
 
   const getExecutiveGenderData = () => {
-    const executives = employees.filter(emp => emp.is_executive);
+    const executives = employees.filter(emp => emp.position === 'Yes');
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
@@ -592,10 +592,10 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
-                      <BarChart data={employeesByCountryData} layout="horizontal">
+                      <BarChart data={employeesByCountryData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tick={{ fontSize: 10 }} />
-                        <YAxis dataKey="country" type="category" tick={{ fontSize: 10 }} width={60} />
+                        <XAxis dataKey="country" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="count" />
                       </BarChart>
@@ -675,7 +675,7 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      {employees.filter(emp => emp.is_executive).length}
+                      {employees.filter(emp => emp.position === 'Yes').length}
                     </div>
                   </CardContent>
                 </Card>

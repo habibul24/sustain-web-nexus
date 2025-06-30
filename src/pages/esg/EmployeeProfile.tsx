@@ -124,8 +124,8 @@ const EmployeeProfile = () => {
     
     const activeEmployees = employeeData.filter(emp => !emp.date_of_exit).length;
     
-    // Executives
-    const executives = employeeData.filter(emp => emp.is_executive);
+    // Executives - check for "Yes" in position field
+    const executives = employeeData.filter(emp => emp.position === 'Yes');
     const totalExecutives = executives.length;
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
@@ -206,7 +206,7 @@ const EmployeeProfile = () => {
         serial_number: row['S/N'] || null,
         name: row['Name'] || '',
         position: row['Position- Executive or not'] || null,
-        is_executive: row['Position- Executive or not']?.toLowerCase().includes('executive') || false,
+        is_executive: row['Position- Executive or not'] === 'Yes',
         age: row['Age'] || null,
         sex: row['Sex'] || null, // Keep M/F as is, will handle in calculations
         employee_number: row['Employee number'] || null,
