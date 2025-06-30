@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,6 +34,7 @@ import RefrigerantEmissions from './pages/esg/RefrigerantEmissions';
 import Scope1Result from './pages/esg/Scope1Result';
 import Scope2 from './pages/esg/Scope2';
 import Scope2aElectricity from './pages/esg/Scope2aElectricity';
+import Scope2aElectricityLocation from './pages/esg/Scope2aElectricityLocation';
 import Scope2bOtherEnergy from './pages/esg/Scope2bOtherEnergy';
 import Scope2Result from './pages/esg/Scope2Result';
 import Governance from './pages/esg/Governance';
@@ -80,6 +82,7 @@ function AppRoutes() {
               <Route path="scope-2">
                 <Route index element={<Scope2 />} />
                 <Route path="electricity" element={<Scope2aElectricity />} />
+                <Route path="electricity/:locationId" element={<Scope2aElectricityLocation />} />
                 <Route path="other-energy" element={<Scope2bOtherEnergy />} />
               </Route>
               <Route path="scope-2-result" element={<Scope2Result />} />
