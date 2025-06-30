@@ -19,14 +19,28 @@ interface Scope2Data {
   created_at: string;
 }
 
+interface Employee {
+  id: string;
+  name: string;
+  position?: string;
+  is_executive?: boolean;
+  age?: number;
+  sex?: string;
+  country_of_assignment?: string;
+  date_of_employment?: string;
+  date_of_exit?: string;
+}
+
 const Dashboard = () => {
   const { user } = useAuthContext();
   const [scope2Data, setScope2Data] = useState<Scope2Data[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchScope2Data();
+      fetchEmployeeData();
     }
   }, [user]);
 
@@ -61,6 +75,21 @@ const Dashboard = () => {
       console.error('Error fetching Scope 2 data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmployeeData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Error fetching employee data:', error);
     }
   };
 
@@ -134,6 +163,91 @@ const Dashboard = () => {
     }));
   };
 
+  // Social data preparation functions
+  const getGenderDistributionData = () => {
+    const maleCount = employees.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const femaleCount = employees.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    return [
+      { name: 'Male', value: maleCount, fill: '#3b82f6' },
+      { name: 'Female', value: femaleCount, fill: '#ec4899' }
+    ];
+  };
+
+  const getExecutiveGenderData = () => {
+    const executives = employees.filter(emp => emp.is_executive);
+    const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    return [
+      { name: 'Male Executives', value: maleExecutives, fill: '#1e40af' },
+      { name: 'Female Executives', value: femaleExecutives, fill: '#be185d' }
+    ];
+  };
+
+  const getAgeDistributionData = () => {
+    const under30 = employees.filter(emp => emp.age && emp.age < 30).length;
+    const age30to50 = employees.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const above50 = employees.filter(emp => emp.age && emp.age > 50).length;
+    
+    return [
+      { name: 'Under 30', value: under30, fill: '#22c55e' },
+      { name: '30-50', value: age30to50, fill: '#f59e0b' },
+      { name: 'Above 50', value: above50, fill: '#ef4444' }
+    ];
+  };
+
+  const getEmployeesByCountryData = () => {
+    const countryCount = employees.reduce((acc, emp) => {
+      if (emp.country_of_assignment) {
+        acc[emp.country_of_assignment] = (acc[emp.country_of_assignment] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(countryCount).map(([country, count]) => ({
+      country,
+      count,
+      fill: '#3b82f6'
+    }));
+  };
+
+  const getTurnoverByGenderData = () => {
+    const maleEmployees = employees.filter(emp => emp.sex === 'M' || emp.sex === 'Male');
+    const femaleEmployees = employees.filter(emp => emp.sex === 'F' || emp.sex === 'Female');
+    
+    const maleLeft = maleEmployees.filter(emp => emp.date_of_exit).length;
+    const femaleLeft = femaleEmployees.filter(emp => emp.date_of_exit).length;
+    
+    const maleTurnover = maleEmployees.length > 0 ? (maleLeft / maleEmployees.length) * 100 : 0;
+    const femaleTurnover = femaleEmployees.length > 0 ? (femaleLeft / femaleEmployees.length) * 100 : 0;
+    
+    return [
+      { gender: 'Male', turnover: Number(maleTurnover.toFixed(2)), fill: '#3b82f6' },
+      { gender: 'Female', turnover: Number(femaleTurnover.toFixed(2)), fill: '#ec4899' }
+    ];
+  };
+
+  const getTurnoverByAgeData = () => {
+    const under30 = employees.filter(emp => emp.age && emp.age < 30);
+    const age30to50 = employees.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50);
+    const above50 = employees.filter(emp => emp.age && emp.age > 50);
+    
+    const under30Left = under30.filter(emp => emp.date_of_exit).length;
+    const age30to50Left = age30to50.filter(emp => emp.date_of_exit).length;
+    const above50Left = above50.filter(emp => emp.date_of_exit).length;
+    
+    const under30Turnover = under30.length > 0 ? (under30Left / under30.length) * 100 : 0;
+    const age30to50Turnover = age30to50.length > 0 ? (age30to50Left / age30to50.length) * 100 : 0;
+    const above50Turnover = above50.length > 0 ? (above50Left / above50.length) * 100 : 0;
+    
+    return [
+      { ageGroup: 'Under 30', turnover: Number(under30Turnover.toFixed(2)), fill: '#22c55e' },
+      { ageGroup: '30-50', turnover: Number(age30to50Turnover.toFixed(2)), fill: '#f59e0b' },
+      { ageGroup: 'Above 50', turnover: Number(above50Turnover.toFixed(2)), fill: '#ef4444' }
+    ];
+  };
+
   // Custom label function for pie charts
   const renderCustomizedLabel = ({
     cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value
@@ -189,6 +303,14 @@ const Dashboard = () => {
   const yearComparisonData = getYearComparisonData();
   const monthlyData = getMonthlyData();
   const locationData = getLocationData();
+  
+  // Social data
+  const genderDistributionData = getGenderDistributionData();
+  const executiveGenderData = getExecutiveGenderData();
+  const ageDistributionData = getAgeDistributionData();
+  const employeesByCountryData = getEmployeesByCountryData();
+  const turnoverByGenderData = getTurnoverByGenderData();
+  const turnoverByAgeData = getTurnoverByAgeData();
 
   const chartConfig = {
     emissions: {
@@ -374,17 +496,216 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="social" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Social Impact Metrics</CardTitle>
-              <CardDescription>Coming soon - Social performance indicators</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                Social metrics will be available once social data collection is implemented.
+          {employees.length > 0 ? (
+            <>
+              {/* Social Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {/* Gender Distribution Pie Chart */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Gender Distribution</CardTitle>
+                    <CardDescription className="text-xs">All employees</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <PieChart>
+                        <Pie
+                          data={genderDistributionData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={renderCustomizedLabel}
+                          outerRadius={60}
+                          dataKey="value"
+                        >
+                          {genderDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Executive Gender Distribution */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Executive Gender Distribution</CardTitle>
+                    <CardDescription className="text-xs">Leadership positions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <PieChart>
+                        <Pie
+                          data={executiveGenderData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={renderCustomizedLabel}
+                          outerRadius={60}
+                          dataKey="value"
+                        >
+                          {executiveGenderData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Age Distribution */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Age Distribution</CardTitle>
+                    <CardDescription className="text-xs">Employee age groups</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <PieChart>
+                        <Pie
+                          data={ageDistributionData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={renderCustomizedLabel}
+                          outerRadius={60}
+                          dataKey="value"
+                        >
+                          {ageDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Employees by Country */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Employees by Country</CardTitle>
+                    <CardDescription className="text-xs">Geographic distribution</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <BarChart data={employeesByCountryData} layout="horizontal">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" tick={{ fontSize: 10 }} />
+                        <YAxis dataKey="country" type="category" tick={{ fontSize: 10 }} width={60} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="count" />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Turnover by Gender */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Turnover Rate by Gender</CardTitle>
+                    <CardDescription className="text-xs">Percentage by gender</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <BarChart data={turnoverByGenderData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="gender" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="turnover" />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Turnover by Age Group */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Turnover Rate by Age Group</CardTitle>
+                    <CardDescription className="text-xs">Percentage by age range</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-48">
+                      <BarChart data={turnoverByAgeData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="ageGroup" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="turnover" />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Social Summary Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Total Employees</CardTitle>
+                    <CardDescription>Current workforce</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {employees.length}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Gender Ratio</CardTitle>
+                    <CardDescription>Male to Female</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {genderDistributionData[0]?.value || 0}:{genderDistributionData[1]?.value || 0}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Executives</CardTitle>
+                    <CardDescription>Leadership positions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {employees.filter(emp => emp.is_executive).length}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Countries</CardTitle>
+                    <CardDescription>Operating locations</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {employeesByCountryData.length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Impact Metrics</CardTitle>
+                <CardDescription>Upload employee data to view social metrics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-gray-500">
+                  Social metrics will be available once you upload employee data in the Employee Profile section.
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="governance" className="space-y-6">

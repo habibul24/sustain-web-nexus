@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Upload, Users, UserCheck, Clock, TrendingUp } from 'lucide-react';
+import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Employee {
@@ -33,8 +33,20 @@ interface EmployeeStats {
   totalMaleWorkers: number;
   totalFemaleWorkers: number;
   employeesUnder30: number;
+  employees30To50: number;
+  employeesAbove50: number;
   turnoverRate: number;
+  turnoverRateMale: number;
+  turnoverRateFemale: number;
+  turnoverRateUnder30: number;
+  turnoverRate30To50: number;
+  turnoverRateAbove50: number;
   activeEmployees: number;
+  totalExecutives: number;
+  maleExecutives: number;
+  femaleExecutives: number;
+  newHires2025: number;
+  employeesByCountry: Record<string, number>;
 }
 
 const EmployeeProfile = () => {
@@ -47,8 +59,20 @@ const EmployeeProfile = () => {
     totalMaleWorkers: 0,
     totalFemaleWorkers: 0,
     employeesUnder30: 0,
+    employees30To50: 0,
+    employeesAbove50: 0,
     turnoverRate: 0,
+    turnoverRateMale: 0,
+    turnoverRateFemale: 0,
+    turnoverRateUnder30: 0,
+    turnoverRate30To50: 0,
+    turnoverRateAbove50: 0,
     activeEmployees: 0,
+    totalExecutives: 0,
+    maleExecutives: 0,
+    femaleExecutives: 0,
+    newHires2025: 0,
+    employeesByCountry: {},
   });
 
   useEffect(() => {
@@ -90,22 +114,76 @@ const EmployeeProfile = () => {
 
   const calculateStats = (employeeData: Employee[]) => {
     const totalEmployees = employeeData.length;
-    const totalMaleWorkers = employeeData.filter(emp => emp.sex === 'Male').length;
-    const totalFemaleWorkers = employeeData.filter(emp => emp.sex === 'Female').length;
+    const totalMaleWorkers = employeeData.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const totalFemaleWorkers = employeeData.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    // Age groups
     const employeesUnder30 = employeeData.filter(emp => emp.age && emp.age < 30).length;
+    const employees30To50 = employeeData.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const employeesAbove50 = employeeData.filter(emp => emp.age && emp.age > 50).length;
+    
     const activeEmployees = employeeData.filter(emp => !emp.date_of_exit).length;
     
-    // Calculate turnover rate: (employees who left / total employees) * 100
+    // Executives
+    const executives = employeeData.filter(emp => emp.is_executive);
+    const totalExecutives = executives.length;
+    const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    // New hires in 2025
+    const newHires2025 = employeeData.filter(emp => {
+      if (!emp.date_of_employment) return false;
+      const hireYear = new Date(emp.date_of_employment).getFullYear();
+      return hireYear === 2025;
+    }).length;
+    
+    // Employees by country
+    const employeesByCountry: Record<string, number> = {};
+    employeeData.forEach(emp => {
+      if (emp.country_of_assignment) {
+        employeesByCountry[emp.country_of_assignment] = (employeesByCountry[emp.country_of_assignment] || 0) + 1;
+      }
+    });
+    
+    // Turnover rates
     const employeesWhoLeft = employeeData.filter(emp => emp.date_of_exit).length;
     const turnoverRate = totalEmployees > 0 ? (employeesWhoLeft / totalEmployees) * 100 : 0;
+    
+    const maleEmployeesWhoLeft = employeeData.filter(emp => emp.date_of_exit && (emp.sex === 'M' || emp.sex === 'Male')).length;
+    const turnoverRateMale = totalMaleWorkers > 0 ? (maleEmployeesWhoLeft / totalMaleWorkers) * 100 : 0;
+    
+    const femaleEmployeesWhoLeft = employeeData.filter(emp => emp.date_of_exit && (emp.sex === 'F' || emp.sex === 'Female')).length;
+    const turnoverRateFemale = totalFemaleWorkers > 0 ? (femaleEmployeesWhoLeft / totalFemaleWorkers) * 100 : 0;
+    
+    // Turnover by age group
+    const under30WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
+    const turnoverRateUnder30 = employeesUnder30 > 0 ? (under30WhoLeft / employeesUnder30) * 100 : 0;
+    
+    const age30To50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const turnoverRate30To50 = employees30To50 > 0 ? (age30To50WhoLeft / employees30To50) * 100 : 0;
+    
+    const above50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
+    const turnoverRateAbove50 = employeesAbove50 > 0 ? (above50WhoLeft / employeesAbove50) * 100 : 0;
 
     setStats({
       totalEmployees,
       totalMaleWorkers,
       totalFemaleWorkers,
       employeesUnder30,
+      employees30To50,
+      employeesAbove50,
       turnoverRate: Math.round(turnoverRate * 100) / 100,
+      turnoverRateMale: Math.round(turnoverRateMale * 100) / 100,
+      turnoverRateFemale: Math.round(turnoverRateFemale * 100) / 100,
+      turnoverRateUnder30: Math.round(turnoverRateUnder30 * 100) / 100,
+      turnoverRate30To50: Math.round(turnoverRate30To50 * 100) / 100,
+      turnoverRateAbove50: Math.round(turnoverRateAbove50 * 100) / 100,
       activeEmployees,
+      totalExecutives,
+      maleExecutives,
+      femaleExecutives,
+      newHires2025,
+      employeesByCountry,
     });
   };
 
@@ -130,7 +208,7 @@ const EmployeeProfile = () => {
         position: row['Position- Executive or not'] || null,
         is_executive: row['Position- Executive or not']?.toLowerCase().includes('executive') || false,
         age: row['Age'] || null,
-        sex: row['Sex'] || null,
+        sex: row['Sex'] || null, // Keep M/F as is, will handle in calculations
         employee_number: row['Employee number'] || null,
         work_mode: row['Work mode (Full Time or Part Time)'] || null,
         country_of_assignment: row['Country of Primary Assignment'] || null,
@@ -214,7 +292,7 @@ const EmployeeProfile = () => {
       </Card>
 
       {/* Statistics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
@@ -236,7 +314,33 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalMaleWorkers}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalFemaleWorkers} female workers
+              {stats.totalEmployees > 0 ? Math.round((stats.totalMaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Female Workers</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalFemaleWorkers}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalEmployees > 0 ? Math.round((stats.totalFemaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Executives</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalExecutives}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.maleExecutives}M / {stats.femaleExecutives}F
             </p>
           </CardContent>
         </Card>
@@ -249,14 +353,53 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.employeesUnder30}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employeesUnder30 / stats.totalEmployees) * 100) : 0}% of total workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.employeesUnder30 / stats.totalEmployees) * 100) : 0}% of workforce
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employee Turnover Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Employees 30-50</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.employees30To50}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalEmployees > 0 ? Math.round((stats.employees30To50 / stats.totalEmployees) * 100) : 0}% of workforce
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Employees Above 50</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.employeesAbove50}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalEmployees > 0 ? Math.round((stats.employeesAbove50 / stats.totalEmployees) * 100) : 0}% of workforce
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">New Hires 2025</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.newHires2025}</div>
+            <p className="text-xs text-muted-foreground">
+              This year
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overall Turnover Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -269,17 +412,62 @@ const EmployeeProfile = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Male Turnover Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeEmployees}</div>
+            <div className="text-2xl font-bold">{stats.turnoverRateMale}%</div>
             <p className="text-xs text-muted-foreground">
-              Currently employed
+              Male employees
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Female Turnover Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.turnoverRateFemale}%</div>
+            <p className="text-xs text-muted-foreground">
+              Female employees
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Countries</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{Object.keys(stats.employeesByCountry).length}</div>
+            <p className="text-xs text-muted-foreground">
+              Operating countries
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Countries Breakdown */}
+      {Object.keys(stats.employeesByCountry).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Employees by Country</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {Object.entries(stats.employeesByCountry).map(([country, count]) => (
+                <div key={country} className="flex justify-between items-center">
+                  <span className="text-sm font-medium">{country}</span>
+                  <span className="text-sm text-muted-foreground">{count} employees</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Employee Data Table */}
       {employees.length > 0 && (
