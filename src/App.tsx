@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -99,7 +98,6 @@ function AppRoutes() {
               <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
             </Route>
             <Route path="social">
-              <Route index element={<ComingSoon label="Social" />} />
               <Route path="employee-profile" element={<ComingSoon label="Employee Profile" />} />
             </Route>
             <Route path="governance">
