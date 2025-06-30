@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -49,6 +48,11 @@ const ESGSidebar = () => (
                             1.d) Refrigerant Emissions
                           </NavLink>
                         </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-1/coming-soon" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            1.e) Coming Soon
+                          </NavLink>
+                        </li>
                       </ul>
                     </AccordionContent>
                   </AccordionItem>
@@ -82,11 +86,50 @@ const ESGSidebar = () => (
                     Scope 2 Result
                   </NavLink>
                 </li>
-                <li>
-                  <NavLink to="/my-esg/environmental/scope-3" className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
-                    Scope 3
-                  </NavLink>
-                </li>
+                <Accordion type="single" collapsible className="border-none">
+                  <AccordionItem value="scope-3">
+                    <AccordionTrigger className={triggerClass + ' text-base font-semibold pl-4'}>Scope 3</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="pl-2 space-y-1">
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/purchased-goods" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.a) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/capital-goods" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.b) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/fuel-energy" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.c) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/transportation" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.d) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/waste" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.e) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/business-travel" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.f) Coming Soon
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink to="/my-esg/environmental/scope-3/employee-commuting" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
+                            3.g) Coming Soon
+                          </NavLink>
+                        </li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
                 <li>
                   <NavLink to="/my-esg/environmental/scope-3-result" className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
                     Scope 3 Result

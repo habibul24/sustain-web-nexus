@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -75,6 +74,7 @@ function AppRoutes() {
                 <Route path="process-emissions" element={<ProcessEmissions />} />
                 <Route path="mobile-combustion" element={<MobileCombustion />} />
                 <Route path="refrigerant-emissions" element={<RefrigerantEmissions />} />
+                <Route path="coming-soon" element={<ComingSoon label="Scope 1.e" />} />
               </Route>
               <Route path="scope-1-result" element={<Scope1Result />} />
               <Route path="scope-2">
@@ -83,7 +83,16 @@ function AppRoutes() {
                 <Route path="other-energy" element={<Scope2bOtherEnergy />} />
               </Route>
               <Route path="scope-2-result" element={<Scope2Result />} />
-              <Route path="scope-3" element={<ComingSoon label="Scope 3" />} />
+              <Route path="scope-3">
+                <Route index element={<ComingSoon label="Scope 3" />} />
+                <Route path="purchased-goods" element={<ComingSoon label="Scope 3.a" />} />
+                <Route path="capital-goods" element={<ComingSoon label="Scope 3.b" />} />
+                <Route path="fuel-energy" element={<ComingSoon label="Scope 3.c" />} />
+                <Route path="transportation" element={<ComingSoon label="Scope 3.d" />} />
+                <Route path="waste" element={<ComingSoon label="Scope 3.e" />} />
+                <Route path="business-travel" element={<ComingSoon label="Scope 3.f" />} />
+                <Route path="employee-commuting" element={<ComingSoon label="Scope 3.g" />} />
+              </Route>
               <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
             </Route>
             <Route path="social">
