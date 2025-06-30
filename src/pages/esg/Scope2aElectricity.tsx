@@ -18,8 +18,20 @@ const MONTHS = [
 ];
 
 const SERVICE_PROVIDERS = [
-  { name: 'Hong Kong Electric', factor: 0.66, source: 'https://www.hkelectric.com/documents/en/CorporateSocialResponsibility/CorporateSocialResponsibility_CDD/Documents/SR2023E.pdf' },
-  { name: 'CLP Power Hong Kong Limited (CLP)', factor: 0.39, source: 'https://www.clp.com.cn/wp-content/uploads/2024/03/CLP_Sustainability_Report_2023_en-1.pdf' }
+  { 
+    name: 'Hong Kong Electric', 
+    factor: 0.6, 
+    source: 'https://www.hkelectric.com/documents/en/InvestorRelations/InvestorRelations_GLNCS/Documents/2025/ESR2024%20full%20version.pdf',
+    factorPriorYear: 0.66,
+    sourcePriorYear: 'https://www.hkelectric.com/documents/en/CorporateSocialResponsibility/CorporateSocialResponsibility_CDD/Documents/SR2023E.pdf'
+  },
+  { 
+    name: 'CLP Power Hong Kong Limited (CLP)', 
+    factor: 0.38, 
+    source: 'https://sustainability.clpgroup.com/en/2024/esg-data-hub',
+    factorPriorYear: 0.39,
+    sourcePriorYear: 'https://www.clp.com.cn/wp-content/uploads/2024/03/CLP_Sustainability_Report_2023_en-1.pdf'
+  }
 ];
 
 interface OfficeLocation {
@@ -38,15 +50,16 @@ const Scope2aElectricity = () => {
   // New state for questionnaire
   const [serviceProvider, setServiceProvider] = useState<string>('');
   const [receivesBillsDirectly, setReceivesBillsDirectly] = useState<string>('');
+  const [providePriorYear, setProvidePriorYear] = useState<string>('');
   const [organizationArea, setOrganizationArea] = useState<string>('');
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   
   const [data, setData] = useState(
     MONTHS.map((month) => ({
       month,
-      companyElectricityQuantity: '',
+      invoiceQuantity: '',
+      invoiceQuantityPriorYear: '',
       totalBuildingElectricity: '',
-      lastYearEmission: '',
       emissionFactor: 0,
       sourceLink: ''
     }))
@@ -140,18 +153,18 @@ const Scope2aElectricity = () => {
             const provider = SERVICE_PROVIDERS.find(p => p.name === existing.source_of_energy);
             return {
               month,
-              companyElectricityQuantity: existing.quantity_used?.toString() || '',
+              invoiceQuantity: existing.quantity_used?.toString() || '',
+              invoiceQuantityPriorYear: (existing as any).invoice_quantity_prior_year?.toString() || '',
               totalBuildingElectricity: (existing as any).total_building_electricity?.toString() || '',
-              lastYearEmission: existing.last_year_emission_figures?.toString() || '',
               emissionFactor: provider?.factor || 0,
               sourceLink: provider?.source || ''
             };
           }
           return {
             month,
-            companyElectricityQuantity: '',
+            invoiceQuantity: '',
+            invoiceQuantityPriorYear: '',
             totalBuildingElectricity: '',
-            lastYearEmission: '',
             emissionFactor: 0,
             sourceLink: ''
           };
@@ -162,6 +175,7 @@ const Scope2aElectricity = () => {
         if (existingData[0]) {
           setServiceProvider(existingData[0].source_of_energy || '');
           setReceivesBillsDirectly((existingData[0] as any).receives_bills_directly || '');
+          setProvidePriorYear((existingData[0] as any).provide_prior_year ? 'Yes' : 'No');
           setOrganizationArea((existingData[0] as any).organization_area?.toString() || '');
           setTotalBuildingArea((existingData[0] as any).total_building_area?.toString() || '');
         }
@@ -169,14 +183,15 @@ const Scope2aElectricity = () => {
         // Reset all data if no existing data for this location
         setData(MONTHS.map((month) => ({
           month,
-          companyElectricityQuantity: '',
+          invoiceQuantity: '',
+          invoiceQuantityPriorYear: '',
           totalBuildingElectricity: '',
-          lastYearEmission: '',
           emissionFactor: 0,
           sourceLink: ''
         })));
         setServiceProvider('');
         setReceivesBillsDirectly('');
+        setProvidePriorYear('');
         setOrganizationArea('');
         setTotalBuildingArea('');
       }
@@ -211,7 +226,7 @@ const Scope2aElectricity = () => {
       return;
     }
 
-    if (!serviceProvider || !receivesBillsDirectly) {
+    if (!serviceProvider || !receivesBillsDirectly || !providePriorYear) {
       toast({
         title: "Error",
         description: "Please answer all questionnaire questions before saving",
@@ -231,17 +246,18 @@ const Scope2aElectricity = () => {
 
       // Insert new data
       const dataToInsert = data
-        .filter(row => row.companyElectricityQuantity || row.totalBuildingElectricity || row.lastYearEmission)
+        .filter(row => row.invoiceQuantity || row.totalBuildingElectricity || row.invoiceQuantityPriorYear)
         .map(row => ({
           user_id: user.id,
           office_location_id: selectedLocation,
           month: row.month,
           source_of_energy: serviceProvider,
           unit_of_measurement: 'KWh',
-          quantity_used: row.companyElectricityQuantity ? parseFloat(row.companyElectricityQuantity) : null,
+          quantity_used: row.invoiceQuantity ? parseFloat(row.invoiceQuantity) : null,
           total_building_electricity: row.totalBuildingElectricity ? parseFloat(row.totalBuildingElectricity) : null,
-          last_year_emission_figures: row.lastYearEmission ? parseFloat(row.lastYearEmission) : null,
+          invoice_quantity_prior_year: row.invoiceQuantityPriorYear ? parseFloat(row.invoiceQuantityPriorYear) : null,
           receives_bills_directly: receivesBillsDirectly,
+          provide_prior_year: providePriorYear === 'Yes',
           organization_area: organizationArea ? parseFloat(organizationArea) : null,
           total_building_area: totalBuildingArea ? parseFloat(totalBuildingArea) : null,
           is_applicable: true,
@@ -279,7 +295,7 @@ const Scope2aElectricity = () => {
     return <div className="max-w-6xl mx-auto p-6">Loading...</div>;
   }
 
-  const showTable = serviceProvider && receivesBillsDirectly;
+  const showTable = serviceProvider && receivesBillsDirectly && providePriorYear;
   const showAreaInputs = receivesBillsDirectly === 'No';
 
   return (
@@ -356,6 +372,21 @@ const Scope2aElectricity = () => {
               </Select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Do you want to provide prior year's Carbon Emission equivalent?
+              </label>
+              <Select value={providePriorYear} onValueChange={setProvidePriorYear}>
+                <SelectTrigger className="w-full max-w-md">
+                  <SelectValue placeholder="Select Yes or No" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {showAreaInputs && (
               <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium text-gray-800">Provide the following information:</h3>
@@ -410,9 +441,8 @@ const Scope2aElectricity = () => {
                 <TableRow>
                   <TableHead>Month</TableHead>
                   {receivesBillsDirectly === 'No' && <TableHead>Total Building Electricity</TableHead>}
-                  <TableHead>Company Electricity Quantity</TableHead>
-                  <TableHead>GHG Emission Factor</TableHead>
-                  <TableHead>Last Year Emission Figure</TableHead>
+                  <TableHead>Invoice Quantity</TableHead>
+                  {providePriorYear === 'Yes' && <TableHead>Invoice Quantity: Prior Year</TableHead>}
                   <TableHead>Unit Of Measurement</TableHead>
                 </TableRow>
               </TableHeader>
@@ -437,24 +467,23 @@ const Scope2aElectricity = () => {
                         type="number"
                         min="0"
                         step="0.01"
-                        value={row.companyElectricityQuantity}
-                        onChange={(e) => handleInputChange(index, 'companyElectricityQuantity', e.target.value)}
+                        value={row.invoiceQuantity}
+                        onChange={(e) => handleInputChange(index, 'invoiceQuantity', e.target.value)}
                         className="w-32"
                       />
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{currentEmissionFactor}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={row.lastYearEmission}
-                        onChange={(e) => handleInputChange(index, 'lastYearEmission', e.target.value)}
-                        className="w-32"
-                      />
-                    </TableCell>
+                    {providePriorYear === 'Yes' && (
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={row.invoiceQuantityPriorYear}
+                          onChange={(e) => handleInputChange(index, 'invoiceQuantityPriorYear', e.target.value)}
+                          className="w-32"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>KWh</TableCell>
                   </TableRow>
                 ))}

@@ -1713,11 +1713,13 @@ export type Database = {
           created_at: string
           data_source: string | null
           emission_factor: number | null
+          emission_factor_prior_year: number | null
           emissions_kg_co2: number | null
           gwp_co2e: number | null
           gwp_methane: number | null
           gwp_nitrous_oxide: number | null
           id: string
+          invoice_quantity_prior_year: number | null
           is_applicable: boolean | null
           last_year_emission_figures: number | null
           methane_emitted_ch4: number | null
@@ -1725,8 +1727,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o: number | null
           notes: string | null
           office_location_id: string | null
+          provide_prior_year: boolean | null
           quantity_used: number | null
           source_of_emission: string | null
+          source_of_emission_prior_year: string | null
           source_of_energy: string
           unit_of_measurement: string
           updated_at: string
@@ -1739,11 +1743,13 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           emission_factor?: number | null
+          emission_factor_prior_year?: number | null
           emissions_kg_co2?: number | null
           gwp_co2e?: number | null
           gwp_methane?: number | null
           gwp_nitrous_oxide?: number | null
           id?: string
+          invoice_quantity_prior_year?: number | null
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
           methane_emitted_ch4?: number | null
@@ -1751,8 +1757,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           office_location_id?: string | null
+          provide_prior_year?: boolean | null
           quantity_used?: number | null
           source_of_emission?: string | null
+          source_of_emission_prior_year?: string | null
           source_of_energy: string
           unit_of_measurement: string
           updated_at?: string
@@ -1765,11 +1773,13 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           emission_factor?: number | null
+          emission_factor_prior_year?: number | null
           emissions_kg_co2?: number | null
           gwp_co2e?: number | null
           gwp_methane?: number | null
           gwp_nitrous_oxide?: number | null
           id?: string
+          invoice_quantity_prior_year?: number | null
           is_applicable?: boolean | null
           last_year_emission_figures?: number | null
           methane_emitted_ch4?: number | null
@@ -1777,8 +1787,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           notes?: string | null
           office_location_id?: string | null
+          provide_prior_year?: boolean | null
           quantity_used?: number | null
           source_of_emission?: string | null
+          source_of_emission_prior_year?: string | null
           source_of_energy?: string
           unit_of_measurement?: string
           updated_at?: string

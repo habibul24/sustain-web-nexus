@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -69,7 +70,7 @@ const ESGSidebar = () => (
                       <ul className="pl-2 space-y-1">
                         <li>
                           <NavLink to="/my-esg/environmental/scope-2/electricity" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
-                            2.a) Electricity
+                            2.a) Electricity - Main Office
                           </NavLink>
                         </li>
                         <li>
