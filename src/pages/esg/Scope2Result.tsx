@@ -1,20 +1,109 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuthContext } from '../../contexts/AuthContext';
 
-const summary = [
-  { label: 'Total Quantity Till Date', value: '0' },
-  { label: 'Total Active Sources', value: '0' },
-  { label: 'Total Emission', value: '0 kgCO2e' },
-];
-
-const tableData = [];
+interface Scope2Data {
+  id: string;
+  source_of_energy: string;
+  quantity_used: number | null;
+  emission_factor: number | null;
+  emissions_kg_co2: number | null;
+  organization_area: number | null;
+  total_building_area: number | null;
+  office_location_name: string;
+  month: string | null;
+}
 
 const Scope2Result = () => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const [scope2Data, setScope2Data] = useState<Scope2Data[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchScope2Data();
+    }
+  }, [user]);
+
+  const fetchScope2Data = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scope2a_electricity')
+        .select(`
+          id,
+          source_of_energy,
+          quantity_used,
+          emission_factor,
+          emissions_kg_co2,
+          organization_area,
+          total_building_area,
+          month,
+          office_locations!inner(name)
+        `)
+        .eq('user_id', user.id)
+        .not('quantity_used', 'is', null);
+
+      if (error) throw error;
+
+      const formattedData = data?.map(item => ({
+        ...item,
+        office_location_name: item.office_locations?.name || 'Unknown Location'
+      })) || [];
+
+      setScope2Data(formattedData);
+    } catch (error) {
+      console.error('Error fetching Scope 2 data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateCO2Emission = (item: Scope2Data) => {
+    if (!item.quantity_used || !item.emission_factor) return 0;
+    
+    // If organization area and total building area are available
+    if (item.organization_area && item.total_building_area) {
+      return (item.organization_area / item.total_building_area) * item.quantity_used * item.emission_factor;
+    }
+    
+    // Standard calculation: Quantity * GHG Emission Factor
+    return item.quantity_used * item.emission_factor;
+  };
+
+  const getTotalQuantity = () => {
+    return scope2Data.reduce((sum, item) => sum + (item.quantity_used || 0), 0);
+  };
+
+  const getTotalEmissions = () => {
+    return scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0);
+  };
+
+  const getActiveSources = () => {
+    return scope2Data.length;
+  };
+
+  const summary = [
+    { label: 'Total Quantity Till Date', value: `${getTotalQuantity().toFixed(2)} kWh` },
+    { label: 'Total Active Sources', value: getActiveSources().toString() },
+    { label: 'Total Emission', value: `${getTotalEmissions().toFixed(2)} kgCO2e` },
+  ];
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Your Scope 2 Carbon Emission Results</h1>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {summary.map((s) => (
           <div key={s.label} className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
@@ -23,37 +112,44 @@ const Scope2Result = () => {
           </div>
         ))}
       </div>
+      
       <div className="bg-white rounded-xl shadow p-4 mb-4 overflow-x-auto">
         <table className="min-w-full text-left">
           <thead>
             <tr className="border-b">
               <th className="py-2 px-3 font-semibold">Description Of Sources</th>
-              <th className="py-2 px-3 font-semibold">Quantity Till Date</th>
+              <th className="py-2 px-3 font-semibold">Location</th>
+              <th className="py-2 px-3 font-semibold">Month</th>
+              <th className="py-2 px-3 font-semibold">Invoice Quantity (kWh)</th>
               <th className="py-2 px-3 font-semibold">GHG Emission Factor</th>
-              <th className="py-2 px-3 font-semibold">Co2 Carbon Emitted</th>
+              <th className="py-2 px-3 font-semibold">Co2 Carbon Emitted (kgCO2e)</th>
             </tr>
           </thead>
           <tbody>
-            {tableData.length === 0 ? (
+            {scope2Data.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-500">No data available</td>
+                <td colSpan={6} className="text-center py-8 text-gray-500">No data available</td>
               </tr>
             ) : (
-              tableData.map((row, idx) => (
-                <tr key={idx} className="border-b">
-                  <td className="py-2 px-3">{row.source}</td>
-                  <td className="py-2 px-3">{row.quantity}</td>
-                  <td className="py-2 px-3">{row.factor}</td>
-                  <td className="py-2 px-3">{row.co2}</td>
+              scope2Data.map((row) => (
+                <tr key={row.id} className="border-b">
+                  <td className="py-2 px-3">{row.source_of_energy}</td>
+                  <td className="py-2 px-3">{row.office_location_name}</td>
+                  <td className="py-2 px-3">{row.month || 'N/A'}</td>
+                  <td className="py-2 px-3">{row.quantity_used?.toFixed(2) || '0'}</td>
+                  <td className="py-2 px-3">{row.emission_factor?.toFixed(3) || '0'}</td>
+                  <td className="py-2 px-3">{calculateCO2Emission(row).toFixed(2)}</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+      
       <div className="mb-6 text-gray-700 text-sm">
         Emission Factor Source: <a href="#" className="text-green-700 underline">View Reference</a>
       </div>
+      
       <div className="flex flex-col md:flex-row gap-4 justify-end">
         <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate PDF</Button>
         <Button className="bg-green-500 hover:bg-green-600 text-white" variant="default">Generate Excel</Button>
@@ -63,4 +159,4 @@ const Scope2Result = () => {
   );
 };
 
-export default Scope2Result; 
+export default Scope2Result;
