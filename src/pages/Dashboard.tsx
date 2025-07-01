@@ -180,8 +180,8 @@ const Dashboard = () => {
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
     return [
-      { name: 'Male Executives', value: maleExecutives, fill: '#1e40af' },
-      { name: 'Female Executives', value: femaleExecutives, fill: '#be185d' }
+      { name: 'Male Exec', value: maleExecutives, fill: '#1e40af' },
+      { name: 'Female Exec', value: femaleExecutives, fill: '#be185d' }
     ];
   };
 
@@ -296,6 +296,32 @@ const Dashboard = () => {
         fontWeight={isTop5 ? "bold" : "normal"}
       >
         {`${month} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
+
+  // Custom label function for social pie charts with external labels
+  const renderSocialLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 20; // Position labels outside the pie
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    if (percent < 0.05) return null; // Don't show label for very small slices
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="#374151" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+      >
+        {`${name} (${(percent * 100).toFixed(0)}%)`}
       </text>
     );
   };
@@ -514,7 +540,7 @@ const Dashboard = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={renderCustomizedLabel}
+                          label={renderSocialLabel}
                           outerRadius={60}
                           dataKey="value"
                         >
@@ -542,7 +568,7 @@ const Dashboard = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={renderCustomizedLabel}
+                          label={renderSocialLabel}
                           outerRadius={60}
                           dataKey="value"
                         >
@@ -570,7 +596,7 @@ const Dashboard = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={renderCustomizedLabel}
+                          label={renderSocialLabel}
                           outerRadius={60}
                           dataKey="value"
                         >
