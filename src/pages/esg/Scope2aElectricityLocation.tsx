@@ -173,6 +173,23 @@ const Scope2aElectricityLocation = () => {
     }
   }, [user, locationId]);
 
+  useEffect(() => {
+    // Reset all form state when locationId changes
+    setElectricityProvider('');
+    setReceivesBillsDirectly('');
+    setProvidePriorYear('');
+    setMonth('');
+    setInvoiceQuantity('');
+    setInvoiceQuantityPriorYear('');
+    setOrganizationArea('');
+    setTotalBuildingArea('');
+    setTotalBuildingElectricity('');
+    setPriorYearEmissionValue('');
+    setTableRows(months.map(month => ({ month, quantity: '', lastYear: '' })));
+    setScope2Data([]);
+    setCurrentStep(1);
+  }, [locationId]);
+
   const fetchData = async () => {
     try {
       // Fetch the specific office location
@@ -536,6 +553,22 @@ const Scope2aElectricityLocation = () => {
     }
   };
 
+  const [allLocations, setAllLocations] = useState<OfficeLocation[]>([]);
+
+  // Fetch all office locations for navigation
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('office_locations')
+        .select('id, name, address')
+        .eq('user_id', user.id)
+        .order('name');
+      if (!error && data) setAllLocations(data);
+    };
+    fetchLocations();
+  }, [user]);
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -701,7 +734,19 @@ const Scope2aElectricityLocation = () => {
         </CardContent>
       </Card>
       <div className="flex justify-end mt-8">
-        <Button onClick={() => navigate('/next-page-url')} className="bg-blue-600 hover:bg-blue-700 text-white">Next</Button>
+        {(() => {
+          const currentIdx = allLocations.findIndex(loc => loc.id === locationId);
+          const nextLocation = currentIdx !== -1 && currentIdx < allLocations.length - 1 ? allLocations[currentIdx + 1] : null;
+          return (
+            <Button
+              onClick={() => nextLocation && navigate(`/my-esg/environmental/scope-2/electricity/${nextLocation.id}`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={!nextLocation}
+            >
+              Next
+            </Button>
+          );
+        })()}
       </div>
     </div>
   );
