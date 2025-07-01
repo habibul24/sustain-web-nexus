@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -164,6 +165,7 @@ const Scope2aElectricity = () => {
           user_id: user.id,
           office_location_id: selectedLocation,
           source_of_energy: electricityProvider,
+          unit_of_measurement: 'kWh', // Adding the required unit_of_measurement field
           quantity_used: calculatedQuantity,
           quantity_used_prior_year: providePriorYear === 'yes' ? parseFloat(invoiceQuantityPriorYear) || null : null,
           month,
