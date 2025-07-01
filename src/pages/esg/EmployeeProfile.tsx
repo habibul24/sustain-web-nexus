@@ -48,6 +48,7 @@ interface EmployeeStats {
   newHires2025: number;
   employeesByCountry: Record<string, number>;
   availableYears: number[];
+  selectedYear: number;
 }
 
 const EmployeeProfile = () => {
@@ -77,6 +78,7 @@ const EmployeeProfile = () => {
     newHires2025: 0,
     employeesByCountry: {},
     availableYears: [],
+    selectedYear: 2025,
   });
 
   useEffect(() => {
@@ -146,181 +148,123 @@ const EmployeeProfile = () => {
   };
 
   const calculateStats = (employeeData: Employee[], turnoverYear: number) => {
-    const totalEmployees = employeeData.length;
-    const totalMaleWorkers = employeeData.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
-    const totalFemaleWorkers = employeeData.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
-    
-    // Age groups
-    const employeesUnder30 = employeeData.filter(emp => emp.age && emp.age < 30).length;
-    const employees30To50 = employeeData.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
-    const employeesAbove50 = employeeData.filter(emp => emp.age && emp.age > 50).length;
-    
-    const activeEmployees = employeeData.filter(emp => !emp.date_of_exit).length;
-    
-    // Executives - check for "Yes" in position field
-    const executives = employeeData.filter(emp => emp.position === 'Yes');
-    const totalExecutives = executives.length;
-    const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
-    const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
-    
-    // New hires in 2025 - improved logic to handle different date formats
-    const newHires2025 = employeeData.filter(emp => {
-      if (!emp.date_of_employment) return false;
+    // Helper function to parse dates consistently
+    const parseDate = (dateString: string | null): Date | null => {
+      if (!dateString) return null;
       
-      console.log('Processing employee:', emp.name, 'Date of employment:', emp.date_of_employment, 'Type:', typeof emp.date_of_employment);
+      let date = new Date(dateString);
       
-      // Try to parse the date - handle string dates
-      let hireDate = new Date(emp.date_of_employment);
-      
-      // Check if the date is valid and extract year
-      if (isNaN(hireDate.getTime())) {
-        console.log('Invalid date format, trying alternative parsing for:', emp.date_of_employment);
-        
-        // Try parsing as Excel serial number if it's a number
-        const dateValue = parseFloat(emp.date_of_employment);
+      if (isNaN(date.getTime())) {
+        const dateValue = parseFloat(dateString);
         if (!isNaN(dateValue)) {
-          // Excel date serial number conversion (Excel epoch starts Jan 1, 1900)
-          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
-          console.log('Parsed as Excel date:', hireDate);
+          date = new Date((dateValue - 25569) * 86400 * 1000);
         } else {
-          // Try parsing MM/DD/YYYY format manually
-          const dateParts = emp.date_of_employment.toString().split('/');
+          const dateParts = dateString.toString().split('/');
           if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1; // Month is 0-indexed
+            const month = parseInt(dateParts[0]) - 1;
             const day = parseInt(dateParts[1]);
             const year = parseInt(dateParts[2]);
-            hireDate = new Date(year, month, day);
-            console.log('Parsed as MM/DD/YYYY:', hireDate, 'Parts:', { month, day, year });
-          } else {
-            console.log('Could not parse date format:', emp.date_of_employment);
-            return false;
+            date = new Date(year, month, day);
           }
         }
       }
       
-      const hireYear = hireDate.getFullYear();
-      const is2025 = hireYear === 2025;
-      console.log('Employee hire date:', emp.date_of_employment, 'Parsed year:', hireYear, 'Is 2025:', is2025);
-      return is2025;
+      return isNaN(date.getTime()) ? null : date;
+    };
+
+    // Filter employees for the selected year
+    const employeesInYear = employeeData.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      const exitDate = parseDate(emp.date_of_exit);
+      
+      if (!hireDate) return false;
+      
+      // Employee was hired before or during the selected year
+      const hiredBeforeOrDuringYear = hireDate.getFullYear() <= turnoverYear;
+      
+      // Employee was still employed during the selected year (no exit date or exited after the year)
+      const stillEmployedInYear = !exitDate || exitDate.getFullYear() > turnoverYear;
+      
+      return hiredBeforeOrDuringYear && stillEmployedInYear;
+    });
+
+    const totalEmployees = employeesInYear.length;
+    const totalMaleWorkers = employeesInYear.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const totalFemaleWorkers = employeesInYear.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    // Age groups for the selected year
+    const employeesUnder30 = employeesInYear.filter(emp => emp.age && emp.age < 30).length;
+    const employees30To50 = employeesInYear.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const employeesAbove50 = employeesInYear.filter(emp => emp.age && emp.age > 50).length;
+    
+    const activeEmployees = employeesInYear.filter(emp => !emp.date_of_exit).length;
+    
+    // Executives for the selected year
+    const executives = employeesInYear.filter(emp => emp.position === 'Yes');
+    const totalExecutives = executives.length;
+    const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    
+    // New hires in the selected year
+    const newHiresInYear = employeesInYear.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() === turnoverYear;
     }).length;
     
-    // Employees by country
+    // Employees by country for the selected year
     const employeesByCountry: Record<string, number> = {};
-    employeeData.forEach(emp => {
+    employeesInYear.forEach(emp => {
       if (emp.country_of_assignment) {
         employeesByCountry[emp.country_of_assignment] = (employeesByCountry[emp.country_of_assignment] || 0) + 1;
       }
     });
     
-    // Get available years from exit dates
-    const availableYears = Array.from(new Set(employeeData
-      .filter(emp => emp.date_of_exit)
+    // Get all available years from employment dates
+    const employmentYears = employeeData
       .map(emp => {
-        if (!emp.date_of_exit) return null;
-        
-        let exitDate = new Date(emp.date_of_exit);
-        
-        // Handle Excel serial numbers or string dates
-        if (isNaN(exitDate.getTime())) {
-          const dateValue = parseFloat(emp.date_of_exit);
-          if (!isNaN(dateValue)) {
-            exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-          } else {
-            const dateParts = emp.date_of_exit.toString().split('/');
-            if (dateParts.length === 3) {
-              const month = parseInt(dateParts[0]) - 1;
-              const day = parseInt(dateParts[1]);
-              const year = parseInt(dateParts[2]);
-              exitDate = new Date(year, month, day);
-            }
-          }
-        }
-        
-        return !isNaN(exitDate.getTime()) ? exitDate.getFullYear() : null;
+        const hireDate = parseDate(emp.date_of_employment);
+        return hireDate ? hireDate.getFullYear() : null;
       })
-      .filter(year => year !== null) as number[]))
+      .filter(year => year !== null) as number[];
+
+    // Get all available years from exit dates
+    const exitYears = employeeData
+      .map(emp => {
+        const exitDate = parseDate(emp.date_of_exit);
+        return exitDate ? exitDate.getFullYear() : null;
+      })
+      .filter(year => year !== null) as number[];
+
+    // Combine and deduplicate all years
+    const allYears = Array.from(new Set([...employmentYears, ...exitYears]))
       .sort((a, b) => b - a); // Sort descending
 
     // Add current year if not present
-    if (!availableYears.includes(turnoverYear)) {
-      availableYears.unshift(turnoverYear);
-      availableYears.sort((a, b) => b - a);
+    const currentYear = new Date().getFullYear();
+    if (!allYears.includes(currentYear)) {
+      allYears.unshift(currentYear);
+      allYears.sort((a, b) => b - a);
     }
     
-    // Turnover rates for selected year - using standard formula with average employees
+    // Turnover rates for selected year
     const employeesWhoLeftInYear = employeeData.filter(emp => {
-      if (!emp.date_of_exit) return false;
-      
-      let exitDate = new Date(emp.date_of_exit);
-      
-      // Handle Excel serial numbers or string dates
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === turnoverYear;
     }).length;
 
     // Calculate employees at start of year (hired before or during the year)
     const employeesAtStartOfYear = employeeData.filter(emp => {
-      if (!emp.date_of_employment) return false;
-      
-      let hireDate = new Date(emp.date_of_employment);
-      
-      // Handle Excel serial numbers or string dates
-      if (isNaN(hireDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_employment);
-        if (!isNaN(dateValue)) {
-          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_employment.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            hireDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= turnoverYear;
     }).length;
 
     // Calculate employees at end of year (still employed or left after the year)
     const employeesAtEndOfYear = employeeData.filter(emp => {
-      // If no exit date, still employed
-      if (!emp.date_of_exit) return true;
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
       
-      let exitDate = new Date(emp.date_of_exit);
-      
-      // Handle Excel serial numbers or string dates
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > turnoverYear;
     }).length;
 
     // Calculate average employees during the year
@@ -329,76 +273,27 @@ const EmployeeProfile = () => {
     
     // Male turnover rate for selected year
     const maleEmployeesWhoLeftInYear = employeeData.filter(emp => {
-      if (!emp.date_of_exit || (emp.sex !== 'M' && emp.sex !== 'Male')) return false;
-      
-      let exitDate = new Date(emp.date_of_exit);
-      
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+      if ((emp.sex !== 'M' && emp.sex !== 'Male')) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === turnoverYear;
     }).length;
 
     // Calculate male employees at start of year
     const maleEmployeesAtStartOfYear = employeeData.filter(emp => {
-      if (!emp.date_of_employment || (emp.sex !== 'M' && emp.sex !== 'Male')) return false;
-      
-      let hireDate = new Date(emp.date_of_employment);
-      
-      if (isNaN(hireDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_employment);
-        if (!isNaN(dateValue)) {
-          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_employment.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            hireDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+      if ((emp.sex !== 'M' && emp.sex !== 'Male')) return false;
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= turnoverYear;
     }).length;
 
     // Calculate male employees at end of year
     const maleEmployeesAtEndOfYear = employeeData.filter(emp => {
       if (emp.sex !== 'M' && emp.sex !== 'Male') return false;
       
-      if (!emp.date_of_exit) return true;
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
       
-      let exitDate = new Date(emp.date_of_exit);
-      
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > turnoverYear;
     }).length;
 
     const averageMaleEmployees = (maleEmployeesAtStartOfYear + maleEmployeesAtEndOfYear) / 2;
@@ -406,89 +301,40 @@ const EmployeeProfile = () => {
     
     // Female turnover rate for selected year
     const femaleEmployeesWhoLeftInYear = employeeData.filter(emp => {
-      if (!emp.date_of_exit || (emp.sex !== 'F' && emp.sex !== 'Female')) return false;
-      
-      let exitDate = new Date(emp.date_of_exit);
-      
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+      if ((emp.sex !== 'F' && emp.sex !== 'Female')) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === turnoverYear;
     }).length;
 
     // Calculate female employees at start of year
     const femaleEmployeesAtStartOfYear = employeeData.filter(emp => {
-      if (!emp.date_of_employment || (emp.sex !== 'F' && emp.sex !== 'Female')) return false;
-      
-      let hireDate = new Date(emp.date_of_employment);
-      
-      if (isNaN(hireDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_employment);
-        if (!isNaN(dateValue)) {
-          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_employment.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            hireDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+      if ((emp.sex !== 'F' && emp.sex !== 'Female')) return false;
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= turnoverYear;
     }).length;
 
     // Calculate female employees at end of year
     const femaleEmployeesAtEndOfYear = employeeData.filter(emp => {
       if (emp.sex !== 'F' && emp.sex !== 'Female') return false;
       
-      if (!emp.date_of_exit) return true;
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
       
-      let exitDate = new Date(emp.date_of_exit);
-      
-      if (isNaN(exitDate.getTime())) {
-        const dateValue = parseFloat(emp.date_of_exit);
-        if (!isNaN(dateValue)) {
-          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = emp.date_of_exit.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            exitDate = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > turnoverYear;
     }).length;
 
     const averageFemaleEmployees = (femaleEmployeesAtStartOfYear + femaleEmployeesAtEndOfYear) / 2;
     const turnoverRateFemale = averageFemaleEmployees > 0 ? (femaleEmployeesWhoLeftInYear / averageFemaleEmployees) * 100 : 0;
     
     // Turnover by age group (keeping existing logic for overall turnover)
-    const under30WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
+    const under30WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
     const turnoverRateUnder30 = employeesUnder30 > 0 ? (under30WhoLeft / employeesUnder30) * 100 : 0;
     
-    const age30To50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const age30To50WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age >= 30 && emp.age <= 50).length;
     const turnoverRate30To50 = employees30To50 > 0 ? (age30To50WhoLeft / employees30To50) * 100 : 0;
     
-    const above50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
+    const above50WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
     const turnoverRateAbove50 = employeesAbove50 > 0 ? (above50WhoLeft / employeesAbove50) * 100 : 0;
 
     setStats({
@@ -508,9 +354,10 @@ const EmployeeProfile = () => {
       totalExecutives,
       maleExecutives,
       femaleExecutives,
-      newHires2025,
+      newHires2025: newHiresInYear,
       employeesByCountry,
-      availableYears,
+      availableYears: allYears,
+      selectedYear: turnoverYear,
     });
   };
 
@@ -703,13 +550,13 @@ const EmployeeProfile = () => {
         </CardContent>
       </Card>
 
-      {/* Turnover Year Filter */}
+      {/* Year Filter */}
       {stats.availableYears.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Turnover Rate Filter</CardTitle>
+            <CardTitle>Year Filter</CardTitle>
             <CardDescription>
-              Select the year to view turnover rates for that specific year
+              Select a year to view all statistics for that specific year. This affects total employees, gender distribution, age groups, executives, and turnover rates.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -739,7 +586,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalEmployees}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.activeEmployees} currently active
+              {stats.activeEmployees} currently active ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -752,7 +599,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalMaleWorkers}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.totalMaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.totalMaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -765,7 +612,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalFemaleWorkers}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.totalFemaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.totalFemaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -778,7 +625,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalExecutives}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.maleExecutives}M / {stats.femaleExecutives}F
+              {stats.maleExecutives}M / {stats.femaleExecutives}F ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -791,7 +638,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.employeesUnder30}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employeesUnder30 / stats.totalEmployees) * 100) : 0}% of workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.employeesUnder30 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -804,7 +651,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.employees30To50}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employees30To50 / stats.totalEmployees) * 100) : 0}% of workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.employees30To50 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -817,20 +664,20 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.employeesAbove50}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employeesAbove50 / stats.totalEmployees) * 100) : 0}% of workforce
+              {stats.totalEmployees > 0 ? Math.round((stats.employeesAbove50 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Hires 2025</CardTitle>
+            <CardTitle className="text-sm font-medium">New Hires {stats.selectedYear}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.newHires2025}</div>
             <p className="text-xs text-muted-foreground">
-              This year
+              Hired in {stats.selectedYear}
             </p>
           </CardContent>
         </Card>
@@ -843,7 +690,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRate}%</div>
             <p className="text-xs text-muted-foreground">
-              For year {selectedTurnoverYear}
+              For year {stats.selectedYear}
             </p>
           </CardContent>
         </Card>
@@ -856,7 +703,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRateMale}%</div>
             <p className="text-xs text-muted-foreground">
-              Male employees ({selectedTurnoverYear})
+              Male employees ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -869,7 +716,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRateFemale}%</div>
             <p className="text-xs text-muted-foreground">
-              Female employees ({selectedTurnoverYear})
+              Female employees ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -882,7 +729,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{Object.keys(stats.employeesByCountry).length}</div>
             <p className="text-xs text-muted-foreground">
-              Operating countries
+              Operating countries ({stats.selectedYear})
             </p>
           </CardContent>
         </Card>
@@ -892,7 +739,7 @@ const EmployeeProfile = () => {
       {Object.keys(stats.employeesByCountry).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Employees by Country</CardTitle>
+            <CardTitle>Employees by Country ({stats.selectedYear})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
