@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -45,6 +44,7 @@ import EmployeeProfile from './pages/esg/EmployeeProfile';
 import Scope3aWaste from './pages/esg/Scope3aWaste';
 import Scope3aPaper from './pages/esg/Scope3aPaper';
 import Scope3aWater from './pages/esg/Scope3aWater';
+import Scope3Result from './pages/esg/Scope3Result';
 
 const queryClient = new QueryClient();
 
@@ -103,7 +103,7 @@ function AppRoutes() {
                 <Route path="business-travel" element={<ComingSoon label="Scope 3.f" />} />
                 <Route path="employee-commuting" element={<ComingSoon label="Scope 3.g" />} />
               </Route>
-              <Route path="scope-3-result" element={<ComingSoon label="Scope 3 Result" />} />
+              <Route path="scope-3-result" element={<Scope3Result />} />
             </Route>
             <Route path="social">
               <Route path="employee-profile" element={<EmployeeProfile />} />

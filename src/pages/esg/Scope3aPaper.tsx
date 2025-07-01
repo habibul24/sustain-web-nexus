@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,12 +35,11 @@ const Scope3aPaper = () => {
   const [totalRecycled, setTotalRecycled] = useState('');
   const [closingQuantity, setClosingQuantity] = useState('');
   
-  // Table data for waste types
-  const [wasteData, setWasteData] = useState<Array<{
-    type: string;
-    quantity: string;
-    emissionFactor: string;
-  }>>([]);
+  // Quantity data for new columns
+  const [quantityRecycle, setQuantityRecycle] = useState('');
+  const [quantityCombust, setQuantityCombust] = useState('');
+  const [quantityLandfill, setQuantityLandfill] = useState('');
+  const [quantityVendor, setQuantityVendor] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -63,18 +61,29 @@ const Scope3aPaper = () => {
       }
 
       if (data) {
-        setUsesPaper(data.uses_paper);
-        setSortsPaperWaste(data.sorts_paper_waste);
-        setMeasuresSortedWaste(data.measures_sorted_waste);
-        setEngagesWasteCompany(data.engages_waste_company);
-        setHasVendorScopeData(data.has_vendor_scope_data);
-        setRecycles(data.recycles || false);
-        setIncinerates(data.incinerates || false);
-        setUsesLandfill(data.uses_landfill || false);
-        setOpeningQuantity(data.opening_quantity?.toString() || '');
-        setTotalPurchased(data.total_purchased?.toString() || '');
-        setTotalRecycled(data.total_recycled?.toString() || '');
-        setClosingQuantity(data.closing_quantity?.toString() || '');
+        // Extend type to allow new columns
+        const d = data as typeof data & {
+          quantity_recycle?: number|string;
+          quantity_combust?: number|string;
+          quantity_landfill?: number|string;
+          quantity_vendor?: number|string;
+        };
+        setUsesPaper(d.uses_paper);
+        setSortsPaperWaste(d.sorts_paper_waste);
+        setMeasuresSortedWaste(d.measures_sorted_waste);
+        setEngagesWasteCompany(d.engages_waste_company);
+        setHasVendorScopeData(d.has_vendor_scope_data);
+        setRecycles(d.recycles || false);
+        setIncinerates(d.incinerates || false);
+        setUsesLandfill(d.uses_landfill || false);
+        setOpeningQuantity(d.opening_quantity?.toString() || '');
+        setTotalPurchased(d.total_purchased?.toString() || '');
+        setTotalRecycled(d.total_recycled?.toString() || '');
+        setClosingQuantity(d.closing_quantity?.toString() || '');
+        setQuantityRecycle(d.quantity_recycle?.toString() || '');
+        setQuantityCombust(d.quantity_combust?.toString() || '');
+        setQuantityLandfill(d.quantity_landfill?.toString() || '');
+        setQuantityVendor(d.quantity_vendor?.toString() || '');
       }
     } catch (error) {
       console.error('Error loading paper data:', error);
@@ -100,6 +109,10 @@ const Scope3aPaper = () => {
         total_purchased: totalPurchased ? parseFloat(totalPurchased) : null,
         total_recycled: totalRecycled ? parseFloat(totalRecycled) : null,
         closing_quantity: closingQuantity ? parseFloat(closingQuantity) : null,
+        quantity_recycle: quantityRecycle ? parseFloat(quantityRecycle) : null,
+        quantity_combust: quantityCombust ? parseFloat(quantityCombust) : null,
+        quantity_landfill: quantityLandfill ? parseFloat(quantityLandfill) : null,
+        quantity_vendor: quantityVendor ? parseFloat(quantityVendor) : null,
       };
 
       const { error } = await supabase
@@ -107,20 +120,6 @@ const Scope3aPaper = () => {
         .upsert(paperData, { onConflict: 'user_id' });
 
       if (error) throw error;
-
-      // Save individual waste type data
-      for (const waste of wasteData) {
-        if (waste.quantity && waste.type) {
-          await supabase
-            .from('paper')
-            .upsert({
-              user_id: user.id,
-              waste_type: waste.type,
-              quantity: parseFloat(waste.quantity),
-              emission_factor_from_vendor: waste.emissionFactor ? parseFloat(waste.emissionFactor) : null,
-            }, { onConflict: 'user_id,waste_type' });
-        }
-      }
 
       toast({
         title: "Data saved successfully!",
@@ -137,25 +136,6 @@ const Scope3aPaper = () => {
       setLoading(false);
     }
   };
-
-  const updateWasteData = (index: number, field: string, value: string) => {
-    const newData = [...wasteData];
-    newData[index] = { ...newData[index], [field]: value };
-    setWasteData(newData);
-  };
-
-  useEffect(() => {
-    // Add rows for selected waste types
-    const types = [];
-    if (recycles) types.push('recycle');
-    if (incinerates) types.push('combust');
-    if (usesLandfill) types.push('landfill');
-    
-    const newWasteData = types.map(type => 
-      wasteData.find(w => w.type === type) || { type, quantity: '', emissionFactor: '' }
-    );
-    setWasteData(newWasteData);
-  }, [recycles, incinerates, usesLandfill]);
 
   const handleNext = async () => {
     await handleSave();
@@ -337,20 +317,42 @@ const Scope3aPaper = () => {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {wasteData.map((row, index) => (
-                                <TableRow key={index}>
-                                  <TableCell className="capitalize">{row.type}</TableCell>
-                                  <TableCell>
-                                    <Input
-                                      type="number"
-                                      value={row.quantity}
-                                      onChange={(e) => updateWasteData(index, 'quantity', e.target.value)}
-                                      placeholder="Enter quantity"
-                                    />
-                                  </TableCell>
-                                  <TableCell>kg</TableCell>
-                                </TableRow>
-                              ))}
+                              <TableRow>
+                                <TableCell className="capitalize">Recycle</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={quantityRecycle}
+                                    onChange={(e) => setQuantityRecycle(e.target.value)}
+                                    placeholder="Enter quantity"
+                                  />
+                                </TableCell>
+                                <TableCell>kg</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="capitalize">Combust</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={quantityCombust}
+                                    onChange={(e) => setQuantityCombust(e.target.value)}
+                                    placeholder="Enter quantity"
+                                  />
+                                </TableCell>
+                                <TableCell>kg</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="capitalize">Landfill</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={quantityLandfill}
+                                    onChange={(e) => setQuantityLandfill(e.target.value)}
+                                    placeholder="Enter quantity"
+                                  />
+                                </TableCell>
+                                <TableCell>kg</TableCell>
+                              </TableRow>
                             </TableBody>
                           </Table>
                         </div>
@@ -419,8 +421,8 @@ const Scope3aPaper = () => {
                                     <TableCell>
                                       <Input
                                         type="number"
-                                        value={wasteData[0]?.quantity || ''}
-                                        onChange={(e) => updateWasteData(0, 'quantity', e.target.value)}
+                                        value={quantityVendor}
+                                        onChange={(e) => setQuantityVendor(e.target.value)}
                                         placeholder="Enter quantity"
                                       />
                                     </TableCell>
@@ -428,8 +430,8 @@ const Scope3aPaper = () => {
                                     <TableCell>
                                       <Input
                                         type="number"
-                                        value={wasteData[0]?.emissionFactor || ''}
-                                        onChange={(e) => updateWasteData(0, 'emissionFactor', e.target.value)}
+                                        value={quantityVendor}
+                                        onChange={(e) => setQuantityVendor(e.target.value)}
                                         placeholder="Enter emission factor"
                                       />
                                     </TableCell>
