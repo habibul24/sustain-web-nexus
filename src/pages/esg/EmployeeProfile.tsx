@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building, Trash2 } from 'lucide-react';
+import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Employee {
@@ -52,7 +52,6 @@ const EmployeeProfile = () => {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
-  const [removing, setRemoving] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [stats, setStats] = useState<EmployeeStats>({
     totalEmployees: 0,
@@ -130,28 +129,53 @@ const EmployeeProfile = () => {
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
+    /* New hires in 2025
+    const newHires2025 = employeeData.filter(emp => {
+      if (!emp.date_of_employment) return false;
+      const hireYear = new Date(emp.date_of_employment).getFullYear();
+      return hireYear === 2025;
+    }).length;
+    */
+
     // New hires in 2025 - improved logic to handle different date formats
     const newHires2025 = employeeData.filter(emp => {
       if (!emp.date_of_employment) return false;
+      
+      console.log('Processing employee:', emp.name, 'Date of employment:', emp.date_of_employment, 'Type:', typeof emp.date_of_employment);
       
       // Try to parse the date - handle string dates
       let hireDate = new Date(emp.date_of_employment);
       
       // Check if the date is valid and extract year
       if (isNaN(hireDate.getTime())) {
+        console.log('Invalid date format, trying alternative parsing for:', emp.date_of_employment);
+        
         // Try parsing as Excel serial number if it's a number
         const dateValue = parseFloat(emp.date_of_employment);
         if (!isNaN(dateValue)) {
           // Excel date serial number conversion (Excel epoch starts Jan 1, 1900)
           hireDate = new Date((dateValue - 25569) * 86400 * 1000);
+          console.log('Parsed as Excel date:', hireDate);
         } else {
-          return false;
+          // Try parsing MM/DD/YYYY format manually
+          const dateParts = emp.date_of_employment.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1; // Month is 0-indexed
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            hireDate = new Date(year, month, day);
+            console.log('Parsed as MM/DD/YYYY:', hireDate, 'Parts:', { month, day, year });
+          } else {
+            console.log('Could not parse date format:', emp.date_of_employment);
+            return false;
+          }
         }
       }
       
       const hireYear = hireDate.getFullYear();
-      console.log('Employee hire date:', emp.date_of_employment, 'Parsed year:', hireYear);
-      return hireYear === 2025;
+      const is2025 = hireYear === 2025;
+      console.log('Employee hire date:', emp.date_of_employment, 'Parsed year:', hireYear, 'Is 2025:', is2025);
+      return is2025;
     }).length;
     
     // Employees by country
@@ -181,8 +205,6 @@ const EmployeeProfile = () => {
     
     const above50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
     const turnoverRateAbove50 = employeesAbove50 > 0 ? (above50WhoLeft / employeesAbove50) * 100 : 0;
-
-    console.log('New hires 2025 count:', newHires2025);
 
     setStats({
       totalEmployees,
@@ -221,23 +243,89 @@ const EmployeeProfile = () => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       // Transform the data to match our database schema
-      const employeeData: Employee[] = jsonData.map((row: any) => ({
-        serial_number: row['S/N'] || null,
-        name: row['Name'] || '',
-        position: row['Position- Executive or not'] || null,
-        is_executive: row['Position- Executive or not'] === 'Yes',
-        age: row['Age'] || null,
-        sex: row['Sex'] || null, // Keep M/F as is, will handle in calculations
-        employee_number: row['Employee number'] || null,
-        work_mode: row['Work mode (Full Time or Part Time)'] || null,
-        country_of_assignment: row['Country of Primary Assignment'] || null,
-        factory_of_assignment: row['Factory of Primary Assignment'] || null,
-        date_of_employment: row['Date of employment'] ? new Date(row['Date of employment']).toISOString().split('T')[0] : null,
-        date_of_exit: row['Date of exit'] ? new Date(row['Date of exit']).toISOString().split('T')[0] : null,
-        category_department: row['Category/ Department'] || null,
-        level_designation: row['By level'] || null,
-        salary: row['Salary'] || null,
-      }));
+      const employeeData: Employee[] = jsonData.map((row: any) => {
+        // Improved date handling for employment date
+        let employmentDate = null;
+        if (row['Date of employment']) {
+          const dateValue = row['Date of employment'];
+          console.log('Raw employment date from Excel:', dateValue, 'Type:', typeof dateValue);
+          
+          // Handle different date formats
+          if (typeof dateValue === 'number') {
+            // Excel serial number
+            const excelDate = new Date((dateValue - 25569) * 86400 * 1000);
+            employmentDate = excelDate.toISOString().split('T')[0];
+            console.log('Converted Excel serial number:', dateValue, 'to:', employmentDate);
+          } else if (typeof dateValue === 'string') {
+            // Try to parse as MM/DD/YYYY format
+            const dateParts = dateValue.split('/');
+            if (dateParts.length === 3) {
+              const month = parseInt(dateParts[0]) - 1; // Month is 0-indexed
+              const day = parseInt(dateParts[1]);
+              const year = parseInt(dateParts[2]);
+              const parsedDate = new Date(year, month, day);
+              employmentDate = parsedDate.toISOString().split('T')[0];
+              console.log('Parsed MM/DD/YYYY:', dateValue, 'to:', employmentDate);
+            } else {
+              // Try standard date parsing
+              const parsedDate = new Date(dateValue);
+              if (!isNaN(parsedDate.getTime())) {
+                employmentDate = parsedDate.toISOString().split('T')[0];
+                console.log('Standard date parsing:', dateValue, 'to:', employmentDate);
+              }
+            }
+          } else if (dateValue instanceof Date) {
+            employmentDate = dateValue.toISOString().split('T')[0];
+            console.log('Date object:', dateValue, 'to:', employmentDate);
+          }
+        }
+
+        // Similar handling for exit date
+        let exitDate = null;
+        if (row['Date of exit']) {
+          const dateValue = row['Date of exit'];
+          console.log('Raw exit date from Excel:', dateValue, 'Type:', typeof dateValue);
+          
+          if (typeof dateValue === 'number') {
+            const excelDate = new Date((dateValue - 25569) * 86400 * 1000);
+            exitDate = excelDate.toISOString().split('T')[0];
+          } else if (typeof dateValue === 'string') {
+            const dateParts = dateValue.split('/');
+            if (dateParts.length === 3) {
+              const month = parseInt(dateParts[0]) - 1;
+              const day = parseInt(dateParts[1]);
+              const year = parseInt(dateParts[2]);
+              const parsedDate = new Date(year, month, day);
+              exitDate = parsedDate.toISOString().split('T')[0];
+            } else {
+              const parsedDate = new Date(dateValue);
+              if (!isNaN(parsedDate.getTime())) {
+                exitDate = parsedDate.toISOString().split('T')[0];
+              }
+            }
+          } else if (dateValue instanceof Date) {
+            exitDate = dateValue.toISOString().split('T')[0];
+          }
+        }
+
+        return {
+          serial_number: row['S/N'] || null,
+          name: row['Name'] || '',
+          position: row['Position- Executive or not'] || null,
+          is_executive: row['Position- Executive or not'] === 'Yes',
+          age: row['Age'] || null,
+          sex: row['Sex'] || null,
+          employee_number: row['Employee number'] || null,
+          work_mode: row['Work mode (Full Time or Part Time)'] || null,
+          country_of_assignment: row['Country of Primary Assignment'] || null,
+          factory_of_assignment: row['Factory of Primary Assignment'] || null,
+          date_of_employment: employmentDate,
+          date_of_exit: exitDate,
+          category_department: row['Category/ Department'] || null,
+          level_designation: row['By level'] || null,
+          salary: row['Salary'] || null,
+        };
+      });
 
       // Clear existing data and insert new data
       const { error: deleteError } = await supabase
@@ -274,38 +362,6 @@ const EmployeeProfile = () => {
     }
   };
 
-  const handleRemoveData = async () => {
-    if (!user) return;
-
-    setRemoving(true);
-
-    try {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "All employee data has been removed",
-      });
-
-      setEmployees([]);
-      calculateStats([]);
-    } catch (error) {
-      console.error('Error removing employee data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove employee data",
-        variant: "destructive",
-      });
-    } finally {
-      setRemoving(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -330,27 +386,14 @@ const EmployeeProfile = () => {
               type="file"
               accept=".xlsx,.xls"
               onChange={handleFileUpload}
-              disabled={uploading || removing}
+              disabled={uploading}
             />
-            <div className="flex gap-2">
-              <Button 
-                disabled={uploading || removing}
-                className="flex-1"
-              >
-                {uploading ? 'Uploading...' : 'Upload Excel File'}
-              </Button>
-              {employees.length > 0 && (
-                <Button
-                  variant="destructive"
-                  onClick={handleRemoveData}
-                  disabled={uploading || removing}
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {removing ? 'Removing...' : 'Remove Data'}
-                </Button>
-              )}
-            </div>
+            <Button 
+              disabled={uploading}
+              className="w-full"
+            >
+              {uploading ? 'Uploading...' : 'Upload Excel File'}
+            </Button>
           </div>
         </CardContent>
       </Card>
