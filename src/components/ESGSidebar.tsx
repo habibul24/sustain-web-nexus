@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -162,6 +161,11 @@ const ESGSidebar = () => {
                               <AccordionTrigger className={triggerClass + ' text-sm font-medium pl-6'}>3.a) Waste</AccordionTrigger>
                               <AccordionContent>
                                 <ul className="pl-4 space-y-1">
+                                  <li>
+                                    <NavLink to="/my-esg/environmental/scope-3/waste" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}>
+                                      Waste
+                                    </NavLink>
+                                  </li>
                                   <li>
                                     <NavLink to="/my-esg/environmental/scope-3/waste/paper" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}>
                                       Paper
