@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -47,15 +48,15 @@ const Scope2aElectricityLocation = () => {
   const [loading, setLoading] = useState(true);
   
   // Form data
-  const [receivesBillsDirectly, setReceivesBillsDirectly] = useState<string>('');
   const [electricityProvider, setElectricityProvider] = useState<string>('');
+  const [receivesBillsDirectly, setReceivesBillsDirectly] = useState<string>('');
+  const [providePriorYear, setProvidePriorYear] = useState<string>('');
+  const [month, setMonth] = useState<string>('');
+  const [invoiceQuantity, setInvoiceQuantity] = useState<string>('');
+  const [invoiceQuantityPriorYear, setInvoiceQuantityPriorYear] = useState<string>('');
   const [organizationArea, setOrganizationArea] = useState<string>('');
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   const [totalBuildingElectricity, setTotalBuildingElectricity] = useState<string>('');
-  const [month, setMonth] = useState<string>('');
-  const [invoiceQuantity, setInvoiceQuantity] = useState<string>('');
-  const [providePriorYear, setProvidePriorYear] = useState<string>('');
-  const [invoiceQuantityPriorYear, setInvoiceQuantityPriorYear] = useState<string>('');
 
   useEffect(() => {
     if (user && locationId) {
@@ -121,7 +122,16 @@ const Scope2aElectricityLocation = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStep === 1 && !receivesBillsDirectly) {
+    if (currentStep === 1 && !electricityProvider) {
+      toast({
+        title: "Please select electricity provider",
+        description: "Please select your electricity provider.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentStep === 2 && !receivesBillsDirectly) {
       toast({
         title: "Please answer the question",
         description: "Please indicate if you receive electricity bills directly.",
@@ -130,10 +140,10 @@ const Scope2aElectricityLocation = () => {
       return;
     }
 
-    if (currentStep === 2 && !electricityProvider) {
+    if (currentStep === 3 && !providePriorYear) {
       toast({
-        title: "Please select electricity provider",
-        description: "Please select your electricity provider.",
+        title: "Please answer the question",
+        description: "Please indicate if you want to provide prior year data.",
         variant: "destructive",
       });
       return;
@@ -191,15 +201,15 @@ const Scope2aElectricityLocation = () => {
   };
 
   const resetForm = () => {
-    setReceivesBillsDirectly('');
     setElectricityProvider('');
+    setReceivesBillsDirectly('');
+    setProvidePriorYear('');
+    setMonth('');
+    setInvoiceQuantity('');
+    setInvoiceQuantityPriorYear('');
     setOrganizationArea('');
     setTotalBuildingArea('');
     setTotalBuildingElectricity('');
-    setMonth('');
-    setInvoiceQuantity('');
-    setProvidePriorYear('');
-    setInvoiceQuantityPriorYear('');
   };
 
   const renderStepContent = () => {
@@ -208,44 +218,16 @@ const Scope2aElectricityLocation = () => {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Step 1: Electricity Bills</CardTitle>
+              <CardTitle>Step 1: Electricity Service Provider</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Label>Does your organization receive electricity bills directly for {currentLocation?.name}?</Label>
-                <RadioGroup value={receivesBillsDirectly} onValueChange={setReceivesBillsDirectly}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="bills-yes" />
-                    <Label htmlFor="bills-yes" className="cursor-pointer">
-                      Yes, we receive electricity bills directly
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="bills-no" />
-                    <Label htmlFor="bills-no" className="cursor-pointer">
-                      No, electricity is included in rent or managed by building
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 2:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 2: Electricity Provider</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Label>Select your electricity provider for {currentLocation?.name}:</Label>
+                <Label>What is your electricity service provider for {currentLocation?.name}?</Label>
                 <RadioGroup value={electricityProvider} onValueChange={setElectricityProvider}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Hong Kong Electric" id="hke" />
                     <Label htmlFor="hke" className="cursor-pointer">
-                      Hong Kong Electric (HKE)
+                      Hong Kong Electric
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -260,12 +242,68 @@ const Scope2aElectricityLocation = () => {
           </Card>
         );
 
+      case 2:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 2: Electricity Bills</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Label>Do you receive electricity bills directly for {currentLocation?.name}?</Label>
+                <RadioGroup value={receivesBillsDirectly} onValueChange={setReceivesBillsDirectly}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="bills-yes" />
+                    <Label htmlFor="bills-yes" className="cursor-pointer">
+                      Yes
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="bills-no" />
+                    <Label htmlFor="bills-no" className="cursor-pointer">
+                      No
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
       case 3:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 3: Prior Year Data</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Label>Do you want to provide prior year's Carbon Emission equivalent?</Label>
+                <RadioGroup value={providePriorYear} onValueChange={setProvidePriorYear}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="prior-yes" />
+                    <Label htmlFor="prior-yes" className="cursor-pointer">
+                      Yes
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="prior-no" />
+                    <Label htmlFor="prior-no" className="cursor-pointer">
+                      No
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 4:
         if (receivesBillsDirectly === 'yes') {
           return (
             <Card>
               <CardHeader>
-                <CardTitle>Step 3: Direct Billing Information</CardTitle>
+                <CardTitle>Step 4: Direct Billing Information</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -288,22 +326,9 @@ const Scope2aElectricityLocation = () => {
                       placeholder="Enter electricity consumption in kWh"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Do you want to provide prior year data for comparison?</Label>
-                    <RadioGroup value={providePriorYear} onValueChange={setProvidePriorYear}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="prior-yes" />
-                        <Label htmlFor="prior-yes" className="cursor-pointer">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="prior-no" />
-                        <Label htmlFor="prior-no" className="cursor-pointer">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
                   {providePriorYear === 'yes' && (
                     <div>
-                      <Label htmlFor="invoice-quantity-prior">Invoice Quantity Prior Year (kWh)</Label>
+                      <Label htmlFor="invoice-quantity-prior">Invoice Quantity: Prior Year (kWh)</Label>
                       <Input
                         id="invoice-quantity-prior"
                         type="number"
@@ -321,7 +346,7 @@ const Scope2aElectricityLocation = () => {
           return (
             <Card>
               <CardHeader>
-                <CardTitle>Step 3: Building Area Information</CardTitle>
+                <CardTitle>Step 4: Building Area Information</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -335,7 +360,7 @@ const Scope2aElectricityLocation = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="org-area">Your Organization's Area (sq ft)</Label>
+                    <Label htmlFor="org-area">Area of Organization Space (sq ft)</Label>
                     <Input
                       id="org-area"
                       type="number"
@@ -353,6 +378,9 @@ const Scope2aElectricityLocation = () => {
                       onChange={(e) => setTotalBuildingArea(e.target.value)}
                       placeholder="Enter total building floor area"
                     />
+                    <p className="text-sm text-gray-600 mt-1">
+                      💡 Request the monthly total electricity figures of the building from the facility manager.
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="total-building-electricity">Total Building Electricity (kWh)</Label>
@@ -364,24 +392,11 @@ const Scope2aElectricityLocation = () => {
                       placeholder="Enter total building electricity consumption"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Do you want to provide prior year data for comparison?</Label>
-                    <RadioGroup value={providePriorYear} onValueChange={setProvidePriorYear}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="prior-yes" />
-                        <Label htmlFor="prior-yes" className="cursor-pointer">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="prior-no" />
-                        <Label htmlFor="prior-no" className="cursor-pointer">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
                   {providePriorYear === 'yes' && (
                     <div>
-                      <Label htmlFor="invoice-quantity-prior">Total Building Electricity Prior Year (kWh)</Label>
+                      <Label htmlFor="total-building-electricity-prior">Total Building Electricity: Prior Year (kWh)</Label>
                       <Input
-                        id="invoice-quantity-prior"
+                        id="total-building-electricity-prior"
                         type="number"
                         value={invoiceQuantityPriorYear}
                         onChange={(e) => setInvoiceQuantityPriorYear(e.target.value)}
@@ -434,7 +449,7 @@ const Scope2aElectricityLocation = () => {
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-center space-x-4">
-          {[1, 2, 3].map((step) => (
+          {[1, 2, 3, 4].map((step) => (
             <div
               key={step}
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
@@ -448,7 +463,7 @@ const Scope2aElectricityLocation = () => {
           ))}
         </div>
         <div className="text-center mt-2 text-sm text-gray-600">
-          Step {currentStep} of 3
+          Step {currentStep} of 4
         </div>
       </div>
 
@@ -467,7 +482,7 @@ const Scope2aElectricityLocation = () => {
           Previous
         </Button>
         
-        {currentStep < 3 ? (
+        {currentStep < 4 ? (
           <Button onClick={handleNextStep} className="bg-green-500 hover:bg-green-600">
             Next
           </Button>
@@ -489,23 +504,43 @@ const Scope2aElectricityLocation = () => {
               <table className="min-w-full text-left">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 px-3 font-semibold">Provider</th>
                     <th className="py-2 px-3 font-semibold">Month</th>
-                    <th className="py-2 px-3 font-semibold">Quantity (kWh)</th>
+                    <th className="py-2 px-3 font-semibold">Invoice Quantity (kWh)</th>
+                    {providePriorYear === 'yes' && (
+                      <th className="py-2 px-3 font-semibold">Invoice Quantity: Prior Year (kWh)</th>
+                    )}
+                    <th className="py-2 px-3 font-semibold">Unit of Measurement</th>
                     <th className="py-2 px-3 font-semibold">CO₂e Emissions (kg)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {scope2Data.map((entry) => (
                     <tr key={entry.id} className="border-b">
-                      <td className="py-2 px-3">{entry.source_of_energy}</td>
                       <td className="py-2 px-3">{entry.month || 'N/A'}</td>
                       <td className="py-2 px-3">{entry.quantity_used?.toFixed(2) || '0'}</td>
+                      {providePriorYear === 'yes' && (
+                        <td className="py-2 px-3">{entry.quantity_used_prior_year?.toFixed(2) || 'N/A'}</td>
+                      )}
+                      <td className="py-2 px-3">kWh</td>
                       <td className="py-2 px-3">{entry.emissions_kg_co2?.toFixed(2) || '0'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div className="mt-4">
+                <Button 
+                  variant="link" 
+                  className="text-blue-600 hover:text-blue-800"
+                  onClick={() => {
+                    const sourceUrl = scope2Data[0]?.source_of_energy === 'Hong Kong Electric' 
+                      ? 'https://www.hkelectric.com/documents/en/InvestorRelations/InvestorRelations_GLNCS/Documents/2025/ESR2024%20full%20version.pdf'
+                      : 'https://sustainability.clpgroup.com/en/2024/esg-data-hub';
+                    window.open(sourceUrl, '_blank');
+                  }}
+                >
+                  💡 Click here for source of emission factor
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
