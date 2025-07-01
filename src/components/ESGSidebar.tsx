@@ -171,11 +171,25 @@ const ESGSidebar = () => {
                                       Paper
                                     </NavLink>
                                   </li>
-                                  <li>
-                                    <NavLink to="/my-esg/environmental/scope-3/waste/water" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}>
-                                      Water
-                                    </NavLink>
-                                  </li>
+                                  <Accordion type="single" collapsible className="border-none">
+                                    <AccordionItem value="water">
+                                      <AccordionTrigger className={triggerClass + ' text-sm font-medium pl-6'}>Water</AccordionTrigger>
+                                      <AccordionContent>
+                                        <ul className="pl-4 space-y-1">
+                                          {officeLocations.map((location) => (
+                                            <li key={location.id}>
+                                              <NavLink 
+                                                to={`/my-esg/environmental/scope-3/waste/water/${location.id}`} 
+                                                className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}
+                                              >
+                                                {location.name}
+                                              </NavLink>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
                                 </ul>
                               </AccordionContent>
                             </AccordionItem>

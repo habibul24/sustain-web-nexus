@@ -44,6 +44,7 @@ import EmployeeProfile from './pages/esg/EmployeeProfile';
 import Scope3aWaste from './pages/esg/Scope3aWaste';
 import Scope3aPaper from './pages/esg/Scope3aPaper';
 import Scope3aWater from './pages/esg/Scope3aWater';
+import Scope3aWaterLocation from './pages/esg/Scope3aWaterLocation';
 import Scope3Result from './pages/esg/Scope3Result';
 
 const queryClient = new QueryClient();
@@ -96,6 +97,7 @@ function AppRoutes() {
                   <Route index element={<Scope3aWaste />} />
                   <Route path="paper" element={<Scope3aPaper />} />
                   <Route path="water" element={<Scope3aWater />} />
+                  <Route path="water/:locationId" element={<Scope3aWaterLocation />} />
                 </Route>
                 <Route path="capital-goods" element={<ComingSoon label="Scope 3.b" />} />
                 <Route path="fuel-energy" element={<ComingSoon label="Scope 3.c" />} />

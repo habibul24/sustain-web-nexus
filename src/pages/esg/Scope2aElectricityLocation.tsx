@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -57,6 +56,115 @@ const Scope2aElectricityLocation = () => {
   const [organizationArea, setOrganizationArea] = useState<string>('');
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   const [totalBuildingElectricity, setTotalBuildingElectricity] = useState<string>('');
+
+  // Remove stepper and back button, show all questions in a single form for the selected location
+  // Add state for table rows (months)
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  // Table state for invoice quantities and prior year emission
+  const [tableRows, setTableRows] = useState(() => months.map(month => ({
+    month,
+    quantity: '',
+    lastYear: ''
+  })));
+
+  // Track if provider was changed and deletion is pending
+  const [pendingProviderChange, setPendingProviderChange] = useState(false);
+  const [previousProvider, setPreviousProvider] = useState<string>('');
+
+  // When scope2Data loads, populate tableRows
+  useEffect(() => {
+    if (receivesBillsDirectly === 'yes' && scope2Data.length > 0) {
+      setTableRows(months.map(month => {
+        const entry = scope2Data.find(e => e.month === month);
+        return {
+          month,
+          quantity: entry ? (entry.quantity_used?.toString() || '') : '',
+          lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
+        };
+      }));
+    }
+  }, [scope2Data, receivesBillsDirectly]);
+
+  // When provider changes, set pending flag if there is existing data for this location
+  useEffect(() => {
+    if (!loading && electricityProvider && previousProvider && electricityProvider !== previousProvider) {
+      const hasData = scope2Data.some(e => e.source_of_energy === previousProvider);
+      if (hasData) {
+        setPendingProviderChange(true);
+      }
+    }
+    setPreviousProvider(electricityProvider);
+    // eslint-disable-next-line
+  }, [electricityProvider]);
+
+  // Only show and save values for the currently selected provider
+  useEffect(() => {
+    if (receivesBillsDirectly === 'yes' && scope2Data.length > 0) {
+      setTableRows(months.map(month => {
+        const entry = scope2Data.find(e => e.month === month && e.source_of_energy === electricityProvider);
+        return {
+          month,
+          quantity: entry ? (entry.quantity_used?.toString() || '') : '',
+          lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
+        };
+      }));
+    }
+  }, [scope2Data, receivesBillsDirectly, electricityProvider]);
+
+  // Handle table input change
+  const handleTableChange = (idx: number, field: 'quantity' | 'lastYear', value: string) => {
+    setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+  };
+
+  // Save all table rows for this location
+  const handleSaveTable = async () => {
+    try {
+      if (pendingProviderChange) {
+        if (!window.confirm('Changing the provider will delete all previous monthly values for this location. Continue?')) {
+          setPendingProviderChange(false);
+          return;
+        }
+        // Delete all previous records for this location
+        await supabase.from('scope2a_electricity')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('office_location_id', locationId);
+        setPendingProviderChange(false);
+      }
+      for (const row of tableRows) {
+        // Find if record exists for this month/location/provider
+        const existing = scope2Data.find(e => e.month === row.month && e.source_of_energy === electricityProvider);
+        if (existing) {
+          // Update
+          await supabase.from('scope2a_electricity').update({
+            source_of_energy: electricityProvider,
+            quantity_used: row.quantity ? parseFloat(row.quantity) : null,
+            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null
+          }).eq('id', existing.id);
+        } else if (row.quantity) {
+          // Insert
+          await supabase.from('scope2a_electricity').insert({
+            user_id: user.id,
+            office_location_id: locationId,
+            source_of_energy: electricityProvider,
+            unit_of_measurement: 'kWh',
+            month: row.month,
+            quantity_used: row.quantity ? parseFloat(row.quantity) : null,
+            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null,
+            receives_bills_directly: receivesBillsDirectly,
+            provide_prior_year: providePriorYear === 'yes'
+          });
+        }
+      }
+      toast({ title: 'Success!', description: 'Table data saved.' });
+      fetchData();
+    } catch (error) {
+      toast({ title: 'Error!', description: 'Failed to save table data.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     if (user && locationId) {
@@ -433,118 +541,153 @@ const Scope2aElectricityLocation = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center mb-8">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/my-esg/environmental/scope-2/electricity')}
-          className="mr-4"
-        >
-          ← Back to Locations
-        </Button>
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Scope 2a Electricity - {currentLocation.name}
-        </h1>
-      </div>
-      
-      {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center space-x-4">
-          {[1, 2, 3, 4].map((step) => (
-            <div
-              key={step}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                step <= currentStep
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-600'
-              }`}
-            >
-              {step}
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">
+        Scope 2a Electricity - {currentLocation.name}
+      </h1>
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Electricity Data Entry</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label>What is your electricity service provider?</Label>
+              <RadioGroup value={electricityProvider} onValueChange={setElectricityProvider}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Hong Kong Electric" id="hke" />
+                  <Label htmlFor="hke" className="cursor-pointer">Hong Kong Electric</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="CLP Power Hong Kong Limited (CLP)" id="clp" />
+                  <Label htmlFor="clp" className="cursor-pointer">CLP Power Hong Kong Limited (CLP)</Label>
+                </div>
+              </RadioGroup>
             </div>
-          ))}
-        </div>
-        <div className="text-center mt-2 text-sm text-gray-600">
-          Step {currentStep} of 4
-        </div>
-      </div>
-
-      {/* Step content */}
-      <div className="mb-8">
-        {renderStepContent()}
-      </div>
-
-      {/* Navigation buttons */}
-      <div className="flex justify-between mb-8">
-        <Button
-          variant="outline"
-          onClick={handlePreviousStep}
-          disabled={currentStep === 1}
-        >
-          Previous
-        </Button>
-        
-        {currentStep < 4 ? (
-          <Button onClick={handleNextStep} className="bg-green-500 hover:bg-green-600">
-            Next
-          </Button>
-        ) : (
-          <Button onClick={handleSaveEntry} className="bg-green-500 hover:bg-green-600">
-            Save Entry
-          </Button>
-        )}
-      </div>
-
-      {/* Existing entries */}
-      {scope2Data.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Existing Entries for {currentLocation.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-2 px-3 font-semibold">Month</th>
-                    <th className="py-2 px-3 font-semibold">Invoice Quantity (kWh)</th>
-                    {providePriorYear === 'yes' && (
-                      <th className="py-2 px-3 font-semibold">Invoice Quantity: Prior Year (kWh)</th>
-                    )}
-                    <th className="py-2 px-3 font-semibold">Unit of Measurement</th>
-                    <th className="py-2 px-3 font-semibold">CO₂e Emissions (kg)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scope2Data.map((entry) => (
-                    <tr key={entry.id} className="border-b">
-                      <td className="py-2 px-3">{entry.month || 'N/A'}</td>
-                      <td className="py-2 px-3">{entry.quantity_used?.toFixed(2) || '0'}</td>
-                      {providePriorYear === 'yes' && (
-                        <td className="py-2 px-3">{entry.quantity_used_prior_year?.toFixed(2) || 'N/A'}</td>
-                      )}
-                      <td className="py-2 px-3">kWh</td>
-                      <td className="py-2 px-3">{entry.emissions_kg_co2?.toFixed(2) || '0'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="mt-4">
-                <Button 
-                  variant="link" 
-                  className="text-blue-600 hover:text-blue-800"
-                  onClick={() => {
-                    const sourceUrl = scope2Data[0]?.source_of_energy === 'Hong Kong Electric' 
-                      ? 'https://www.hkelectric.com/documents/en/InvestorRelations/InvestorRelations_GLNCS/Documents/2025/ESR2024%20full%20version.pdf'
-                      : 'https://sustainability.clpgroup.com/en/2024/esg-data-hub';
-                    window.open(sourceUrl, '_blank');
-                  }}
-                >
-                  💡 Click here for source of emission factor
-                </Button>
-              </div>
+            <div className="space-y-4">
+              <Label>Do you receive electricity bills directly?</Label>
+              <RadioGroup value={receivesBillsDirectly} onValueChange={setReceivesBillsDirectly}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="bills-yes" />
+                  <Label htmlFor="bills-yes" className="cursor-pointer">Yes</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="bills-no" />
+                  <Label htmlFor="bills-no" className="cursor-pointer">No</Label>
+                </div>
+              </RadioGroup>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            {receivesBillsDirectly === 'yes' && (
+              <>
+                <div className="space-y-4">
+                  <Label>Do you want to provide prior year details?</Label>
+                  <RadioGroup value={providePriorYear} onValueChange={setProvidePriorYear}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="prior-yes" />
+                      <Label htmlFor="prior-yes" className="cursor-pointer">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="prior-no" />
+                      <Label htmlFor="prior-no" className="cursor-pointer">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="py-2 px-3 font-semibold">Month</th>
+                        <th className="py-2 px-3 font-semibold">Invoice Quantity</th>
+                        <th className="py-2 px-3 font-semibold">Unit of Measurement</th>
+                        {providePriorYear === 'yes' && (
+                          <th className="py-2 px-3 font-semibold">Last Year Emission Figure</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableRows.map((row, idx) => (
+                        <tr key={row.month} className="border-b">
+                          <td className="py-2 px-3 font-semibold">{row.month}</td>
+                          <td className="py-2 px-3">
+                            <Input
+                              type="number"
+                              value={row.quantity}
+                              onChange={e => handleTableChange(idx, 'quantity', e.target.value)}
+                              placeholder="Enter quantity"
+                            />
+                          </td>
+                          <td className="py-2 px-3">kWh</td>
+                          {providePriorYear === 'yes' && (
+                            <td className="py-2 px-3">
+                              <Input
+                                type="number"
+                                value={row.lastYear}
+                                onChange={e => handleTableChange(idx, 'lastYear', e.target.value)}
+                                placeholder="Last year emission"
+                              />
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button 
+                      variant="link" 
+                      className="text-blue-600 hover:text-blue-800"
+                      onClick={() => {
+                        const sourceUrl = electricityProvider === 'Hong Kong Electric' 
+                          ? 'https://www.hkelectric.com/documents/en/InvestorRelations/InvestorRelations_GLNCS/Documents/2025/ESR2024%20full%20version.pdf'
+                          : 'https://sustainability.clpgroup.com/en/2024/esg-data-hub';
+                        window.open(sourceUrl, '_blank');
+                      }}
+                    >
+                      💡 Click here for source of emission factor
+                    </Button>
+                    <Button onClick={handleSaveTable} className="bg-green-500 hover:bg-green-600 text-white ml-auto">Save Table</Button>
+                  </div>
+                </div>
+              </>
+            )}
+            {receivesBillsDirectly === 'no' && (
+              <>
+                <div className="space-y-4">
+                  <Label>Area of Organization Space (sq ft)</Label>
+                  <Input
+                    id="org-area"
+                    type="number"
+                    value={organizationArea}
+                    onChange={(e) => setOrganizationArea(e.target.value)}
+                    placeholder="Enter your organization's floor area"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <Label>Total Building Area (sq ft)</Label>
+                  <Input
+                    id="total-building-area"
+                    type="number"
+                    value={totalBuildingArea}
+                    onChange={(e) => setTotalBuildingArea(e.target.value)}
+                    placeholder="Enter total building floor area"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <Label>Total Building Electricity (kWh)</Label>
+                  <Input
+                    id="total-building-electricity"
+                    type="number"
+                    value={totalBuildingElectricity}
+                    onChange={(e) => setTotalBuildingElectricity(e.target.value)}
+                    placeholder="Enter total building electricity consumption"
+                  />
+                </div>
+                <div className="mt-2 text-sm text-gray-600 flex items-center gap-2">
+                  <span>💡</span> Request the monthly total electricity figures of the building from the facility manager.
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

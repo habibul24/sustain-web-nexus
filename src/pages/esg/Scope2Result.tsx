@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -77,16 +76,37 @@ const Scope2Result = () => {
     return item.quantity_used * item.emission_factor;
   };
 
+  // Group scope2Data by location
+  const scope2ByLocation: Record<string, { location: string, totalQuantity: number, emissionFactor: number, totalEmission: number }> = {};
+  scope2Data.forEach(row => {
+    const loc = row.office_location_name || 'Unknown';
+    const q = parseFloat(row.quantity_used as any) || 0;
+    const ef = parseFloat(row.emission_factor as any) || 0;
+    if (!scope2ByLocation[loc]) {
+      scope2ByLocation[loc] = { location: loc, totalQuantity: 0, emissionFactor: ef, totalEmission: 0 };
+    }
+    scope2ByLocation[loc].totalQuantity += q;
+    // If emission factor varies, you could average or just use the last one
+    scope2ByLocation[loc].emissionFactor = ef;
+    // Use the same calculation as before
+    if (row.organization_area && row.total_building_area) {
+      scope2ByLocation[loc].totalEmission += (row.organization_area / row.total_building_area) * q * ef;
+    } else {
+      scope2ByLocation[loc].totalEmission += q * ef;
+    }
+  });
+  const scope2Rows = Object.values(scope2ByLocation);
+
   const getTotalQuantity = () => {
-    return scope2Data.reduce((sum, item) => sum + (item.quantity_used || 0), 0);
+    return scope2Rows.reduce((sum, item) => sum + item.totalQuantity, 0);
   };
 
   const getTotalEmissions = () => {
-    return scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0);
+    return scope2Rows.reduce((sum, item) => sum + item.totalEmission, 0);
   };
 
   const getActiveSources = () => {
-    return scope2Data.length;
+    return scope2Rows.length;
   };
 
   const generatePDF = () => {
@@ -103,18 +123,16 @@ const Scope2Result = () => {
     doc.text(`Total Emission: ${getTotalEmissions().toFixed(2)} kgCO2e`, 14, 56);
     
     // Table data
-    const tableData = scope2Data.map(row => [
-      row.source_of_energy,
-      row.office_location_name,
-      row.month || 'N/A',
-      row.quantity_used?.toFixed(2) || '0',
-      row.emission_factor?.toFixed(3) || '0',
-      calculateCO2Emission(row).toFixed(2)
+    const tableData = scope2Rows.map(row => [
+      row.location,
+      row.totalQuantity.toFixed(2),
+      row.emissionFactor.toFixed(3),
+      row.totalEmission.toFixed(2)
     ]);
 
     autoTable(doc, {
       startY: 70,
-      head: [['Description Of Sources', 'Location', 'Month', 'Invoice Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']],
+      head: [['Location', 'Total Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
@@ -138,17 +156,15 @@ const Scope2Result = () => {
       ['Total Active Sources', getActiveSources().toString()],
       ['Total Emission', `${getTotalEmissions().toFixed(2)} kgCO2e`],
       [''],
-      ['Description Of Sources', 'Location', 'Month', 'Invoice Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']
+      ['Location', 'Total Quantity (kWh)', 'GHG Emission Factor', 'CO2 Carbon Emitted (kgCO2e)']
     ];
 
     // Table data
-    const tableData = scope2Data.map(row => [
-      row.source_of_energy,
-      row.office_location_name,
-      row.month || 'N/A',
-      row.quantity_used?.toFixed(2) || '0',
-      row.emission_factor?.toFixed(3) || '0',
-      calculateCO2Emission(row).toFixed(2)
+    const tableData = scope2Rows.map(row => [
+      row.location,
+      row.totalQuantity.toFixed(2),
+      row.emissionFactor.toFixed(3),
+      row.totalEmission.toFixed(2)
     ]);
 
     const allData = [...summaryData, ...tableData];
@@ -191,31 +207,21 @@ const Scope2Result = () => {
         <table className="min-w-full text-left">
           <thead>
             <tr className="border-b">
-              <th className="py-2 px-3 font-semibold">Description Of Sources</th>
               <th className="py-2 px-3 font-semibold">Location</th>
-              <th className="py-2 px-3 font-semibold">Month</th>
-              <th className="py-2 px-3 font-semibold">Invoice Quantity (kWh)</th>
+              <th className="py-2 px-3 font-semibold">Total Quantity (kWh)</th>
               <th className="py-2 px-3 font-semibold">GHG Emission Factor</th>
-              <th className="py-2 px-3 font-semibold">Co2 Carbon Emitted (kgCO2e)</th>
+              <th className="py-2 px-3 font-semibold">CO2 Carbon Emitted (kgCO2e)</th>
             </tr>
           </thead>
           <tbody>
-            {scope2Data.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-500">No data available</td>
+            {scope2Rows.map(row => (
+              <tr key={row.location}>
+                <td className="py-2 px-3">{row.location}</td>
+                <td className="py-2 px-3">{row.totalQuantity.toFixed(2)}</td>
+                <td className="py-2 px-3">{row.emissionFactor}</td>
+                <td className="py-2 px-3">{row.totalEmission.toFixed(2)}</td>
               </tr>
-            ) : (
-              scope2Data.map((row) => (
-                <tr key={row.id} className="border-b">
-                  <td className="py-2 px-3">{row.source_of_energy}</td>
-                  <td className="py-2 px-3">{row.office_location_name}</td>
-                  <td className="py-2 px-3">{row.month || 'N/A'}</td>
-                  <td className="py-2 px-3">{row.quantity_used?.toFixed(2) || '0'}</td>
-                  <td className="py-2 px-3">{row.emission_factor?.toFixed(3) || '0'}</td>
-                  <td className="py-2 px-3">{calculateCO2Emission(row).toFixed(2)}</td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
