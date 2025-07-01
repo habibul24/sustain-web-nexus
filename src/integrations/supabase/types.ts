@@ -1444,7 +1444,9 @@ export type Database = {
       }
       paper: {
         Row: {
-          carbon_dioxide_emitted_co2: number | null
+          carbon_dioxide_emitted_co2_combust: number | null
+          carbon_dioxide_emitted_co2_landfill: number | null
+          carbon_dioxide_emitted_co2_recycle: number | null
           closing_quantity: number | null
           created_at: string
           emission_factor_from_vendor: number | null
@@ -1461,6 +1463,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o: number | null
           opening_quantity: number | null
           quantity: number | null
+          quantity_combust: number | null
+          quantity_landfill: number | null
+          quantity_recycle: number | null
+          quantity_vendor: number | null
           recycles: boolean | null
           sorts_paper_waste: boolean | null
           source_of_emission: string | null
@@ -1474,7 +1480,9 @@ export type Database = {
           waste_type: string | null
         }
         Insert: {
-          carbon_dioxide_emitted_co2?: number | null
+          carbon_dioxide_emitted_co2_combust?: number | null
+          carbon_dioxide_emitted_co2_landfill?: number | null
+          carbon_dioxide_emitted_co2_recycle?: number | null
           closing_quantity?: number | null
           created_at?: string
           emission_factor_from_vendor?: number | null
@@ -1491,6 +1499,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           opening_quantity?: number | null
           quantity?: number | null
+          quantity_combust?: number | null
+          quantity_landfill?: number | null
+          quantity_recycle?: number | null
+          quantity_vendor?: number | null
           recycles?: boolean | null
           sorts_paper_waste?: boolean | null
           source_of_emission?: string | null
@@ -1504,7 +1516,9 @@ export type Database = {
           waste_type?: string | null
         }
         Update: {
-          carbon_dioxide_emitted_co2?: number | null
+          carbon_dioxide_emitted_co2_combust?: number | null
+          carbon_dioxide_emitted_co2_landfill?: number | null
+          carbon_dioxide_emitted_co2_recycle?: number | null
           closing_quantity?: number | null
           created_at?: string
           emission_factor_from_vendor?: number | null
@@ -1521,6 +1535,10 @@ export type Database = {
           nitrous_oxide_emitted_n2o?: number | null
           opening_quantity?: number | null
           quantity?: number | null
+          quantity_combust?: number | null
+          quantity_landfill?: number | null
+          quantity_recycle?: number | null
+          quantity_vendor?: number | null
           recycles?: boolean | null
           sorts_paper_waste?: boolean | null
           source_of_emission?: string | null
@@ -1983,6 +2001,146 @@ export type Database = {
           },
         ]
       }
+      scope3a_water: {
+        Row: {
+          assessment_period_end: string | null
+          assessment_period_start: string | null
+          carbon_dioxide_emitted_co2: number | null
+          created_at: string
+          data_source: string | null
+          emission_factor: number | null
+          emission_factor_prior_year: number | null
+          emissions_kg_co2: number | null
+          gwp_co2e: number | null
+          gwp_methane: number | null
+          gwp_nitrous_oxide: number | null
+          id: string
+          invoice_file_url: string | null
+          invoice_quantity_prior_year: number | null
+          is_applicable: boolean | null
+          last_year_emission_figures: number | null
+          methane_emitted_ch4: number | null
+          month: string | null
+          nitrous_oxide_emitted_n2o: number | null
+          notes: string | null
+          office_location_id: string | null
+          organization_area: number | null
+          provide_prior_year: boolean | null
+          quantity_used: number | null
+          quantity_used_prior_year: number | null
+          receives_bills_directly: string | null
+          source_of_emission: string | null
+          source_of_emission_prior_year: string | null
+          total_building_area: number | null
+          total_building_water: number | null
+          unit_of_measurement: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emission_factor_prior_year?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          invoice_file_url?: string | null
+          invoice_quantity_prior_year?: number | null
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          month?: string | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          office_location_id?: string | null
+          organization_area?: number | null
+          provide_prior_year?: boolean | null
+          quantity_used?: number | null
+          quantity_used_prior_year?: number | null
+          receives_bills_directly?: string | null
+          source_of_emission?: string | null
+          source_of_emission_prior_year?: string | null
+          total_building_area?: number | null
+          total_building_water?: number | null
+          unit_of_measurement: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_period_end?: string | null
+          assessment_period_start?: string | null
+          carbon_dioxide_emitted_co2?: number | null
+          created_at?: string
+          data_source?: string | null
+          emission_factor?: number | null
+          emission_factor_prior_year?: number | null
+          emissions_kg_co2?: number | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          id?: string
+          invoice_file_url?: string | null
+          invoice_quantity_prior_year?: number | null
+          is_applicable?: boolean | null
+          last_year_emission_figures?: number | null
+          methane_emitted_ch4?: number | null
+          month?: string | null
+          nitrous_oxide_emitted_n2o?: number | null
+          notes?: string | null
+          office_location_id?: string | null
+          organization_area?: number | null
+          provide_prior_year?: boolean | null
+          quantity_used?: number | null
+          quantity_used_prior_year?: number | null
+          receives_bills_directly?: string | null
+          source_of_emission?: string | null
+          source_of_emission_prior_year?: string | null
+          total_building_area?: number | null
+          total_building_water?: number | null
+          unit_of_measurement?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scope3a_water_office_location_id_fkey"
+            columns: ["office_location_id"]
+            isOneToOne: false
+            referencedRelation: "office_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scope3a_water_audit: {
+        Row: {
+          action: string | null
+          changed_at: string | null
+          changed_by: string | null
+          id: number
+          row_data: Json | null
+        }
+        Insert: {
+          action?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: number
+          row_data?: Json | null
+        }
+        Update: {
+          action?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: number
+          row_data?: Json | null
+        }
+        Relationships: []
+      }
       stationary_combustion: {
         Row: {
           assessment_period_end: string | null
@@ -2316,6 +2474,7 @@ export type Database = {
           operations_description: string | null
           phone: string | null
           preferred_contact: string | null
+          reporting_year_end_date: string | null
           role_id: string | null
           service_needed: string | null
           software_used: string | null
@@ -2346,6 +2505,7 @@ export type Database = {
           operations_description?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          reporting_year_end_date?: string | null
           role_id?: string | null
           service_needed?: string | null
           software_used?: string | null
@@ -2376,6 +2536,7 @@ export type Database = {
           operations_description?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          reporting_year_end_date?: string | null
           role_id?: string | null
           service_needed?: string | null
           software_used?: string | null

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -19,6 +20,14 @@ interface Scope2Data {
   month: string | null;
   receives_bills_directly: string;
   total_building_electricity: number | null;
+}
+
+interface LocationSummary {
+  location: string;
+  totalQuantity: number;
+  emissionFactor: number;
+  totalEmission: number;
+  receivesBillsDirectly: string;
 }
 
 const Scope2Result = () => {
@@ -57,7 +66,7 @@ const Scope2Result = () => {
 
       const formattedData = data?.map(item => ({
         ...item,
-        office_location_name: item.office_locations?.name || 'Unknown Location'
+        office_location_name: (item as any).office_locations?.name || 'Unknown Location'
       })) || [];
 
       setScope2Data(formattedData);
@@ -68,68 +77,63 @@ const Scope2Result = () => {
     }
   };
 
-  const calculateCO2Emission = (item: Scope2Data) => {
-    if (item.receives_bills_directly === 'no' && item.total_building_electricity && item.organization_area && item.total_building_area && item.emission_factor) {
-      return (item.organization_area / item.total_building_area) * item.total_building_electricity * item.emission_factor;
-    }
-    if (!item.quantity_used || !item.emission_factor) return 0;
-    // If organization area and total building area are available
-    if (item.organization_area && item.total_building_area) {
-      return (item.organization_area / item.total_building_area) * item.quantity_used * item.emission_factor;
-    }
-    // Standard calculation: Quantity * GHG Emission Factor
-    return item.quantity_used * item.emission_factor;
+  // Group data by location and calculate totals
+  const getLocationSummaries = (): LocationSummary[] => {
+    const locationGroups: Record<string, Scope2Data[]> = {};
+    
+    // Group by location
+    scope2Data.forEach(item => {
+      const location = item.office_location_name;
+      if (!locationGroups[location]) {
+        locationGroups[location] = [];
+      }
+      locationGroups[location].push(item);
+    });
+
+    // Calculate totals for each location
+    return Object.entries(locationGroups).map(([location, items]) => {
+      // Get the billing method (should be consistent for a location)
+      const receivesBillsDirectly = items[0]?.receives_bills_directly || 'yes';
+      const emissionFactor = items[0]?.emission_factor || 0;
+      
+      let totalQuantity = 0;
+      let totalEmission = 0;
+
+      if (receivesBillsDirectly === 'yes') {
+        // For direct billing: sum up all monthly quantities
+        totalQuantity = items.reduce((sum, item) => sum + (item.quantity_used || 0), 0);
+        totalEmission = totalQuantity * emissionFactor;
+      } else {
+        // For indirect billing: use the calculated quantity (should be same for all records)
+        const firstItem = items[0];
+        if (firstItem && firstItem.organization_area && firstItem.total_building_area && firstItem.total_building_electricity) {
+          totalQuantity = (firstItem.organization_area / firstItem.total_building_area) * firstItem.total_building_electricity;
+          totalEmission = totalQuantity * emissionFactor;
+        }
+      }
+
+      return {
+        location,
+        totalQuantity,
+        emissionFactor,
+        totalEmission,
+        receivesBillsDirectly
+      };
+    });
   };
 
-  // Group scope2Data by location, using the most recent 'no' record if it exists, otherwise the most recent 'yes' record
-  const latestByLocation: Record<string, Scope2Data> = {};
-  scope2Data.forEach(row => {
-    const loc = row.office_location_name || 'Unknown';
-    // Always overwrite, so the last (most recent) record for each location is used
-    if (!latestByLocation[loc]) {
-      latestByLocation[loc] = row;
-    } else {
-      // Prefer 'no' bills directly if it exists
-      if (row.receives_bills_directly === 'no') {
-        latestByLocation[loc] = row;
-      } else if (latestByLocation[loc].receives_bills_directly !== 'no') {
-        latestByLocation[loc] = row;
-      }
-    }
-  });
-  const scope2Rows = Object.entries(latestByLocation).map(([location, row]) => {
-    const ef = parseFloat(row.emission_factor as any) || 0;
-    let totalQuantity = 0;
-    let totalEmission = 0;
-    if (row.receives_bills_directly === 'no' && row.total_building_electricity && row.organization_area && row.total_building_area) {
-      totalQuantity = parseFloat(row.total_building_electricity as any) || 0;
-      totalEmission = (row.organization_area / row.total_building_area) * totalQuantity * ef;
-    } else if (row.quantity_used) {
-      totalQuantity = parseFloat(row.quantity_used as any) || 0;
-      if (row.organization_area && row.total_building_area) {
-        totalEmission = (row.organization_area / row.total_building_area) * totalQuantity * ef;
-      } else {
-        totalEmission = totalQuantity * ef;
-      }
-    }
-    return {
-      location,
-      totalQuantity,
-      emissionFactor: ef,
-      totalEmission
-    };
-  });
+  const locationSummaries = getLocationSummaries();
 
   const getTotalQuantity = () => {
-    return scope2Rows.reduce((sum, item) => sum + item.totalQuantity, 0);
+    return locationSummaries.reduce((sum, item) => sum + item.totalQuantity, 0);
   };
 
   const getTotalEmissions = () => {
-    return scope2Rows.reduce((sum, item) => sum + item.totalEmission, 0);
+    return locationSummaries.reduce((sum, item) => sum + item.totalEmission, 0);
   };
 
   const getActiveSources = () => {
-    return scope2Rows.length;
+    return locationSummaries.length;
   };
 
   const generatePDF = () => {
@@ -146,7 +150,7 @@ const Scope2Result = () => {
     doc.text(`Total Emission: ${getTotalEmissions().toFixed(2)} kgCO2e`, 14, 56);
     
     // Table data
-    const tableData = scope2Rows.map(row => [
+    const tableData = locationSummaries.map(row => [
       row.location,
       row.totalQuantity.toFixed(2),
       row.emissionFactor.toFixed(3),
@@ -163,7 +167,6 @@ const Scope2Result = () => {
     });
 
     // Footer
-    const pageCount = doc.getNumberOfPages();
     doc.setFontSize(10);
     doc.text('Emission Factor Source: View Reference', 14, doc.internal.pageSize.height - 10);
     
@@ -183,7 +186,7 @@ const Scope2Result = () => {
     ];
 
     // Table data
-    const tableData = scope2Rows.map(row => [
+    const tableData = locationSummaries.map(row => [
       row.location,
       row.totalQuantity.toFixed(2),
       row.emissionFactor.toFixed(3),
@@ -234,15 +237,17 @@ const Scope2Result = () => {
               <th className="py-2 px-3 font-semibold">Total Quantity (kWh)</th>
               <th className="py-2 px-3 font-semibold">GHG Emission Factor</th>
               <th className="py-2 px-3 font-semibold">CO2 Carbon Emitted (kgCO2e)</th>
+              <th className="py-2 px-3 font-semibold">Billing Method</th>
             </tr>
           </thead>
           <tbody>
-            {scope2Rows.map(row => (
+            {locationSummaries.map(row => (
               <tr key={row.location}>
                 <td className="py-2 px-3">{row.location}</td>
                 <td className="py-2 px-3">{row.totalQuantity.toFixed(2)}</td>
-                <td className="py-2 px-3">{row.emissionFactor}</td>
+                <td className="py-2 px-3">{row.emissionFactor.toFixed(3)}</td>
                 <td className="py-2 px-3">{row.totalEmission.toFixed(2)}</td>
+                <td className="py-2 px-3">{row.receivesBillsDirectly === 'yes' ? 'Direct' : 'Indirect'}</td>
               </tr>
             ))}
           </tbody>
