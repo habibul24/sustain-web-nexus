@@ -216,9 +216,21 @@ const Onboarding = () => {
                     <SelectValue placeholder="Select framework" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="framework1">Framework Option 1</SelectItem>
-                    <SelectItem value="framework2">Framework Option 2</SelectItem>
-                    <SelectItem value="framework3">Framework Option 3</SelectItem>
+                    <SelectItem value="gri">Global Reporting Initiative standards (GRI)</SelectItem>
+                    <SelectItem value="sasb">Sustainability Accounting Standards Board standards (SASB)</SelectItem>
+                    <SelectItem value="issb">International Sustainability Standards Board (ISSB) IFRS S1 and S2</SelectItem>
+                    <SelectItem value="cdp">Carbon Disclosure Projects (CDP)</SelectItem>
+                    <SelectItem value="csrd">Corporate Sustainability Reporting Directive (CSRD)</SelectItem>
+                    <SelectItem value="cdsb">Climate Disclosure Standard Boards (CDSB)</SelectItem>
+                    <SelectItem value="ungc">United Nations Global Compact</SelectItem>
+                    <SelectItem value="iirc">International Integrated Reporting Council (IIRC)</SelectItem>
+                    <SelectItem value="gresb">Global Real Estate Sustainability Benchmark (GRESB)</SelectItem>
+                    <SelectItem value="sbti">Science Based Targets initiative (SBTi)</SelectItem>
+                    <SelectItem value="efrag">European Financial Reporting Advisory Group (EFRAG)</SelectItem>
+                    <SelectItem value="tcfd">Task Force on Climate-Related Financial Disclosures (TCFD)</SelectItem>
+                    <SelectItem value="nger">National Greenhouse and Energy Reporting (NGER)</SelectItem>
+                    <SelectItem value="ghg">Greenhouse Gas Protocol Accounting and Reporting Standard (GHG)</SelectItem>
+                    <SelectItem value="lca">Life Cycle Assessment (LCA)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
