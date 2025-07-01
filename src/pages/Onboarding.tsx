@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -155,9 +154,22 @@ const Onboarding = () => {
                     <SelectValue placeholder="Select software" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="placeholder1">Software Option 1</SelectItem>
-                    <SelectItem value="placeholder2">Software Option 2</SelectItem>
-                    <SelectItem value="placeholder3">Software Option 3</SelectItem>
+                    <SelectItem value="xero">Xero</SelectItem>
+                    <SelectItem value="sage">Sage</SelectItem>
+                    <SelectItem value="sage-intacct">Sage Intacct</SelectItem>
+                    <SelectItem value="netsuite">Netsuite</SelectItem>
+                    <SelectItem value="sap">SAP</SelectItem>
+                    <SelectItem value="oracle-fusion-cloud-erp">Oracle Fusion Cloud ERP</SelectItem>
+                    <SelectItem value="reach">Reach</SelectItem>
+                    <SelectItem value="quickbooks">Quickbooks</SelectItem>
+                    <SelectItem value="mas-accounting">MAS Accounting</SelectItem>
+                    <SelectItem value="abss">ABSS</SelectItem>
+                    <SelectItem value="sunsystems">Sunsystems</SelectItem>
+                    <SelectItem value="myob">MYOB</SelectItem>
+                    <SelectItem value="hnry">HNRY</SelectItem>
+                    <SelectItem value="sleek">Sleek</SelectItem>
+                    <SelectItem value="odoo">Odoo</SelectItem>
+                    <SelectItem value="excel-sheets">Excel sheets</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -30,7 +30,7 @@ const SignIn = () => {
               Don't have an account?{' '}
               <Link 
                 to="/sign-up" 
-                className="text-green-600 hover:text-green-700 font-semibold"
+                className="text-orange-500 hover:text-orange-600 font-semibold"
               >
                 Sign up now
               </Link>
