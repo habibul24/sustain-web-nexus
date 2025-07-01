@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,6 +42,9 @@ import Strategy from './pages/esg/Strategy';
 import RiskAssessment from './pages/esg/RiskAssessment';
 import MetricsTargets from './pages/esg/MetricsTargets';
 import EmployeeProfile from './pages/esg/EmployeeProfile';
+import Scope3aWaste from './pages/esg/Scope3aWaste';
+import Scope3aPaper from './pages/esg/Scope3aPaper';
+import Scope3aWater from './pages/esg/Scope3aWater';
 
 const queryClient = new QueryClient();
 
@@ -88,11 +92,14 @@ function AppRoutes() {
               <Route path="scope-2-result" element={<Scope2Result />} />
               <Route path="scope-3">
                 <Route index element={<ComingSoon label="Scope 3" />} />
-                <Route path="purchased-goods" element={<ComingSoon label="Scope 3.a" />} />
+                <Route path="waste">
+                  <Route index element={<Scope3aWaste />} />
+                  <Route path="paper" element={<Scope3aPaper />} />
+                  <Route path="water" element={<Scope3aWater />} />
+                </Route>
                 <Route path="capital-goods" element={<ComingSoon label="Scope 3.b" />} />
                 <Route path="fuel-energy" element={<ComingSoon label="Scope 3.c" />} />
                 <Route path="transportation" element={<ComingSoon label="Scope 3.d" />} />
-                <Route path="waste" element={<ComingSoon label="Scope 3.e" />} />
                 <Route path="business-travel" element={<ComingSoon label="Scope 3.f" />} />
                 <Route path="employee-commuting" element={<ComingSoon label="Scope 3.g" />} />
               </Route>

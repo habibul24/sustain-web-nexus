@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -156,11 +157,25 @@ const ESGSidebar = () => {
                       <AccordionTrigger className={triggerClass + ' text-base font-semibold pl-4'}>Scope 3</AccordionTrigger>
                       <AccordionContent>
                         <ul className="pl-2 space-y-1">
-                          <li>
-                            <NavLink to="/my-esg/environmental/scope-3/purchased-goods" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
-                              3.a) Coming Soon
-                            </NavLink>
-                          </li>
+                          <Accordion type="single" collapsible className="border-none">
+                            <AccordionItem value="waste">
+                              <AccordionTrigger className={triggerClass + ' text-sm font-medium pl-6'}>3.a) Waste</AccordionTrigger>
+                              <AccordionContent>
+                                <ul className="pl-4 space-y-1">
+                                  <li>
+                                    <NavLink to="/my-esg/environmental/scope-3/waste/paper" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}>
+                                      Paper
+                                    </NavLink>
+                                  </li>
+                                  <li>
+                                    <NavLink to="/my-esg/environmental/scope-3/waste/water" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100 text-sm pl-8` : `${subLinkClass} text-sm pl-8`}>
+                                      Water
+                                    </NavLink>
+                                  </li>
+                                </ul>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
                           <li>
                             <NavLink to="/my-esg/environmental/scope-3/capital-goods" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
                               3.b) Coming Soon
@@ -174,11 +189,6 @@ const ESGSidebar = () => {
                           <li>
                             <NavLink to="/my-esg/environmental/scope-3/transportation" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
                               3.d) Coming Soon
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink to="/my-esg/environmental/scope-3/waste" className={({ isActive }) => isActive ? `${subLinkClass} bg-green-100` : subLinkClass}>
-                              3.e) Coming Soon
                             </NavLink>
                           </li>
                           <li>

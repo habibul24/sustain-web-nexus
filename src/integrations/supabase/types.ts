@@ -1442,6 +1442,99 @@ export type Database = {
         }
         Relationships: []
       }
+      paper: {
+        Row: {
+          carbon_dioxide_emitted_co2: number | null
+          closing_quantity: number | null
+          created_at: string
+          emission_factor_from_vendor: number | null
+          emissions_kg_co2: number | null
+          engages_waste_company: boolean | null
+          gwp_co2e: number | null
+          gwp_methane: number | null
+          gwp_nitrous_oxide: number | null
+          has_vendor_scope_data: boolean | null
+          id: string
+          incinerates: boolean | null
+          measures_sorted_waste: boolean | null
+          methane_emitted_ch4: number | null
+          nitrous_oxide_emitted_n2o: number | null
+          opening_quantity: number | null
+          quantity: number | null
+          recycles: boolean | null
+          sorts_paper_waste: boolean | null
+          source_of_emission: string | null
+          total_purchased: number | null
+          total_recycled: number | null
+          unit_of_measurement: string | null
+          updated_at: string
+          user_id: string
+          uses_landfill: boolean | null
+          uses_paper: boolean | null
+          waste_type: string | null
+        }
+        Insert: {
+          carbon_dioxide_emitted_co2?: number | null
+          closing_quantity?: number | null
+          created_at?: string
+          emission_factor_from_vendor?: number | null
+          emissions_kg_co2?: number | null
+          engages_waste_company?: boolean | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          has_vendor_scope_data?: boolean | null
+          id?: string
+          incinerates?: boolean | null
+          measures_sorted_waste?: boolean | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          opening_quantity?: number | null
+          quantity?: number | null
+          recycles?: boolean | null
+          sorts_paper_waste?: boolean | null
+          source_of_emission?: string | null
+          total_purchased?: number | null
+          total_recycled?: number | null
+          unit_of_measurement?: string | null
+          updated_at?: string
+          user_id: string
+          uses_landfill?: boolean | null
+          uses_paper?: boolean | null
+          waste_type?: string | null
+        }
+        Update: {
+          carbon_dioxide_emitted_co2?: number | null
+          closing_quantity?: number | null
+          created_at?: string
+          emission_factor_from_vendor?: number | null
+          emissions_kg_co2?: number | null
+          engages_waste_company?: boolean | null
+          gwp_co2e?: number | null
+          gwp_methane?: number | null
+          gwp_nitrous_oxide?: number | null
+          has_vendor_scope_data?: boolean | null
+          id?: string
+          incinerates?: boolean | null
+          measures_sorted_waste?: boolean | null
+          methane_emitted_ch4?: number | null
+          nitrous_oxide_emitted_n2o?: number | null
+          opening_quantity?: number | null
+          quantity?: number | null
+          recycles?: boolean | null
+          sorts_paper_waste?: boolean | null
+          source_of_emission?: string | null
+          total_purchased?: number | null
+          total_recycled?: number | null
+          unit_of_measurement?: string | null
+          updated_at?: string
+          user_id?: string
+          uses_landfill?: boolean | null
+          uses_paper?: boolean | null
+          waste_type?: string | null
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           brand: string | null
@@ -2353,6 +2446,30 @@ export type Database = {
           session_token?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      waste: {
+        Row: {
+          contributes_significantly: boolean | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contributes_significantly?: boolean | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contributes_significantly?: boolean | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
