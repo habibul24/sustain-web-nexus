@@ -469,6 +469,68 @@ const Dashboard = () => {
   const turnoverByGenderData = getTurnoverByGenderData();
   const turnoverByAgeData = getTurnoverByAgeData();
 
+  // --- Social Year Comparison Data ---
+  const socialYears = [2023, 2024, 2025];
+
+  // Helper to calculate stats for a given year
+  const getSocialStatsForYear = (year: number) => {
+    // Parse dates
+    const parseDate = (dateString: string | null): Date | null => {
+      if (!dateString) return null;
+      let date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        const dateValue = parseFloat(dateString);
+        if (!isNaN(dateValue)) {
+          date = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = dateString.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            date = new Date(year, month, day);
+          }
+        }
+      }
+      return isNaN(date.getTime()) ? null : date;
+    };
+
+    // Employees at start of year
+    const employeesAtStart = employees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= year;
+    }).length;
+    // Employees at end of year
+    const employeesAtEnd = employees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > year) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > year;
+    }).length;
+    // Average employees
+    const avgEmployees = (employeesAtStart + employeesAtEnd) / 2;
+    // Employees who left in year
+    const leftInYear = employees.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === year;
+    }).length;
+    // New hires in year
+    const newHires = employees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() === year;
+    }).length;
+    // Turnover rate
+    const turnoverRate = avgEmployees > 0 ? (leftInYear / avgEmployees) * 100 : 0;
+    return {
+      year,
+      avgEmployees,
+      turnoverRate: Number(turnoverRate.toFixed(2)),
+      newHires
+    };
+  };
+
+  const socialYearStats = socialYears.map(getSocialStatsForYear);
+
   const chartConfig = {
     emissions: {
       label: "Emissions (kgCO₂e)",
@@ -848,6 +910,67 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+
+              {/* Social Year Comparison Charts */}
+              <div className="mt-8">
+                <h2 className="text-lg font-bold mb-4">Year-by-Year Comparison</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Total Employees by Year */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Total Employees by Year</CardTitle>
+                      <CardDescription className="text-xs">Average number of employees</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <BarChart data={socialYearStats}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="avgEmployees" fill="#3b82f6" />
+                        </BarChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                  {/* Turnover Rate by Year */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Turnover Rate by Year</CardTitle>
+                      <CardDescription className="text-xs">% of employees who left</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <BarChart data={socialYearStats}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="turnoverRate" fill="#ef4444" />
+                        </BarChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                  {/* New Hires by Year */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">New Hires by Year</CardTitle>
+                      <CardDescription className="text-xs">Employees hired each year</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <BarChart data={socialYearStats}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="newHires" fill="#22c55e" />
+                        </BarChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </>
           ) : (
