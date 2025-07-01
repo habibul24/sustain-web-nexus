@@ -81,11 +81,35 @@ const EmployeeProfile = () => {
     selectedYear: 2025,
   });
 
+  // --- Template preview state ---
+  const [templatePreview, setTemplatePreview] = useState<any[]>([]);
+  const [templateHeaders, setTemplateHeaders] = useState<string[]>([]);
+
   useEffect(() => {
     if (user) {
       loadEmployees();
     }
+    // Fetch and preview the template
+    fetchTemplatePreview();
   }, [user]);
+
+  const fetchTemplatePreview = async () => {
+    try {
+      const response = await fetch('/Employee%20Profile%20Template.xlsx');
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // array of arrays
+      if (jsonData.length > 0) {
+        setTemplateHeaders(jsonData[0] as string[]);
+        setTemplatePreview(jsonData.slice(1, 4)); // first 3 rows
+      }
+    } catch (err) {
+      setTemplateHeaders([]);
+      setTemplatePreview([]);
+    }
+  };
 
   const loadEmployees = async () => {
     try {
@@ -448,21 +472,21 @@ const EmployeeProfile = () => {
         }
 
         return {
-          serial_number: row['S/N'] || null,
-          name: row['Name'] || '',
-          position: row['Position- Executive or not'] || null,
-          is_executive: row['Position- Executive or not'] === 'Yes',
-          age: row['Age'] || null,
+        serial_number: row['S/N'] || null,
+        name: row['Name'] || '',
+        position: row['Position- Executive or not'] || null,
+        is_executive: row['Position- Executive or not'] === 'Yes',
+        age: row['Age'] || null,
           sex: row['Sex'] || null,
-          employee_number: row['Employee number'] || null,
-          work_mode: row['Work mode (Full Time or Part Time)'] || null,
-          country_of_assignment: row['Country of Primary Assignment'] || null,
-          factory_of_assignment: row['Factory of Primary Assignment'] || null,
+        employee_number: row['Employee number'] || null,
+        work_mode: row['Work mode (Full Time or Part Time)'] || null,
+        country_of_assignment: row['Country of Primary Assignment'] || null,
+        factory_of_assignment: row['Factory of Primary Assignment'] || null,
           date_of_employment: employmentDate,
           date_of_exit: exitDate,
-          category_department: row['Category/ Department'] || null,
-          level_designation: row['By level'] || null,
-          salary: row['Salary'] || null,
+        category_department: row['Category/ Department'] || null,
+        level_designation: row['By level'] || null,
+        salary: row['Salary'] || null,
         };
       });
 
@@ -505,7 +529,44 @@ const EmployeeProfile = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Employee Profile</h1>
-        <p className="text-gray-600 mt-2">Upload and manage employee data from Excel files</p>
+        {/* Template preview and download */}
+        <div className="mt-2 mb-4 flex flex-col md:flex-row md:items-center md:gap-6">
+          <div>
+            <div className="font-semibold mb-1">Download Employee Profile Template</div>
+            <a
+              href="/Employee%20Profile%20Template.xlsx"
+              download
+              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium mb-2"
+            >
+              Download Template
+            </a>
+            {templateHeaders.length > 0 && (
+              <div className="mt-2">
+                <div className="font-semibold text-sm mb-1">Template Preview:</div>
+                <div className="overflow-x-auto border rounded">
+                  <table className="min-w-max text-xs">
+                    <thead>
+                      <tr>
+                        {templateHeaders.map((header, idx) => (
+                          <th key={idx} className="px-2 py-1 border-b bg-gray-100 font-semibold">{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {templatePreview.map((row, i) => (
+                        <tr key={i}>
+                          {templateHeaders.map((_, j) => (
+                            <td key={j} className="px-2 py-1 border-b">{row[j] ?? ''}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Upload Section */}
@@ -528,12 +589,12 @@ const EmployeeProfile = () => {
               disabled={uploading}
             />
             <div className="flex gap-2">
-              <Button 
-                disabled={uploading}
+            <Button 
+              disabled={uploading}
                 className="flex-1"
-              >
-                {uploading ? 'Uploading...' : 'Upload Excel File'}
-              </Button>
+            >
+              {uploading ? 'Uploading...' : 'Upload Excel File'}
+            </Button>
               {employees.length > 0 && (
                 <Button
                   variant="destructive"
