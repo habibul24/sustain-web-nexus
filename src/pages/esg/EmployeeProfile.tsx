@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building } from 'lucide-react';
+import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Employee {
@@ -53,6 +53,7 @@ const EmployeeProfile = () => {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [stats, setStats] = useState<EmployeeStats>({
     totalEmployees: 0,
@@ -130,10 +131,33 @@ const EmployeeProfile = () => {
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
-    // New hires in 2025
+    // New hires in 2025 - improved logic to handle different date formats
     const newHires2025 = employeeData.filter(emp => {
       if (!emp.date_of_employment) return false;
-      const hireYear = new Date(emp.date_of_employment).getFullYear();
+      
+      // Try to parse the date - handle both date objects and strings
+      let hireDate;
+      if (emp.date_of_employment instanceof Date) {
+        hireDate = emp.date_of_employment;
+      } else {
+        // Handle string dates
+        hireDate = new Date(emp.date_of_employment);
+      }
+      
+      // Check if the date is valid and extract year
+      if (isNaN(hireDate.getTime())) {
+        // Try parsing as Excel serial number if it's a number
+        const dateValue = parseFloat(emp.date_of_employment);
+        if (!isNaN(dateValue)) {
+          // Excel date serial number conversion (Excel epoch starts Jan 1, 1900)
+          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          return false;
+        }
+      }
+      
+      const hireYear = hireDate.getFullYear();
+      console.log('Employee hire date:', emp.date_of_employment, 'Parsed year:', hireYear);
       return hireYear === 2025;
     }).length;
     
@@ -164,6 +188,8 @@ const EmployeeProfile = () => {
     
     const above50WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
     const turnoverRateAbove50 = employeesAbove50 > 0 ? (above50WhoLeft / employeesAbove50) * 100 : 0;
+
+    console.log('New hires 2025 count:', newHires2025);
 
     setStats({
       totalEmployees,
@@ -255,6 +281,38 @@ const EmployeeProfile = () => {
     }
   };
 
+  const handleRemoveData = async () => {
+    if (!user) return;
+
+    setRemoving(true);
+
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All employee data has been removed",
+      });
+
+      setEmployees([]);
+      calculateStats([]);
+    } catch (error) {
+      console.error('Error removing employee data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove employee data",
+        variant: "destructive",
+      });
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -279,14 +337,27 @@ const EmployeeProfile = () => {
               type="file"
               accept=".xlsx,.xls"
               onChange={handleFileUpload}
-              disabled={uploading}
+              disabled={uploading || removing}
             />
-            <Button 
-              disabled={uploading}
-              className="w-full"
-            >
-              {uploading ? 'Uploading...' : 'Upload Excel File'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                disabled={uploading || removing}
+                className="flex-1"
+              >
+                {uploading ? 'Uploading...' : 'Upload Excel File'}
+              </Button>
+              {employees.length > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={handleRemoveData}
+                  disabled={uploading || removing}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {removing ? 'Removing...' : 'Remove Data'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
