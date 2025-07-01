@@ -143,7 +143,9 @@ const Scope2aElectricityLocation = () => {
           await supabase.from('scope2a_electricity').update({
             source_of_energy: electricityProvider,
             quantity_used: row.quantity ? parseFloat(row.quantity) : null,
-            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null
+            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null,
+            receives_bills_directly: receivesBillsDirectly ? receivesBillsDirectly.toLowerCase() : null,
+            provide_prior_year: providePriorYear === 'yes'
           }).eq('id', existing.id);
         } else if (row.quantity) {
           // Insert
@@ -155,7 +157,7 @@ const Scope2aElectricityLocation = () => {
             month: row.month,
             quantity_used: row.quantity ? parseFloat(row.quantity) : null,
             quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null,
-            receives_bills_directly: receivesBillsDirectly,
+            receives_bills_directly: receivesBillsDirectly ? receivesBillsDirectly.toLowerCase() : null,
             provide_prior_year: providePriorYear === 'yes'
           });
         }
@@ -235,6 +237,16 @@ const Scope2aElectricityLocation = () => {
       })) || [];
 
       setScope2Data(formattedData);
+      // After fetching scope2Data in fetchData, set electricityProvider and receivesBillsDirectly from the most recent record for this location/provider
+      if (formattedData.length > 0) {
+        // If electricityProvider is set, use the most recent record for that provider, else use the most recent record for the location
+        let latestRecord = electricityProvider
+          ? formattedData.find(e => e.source_of_energy === electricityProvider)
+          : formattedData[0];
+        if (!latestRecord) latestRecord = formattedData[0];
+        setElectricityProvider(latestRecord.source_of_energy || '');
+        setReceivesBillsDirectly((latestRecord.receives_bills_directly || '').toLowerCase());
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -298,7 +310,7 @@ const Scope2aElectricityLocation = () => {
           quantity_used: calculatedQuantity,
           quantity_used_prior_year: providePriorYear === 'yes' ? parseFloat(invoiceQuantityPriorYear) || null : null,
           month,
-          receives_bills_directly: receivesBillsDirectly,
+          receives_bills_directly: receivesBillsDirectly ? receivesBillsDirectly.toLowerCase() : null,
           organization_area: receivesBillsDirectly === 'no' ? parseFloat(organizationArea) || null : null,
           total_building_area: receivesBillsDirectly === 'no' ? parseFloat(totalBuildingArea) || null : null,
           total_building_electricity: receivesBillsDirectly === 'no' ? parseFloat(totalBuildingElectricity) || null : null,
