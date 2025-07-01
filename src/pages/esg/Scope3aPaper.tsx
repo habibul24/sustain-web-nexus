@@ -10,11 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Scope3aPaper = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
   // Form state
@@ -80,25 +81,6 @@ const Scope3aPaper = () => {
     }
   };
 
-  const handleNext = () => {
-    if (currentStep === 1 && usesPaper === false) {
-      navigate('/my-esg/environmental/scope-3/waste/water');
-      return;
-    }
-    
-    if (currentStep === 2 && sortsPaperWaste === false) {
-      setCurrentStep(6); // Go to unsorted waste questions
-      return;
-    }
-    
-    if (currentStep === 3 && measuresSortedWaste === false) {
-      setCurrentStep(7); // Go to waste company questions
-      return;
-    }
-    
-    setCurrentStep(currentStep + 1);
-  };
-
   const handleSave = async () => {
     if (!user) return;
 
@@ -139,8 +121,18 @@ const Scope3aPaper = () => {
             }, { onConflict: 'user_id,waste_type' });
         }
       }
+
+      toast({
+        title: "Data saved successfully!",
+        description: "Your paper waste assessment data has been saved.",
+      });
     } catch (error) {
       console.error('Error saving paper data:', error);
+      toast({
+        title: "Error saving data",
+        description: "There was an error saving your data. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -150,10 +142,6 @@ const Scope3aPaper = () => {
     const newData = [...wasteData];
     newData[index] = { ...newData[index], [field]: value };
     setWasteData(newData);
-  };
-
-  const addWasteRow = (type: string) => {
-    setWasteData([...wasteData, { type, quantity: '', emissionFactor: '' }]);
   };
 
   useEffect(() => {
@@ -169,10 +157,21 @@ const Scope3aPaper = () => {
     setWasteData(newWasteData);
   }, [recycles, incinerates, usesLandfill]);
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
+  const handleNext = async () => {
+    await handleSave();
+    navigate('/my-esg/environmental/scope-3/waste/water');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Paper Waste Assessment
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {/* Question 1: Does the company use paper */}
           <div className="space-y-4">
             <Label className="text-lg font-medium text-gray-700">
               Does the company use paper in its operations?
@@ -191,321 +190,280 @@ const Scope3aPaper = () => {
               </div>
             </RadioGroup>
           </div>
-        );
 
-      case 2:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Does the company sort its paper waste?
-            </Label>
-            <RadioGroup
-              value={sortsPaperWaste === null ? '' : sortsPaperWaste.toString()}
-              onValueChange={(value) => setSortsPaperWaste(value === 'true')}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="true" id="sorts-yes" />
-                <Label htmlFor="sorts-yes">Yes</Label>
+          {/* Show rest of questions only if uses paper */}
+          {usesPaper === true && (
+            <>
+              {/* Question 2: Does the company sort its paper waste */}
+              <div className="space-y-4">
+                <Label className="text-lg font-medium text-gray-700">
+                  Does the company sort its paper waste?
+                </Label>
+                <RadioGroup
+                  value={sortsPaperWaste === null ? '' : sortsPaperWaste.toString()}
+                  onValueChange={(value) => setSortsPaperWaste(value === 'true')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="sorts-yes" />
+                    <Label htmlFor="sorts-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="sorts-no" />
+                    <Label htmlFor="sorts-no">No</Label>
+                  </div>
+                </RadioGroup>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="false" id="sorts-no" />
-                <Label htmlFor="sorts-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        );
 
-      case 3:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Do you measure total sorted waste of paper?
-            </Label>
-            <RadioGroup
-              value={measuresSortedWaste === null ? '' : measuresSortedWaste.toString()}
-              onValueChange={(value) => setMeasuresSortedWaste(value === 'true')}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="true" id="measures-yes" />
-                <Label htmlFor="measures-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="false" id="measures-no" />
-                <Label htmlFor="measures-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Select the waste treatment methods you use:
-            </Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="recycle"
-                  checked={recycles}
-                  onCheckedChange={(checked) => setRecycles(checked === true)}
-                />
-                <Label htmlFor="recycle">Do you recycle?</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="incinerate"
-                  checked={incinerates}
-                  onCheckedChange={(checked) => setIncinerates(checked === true)}
-                />
-                <Label htmlFor="incinerate">Do you incinerate/combust?</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="landfill"
-                  checked={usesLandfill}
-                  onCheckedChange={(checked) => setUsesLandfill(checked === true)}
-                />
-                <Label htmlFor="landfill">Do you use General Disposal/Landfill?</Label>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Waste Treatment Data
-            </Label>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit of Measurement</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {wasteData.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="capitalize">{row.type}</TableCell>
-                    <TableCell>
+              {/* If does NOT sort paper waste */}
+              {sortsPaperWaste === false && (
+                <div className="space-y-4">
+                  <Label className="text-lg font-medium text-gray-700">
+                    Please provide the following information:
+                  </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="opening">Opening quantity of paper at the beginning of the period</Label>
                       <Input
+                        id="opening"
                         type="number"
-                        value={row.quantity}
-                        onChange={(e) => updateWasteData(index, 'quantity', e.target.value)}
-                        placeholder="Enter quantity"
+                        value={openingQuantity}
+                        onChange={(e) => setOpeningQuantity(e.target.value)}
+                        placeholder="Enter quantity in kg"
                       />
-                    </TableCell>
-                    <TableCell>kg</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        );
+                    </div>
+                    <div>
+                      <Label htmlFor="purchased">Total kg of paper purchased during the period</Label>
+                      <Input
+                        id="purchased"
+                        type="number"
+                        value={totalPurchased}
+                        onChange={(e) => setTotalPurchased(e.target.value)}
+                        placeholder="Enter quantity in kg"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="recycled">Total kg of paper recycled in the period</Label>
+                      <Input
+                        id="recycled"
+                        type="number"
+                        value={totalRecycled}
+                        onChange={(e) => setTotalRecycled(e.target.value)}
+                        placeholder="Enter quantity in kg"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="closing">Closing quantity of paper available at end of period</Label>
+                      <Input
+                        id="closing"
+                        type="number"
+                        value={closingQuantity}
+                        onChange={(e) => setClosingQuantity(e.target.value)}
+                        placeholder="Enter quantity in kg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-      case 6:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Please provide the following information:
-            </Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="opening">Opening quantity of paper at the beginning of the period</Label>
-                <Input
-                  id="opening"
-                  type="number"
-                  value={openingQuantity}
-                  onChange={(e) => setOpeningQuantity(e.target.value)}
-                  placeholder="Enter quantity in kg"
-                />
-              </div>
-              <div>
-                <Label htmlFor="purchased">Total kg of paper purchased during the period</Label>
-                <Input
-                  id="purchased"
-                  type="number"
-                  value={totalPurchased}
-                  onChange={(e) => setTotalPurchased(e.target.value)}
-                  placeholder="Enter quantity in kg"
-                />
-              </div>
-              <div>
-                <Label htmlFor="recycled">Total kg of paper recycled in the period</Label>
-                <Input
-                  id="recycled"
-                  type="number"
-                  value={totalRecycled}
-                  onChange={(e) => setTotalRecycled(e.target.value)}
-                  placeholder="Enter quantity in kg"
-                />
-              </div>
-              <div>
-                <Label htmlFor="closing">Closing quantity of paper available at end of period</Label>
-                <Input
-                  id="closing"
-                  type="number"
-                  value={closingQuantity}
-                  onChange={(e) => setClosingQuantity(e.target.value)}
-                  placeholder="Enter quantity in kg"
-                />
-              </div>
-            </div>
-          </div>
-        );
+              {/* If sorts paper waste - ask about measuring */}
+              {sortsPaperWaste === true && (
+                <>
+                  <div className="space-y-4">
+                    <Label className="text-lg font-medium text-gray-700">
+                      Do you measure total sorted waste of paper?
+                    </Label>
+                    <RadioGroup
+                      value={measuresSortedWaste === null ? '' : measuresSortedWaste.toString()}
+                      onValueChange={(value) => setMeasuresSortedWaste(value === 'true')}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="true" id="measures-yes" />
+                        <Label htmlFor="measures-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="false" id="measures-no" />
+                        <Label htmlFor="measures-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
 
-      case 7:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Engage the services of waste treatment company?
-            </Label>
-            <RadioGroup
-              value={engagesWasteCompany === null ? '' : engagesWasteCompany.toString()}
-              onValueChange={(value) => setEngagesWasteCompany(value === 'true')}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="true" id="engages-yes" />
-                <Label htmlFor="engages-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="false" id="engages-no" />
-                <Label htmlFor="engages-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        );
+                  {/* If measures sorted waste */}
+                  {measuresSortedWaste === true && (
+                    <>
+                      <div className="space-y-4">
+                        <Label className="text-lg font-medium text-gray-700">
+                          Select the waste treatment methods you use:
+                        </Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="recycle"
+                              checked={recycles}
+                              onCheckedChange={(checked) => setRecycles(checked === true)}
+                            />
+                            <Label htmlFor="recycle">Do you recycle?</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="incinerate"
+                              checked={incinerates}
+                              onCheckedChange={(checked) => setIncinerates(checked === true)}
+                            />
+                            <Label htmlFor="incinerate">Do you incinerate/combust?</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="landfill"
+                              checked={usesLandfill}
+                              onCheckedChange={(checked) => setUsesLandfill(checked === true)}
+                            />
+                            <Label htmlFor="landfill">Do you use General Disposal/Landfill?</Label>
+                          </div>
+                        </div>
+                      </div>
 
-      case 8:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Have scope 1 and 2 from vendor?
-            </Label>
-            <RadioGroup
-              value={hasVendorScopeData === null ? '' : hasVendorScopeData.toString()}
-              onValueChange={(value) => setHasVendorScopeData(value === 'true')}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="true" id="vendor-yes" />
-                <Label htmlFor="vendor-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="false" id="vendor-no" />
-                <Label htmlFor="vendor-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        );
+                      {/* Show table if any treatment methods selected */}
+                      {(recycles || incinerates || usesLandfill) && (
+                        <div className="space-y-4">
+                          <Label className="text-lg font-medium text-gray-700">
+                            Waste Treatment Data
+                          </Label>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Unit of Measurement</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {wasteData.map((row, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="capitalize">{row.type}</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      value={row.quantity}
+                                      onChange={(e) => updateWasteData(index, 'quantity', e.target.value)}
+                                      placeholder="Enter quantity"
+                                    />
+                                  </TableCell>
+                                  <TableCell>kg</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </>
+                  )}
 
-      case 9:
-        return (
-          <div className="space-y-4">
-            <Label className="text-lg font-medium text-gray-700">
-              Vendor Data
-            </Label>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Emission Factor from vendor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={wasteData[0]?.quantity || ''}
-                      onChange={(e) => updateWasteData(0, 'quantity', e.target.value)}
-                      placeholder="Enter quantity"
-                    />
-                  </TableCell>
-                  <TableCell>kg</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={wasteData[0]?.emissionFactor || ''}
-                      onChange={(e) => updateWasteData(0, 'emissionFactor', e.target.value)}
-                      placeholder="Enter emission factor"
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
-        );
+                  {/* If does NOT measure sorted waste */}
+                  {measuresSortedWaste === false && (
+                    <>
+                      <div className="space-y-4">
+                        <Label className="text-lg font-medium text-gray-700">
+                          Engage the services of waste treatment company?
+                        </Label>
+                        <RadioGroup
+                          value={engagesWasteCompany === null ? '' : engagesWasteCompany.toString()}
+                          onValueChange={(value) => setEngagesWasteCompany(value === 'true')}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="true" id="engages-yes" />
+                            <Label htmlFor="engages-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="false" id="engages-no" />
+                            <Label htmlFor="engages-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
 
-      default:
-        return null;
-    }
-  };
+                      {engagesWasteCompany === true && (
+                        <>
+                          <div className="space-y-4">
+                            <Label className="text-lg font-medium text-gray-700">
+                              Have scope 1 and 2 from vendor?
+                            </Label>
+                            <RadioGroup
+                              value={hasVendorScopeData === null ? '' : hasVendorScopeData.toString()}
+                              onValueChange={(value) => setHasVendorScopeData(value === 'true')}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="true" id="vendor-yes" />
+                                <Label htmlFor="vendor-yes">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="false" id="vendor-no" />
+                                <Label htmlFor="vendor-no">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
 
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1: return usesPaper !== null;
-      case 2: return sortsPaperWaste !== null;
-      case 3: return measuresSortedWaste !== null;
-      case 4: return recycles || incinerates || usesLandfill;
-      case 7: return engagesWasteCompany !== null;
-      case 8: return hasVendorScopeData !== null;
-      default: return true;
-    }
-  };
+                          {hasVendorScopeData === true && (
+                            <div className="space-y-4">
+                              <Label className="text-lg font-medium text-gray-700">
+                                Vendor Data
+                              </Label>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Quantity</TableHead>
+                                    <TableHead>Unit of Measurement</TableHead>
+                                    <TableHead>Emission Factor from vendor</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  <TableRow>
+                                    <TableCell>
+                                      <Input
+                                        type="number"
+                                        value={wasteData[0]?.quantity || ''}
+                                        onChange={(e) => updateWasteData(0, 'quantity', e.target.value)}
+                                        placeholder="Enter quantity"
+                                      />
+                                    </TableCell>
+                                    <TableCell>kg</TableCell>
+                                    <TableCell>
+                                      <Input
+                                        type="number"
+                                        value={wasteData[0]?.emissionFactor || ''}
+                                        onChange={(e) => updateWasteData(0, 'emissionFactor', e.target.value)}
+                                        placeholder="Enter emission factor"
+                                      />
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </>
+          )}
 
-  const isLastStep = () => {
-    if (currentStep === 5 && measuresSortedWaste === true) return true;
-    if (currentStep === 6 && sortsPaperWaste === false) return true;
-    if (currentStep === 9 && measuresSortedWaste === false) return true;
-    return false;
-  };
-
-  const handleFinish = async () => {
-    await handleSave();
-    navigate('/my-esg/environmental/scope-3/waste/water');
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Paper Waste Assessment
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCurrentStep()}
-
-          <div className="flex justify-between">
+          <div className="flex justify-between space-x-4">
             <Button
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-              disabled={currentStep === 1}
+              onClick={handleSave}
+              disabled={loading}
               variant="outline"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Previous
+              {loading ? 'Saving...' : 'Save'}
             </Button>
             
-            {isLastStep() ? (
-              <Button
-                onClick={handleFinish}
-                disabled={!isStepValid() || loading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {loading ? 'Saving...' : 'Next to Water'}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Next
-              </Button>
-            )}
+            <Button
+              onClick={handleNext}
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Next to Water
+            </Button>
           </div>
         </CardContent>
       </Card>
