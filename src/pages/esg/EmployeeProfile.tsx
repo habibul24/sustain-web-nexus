@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building } from 'lucide-react';
+import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Employee {
@@ -46,13 +47,16 @@ interface EmployeeStats {
   femaleExecutives: number;
   newHires2025: number;
   employeesByCountry: Record<string, number>;
+  availableYears: number[];
 }
 
 const EmployeeProfile = () => {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedTurnoverYear, setSelectedTurnoverYear] = useState<number>(2025);
   const [stats, setStats] = useState<EmployeeStats>({
     totalEmployees: 0,
     totalMaleWorkers: 0,
@@ -72,6 +76,7 @@ const EmployeeProfile = () => {
     femaleExecutives: 0,
     newHires2025: 0,
     employeesByCountry: {},
+    availableYears: [],
   });
 
   useEffect(() => {
@@ -100,7 +105,7 @@ const EmployeeProfile = () => {
 
       const employeeData = data || [];
       setEmployees(employeeData);
-      calculateStats(employeeData);
+      calculateStats(employeeData, selectedTurnoverYear);
     } catch (error) {
       console.error('Error loading employees:', error);
       toast({
@@ -111,7 +116,36 @@ const EmployeeProfile = () => {
     }
   };
 
-  const calculateStats = (employeeData: Employee[]) => {
+  const removeAllData = async () => {
+    setRemoving(true);
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All employee data has been removed",
+      });
+
+      setEmployees([]);
+      calculateStats([], selectedTurnoverYear);
+    } catch (error) {
+      console.error('Error removing data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove employee data",
+        variant: "destructive",
+      });
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const calculateStats = (employeeData: Employee[], turnoverYear: number) => {
     const totalEmployees = employeeData.length;
     const totalMaleWorkers = employeeData.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const totalFemaleWorkers = employeeData.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
@@ -129,14 +163,6 @@ const EmployeeProfile = () => {
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
-    /* New hires in 2025
-    const newHires2025 = employeeData.filter(emp => {
-      if (!emp.date_of_employment) return false;
-      const hireYear = new Date(emp.date_of_employment).getFullYear();
-      return hireYear === 2025;
-    }).length;
-    */
-
     // New hires in 2025 - improved logic to handle different date formats
     const newHires2025 = employeeData.filter(emp => {
       if (!emp.date_of_employment) return false;
@@ -186,17 +212,119 @@ const EmployeeProfile = () => {
       }
     });
     
-    // Turnover rates
-    const employeesWhoLeft = employeeData.filter(emp => emp.date_of_exit).length;
-    const turnoverRate = totalEmployees > 0 ? (employeesWhoLeft / totalEmployees) * 100 : 0;
+    // Get available years from exit dates
+    const availableYears = Array.from(new Set(employeeData
+      .filter(emp => emp.date_of_exit)
+      .map(emp => {
+        if (!emp.date_of_exit) return null;
+        
+        let exitDate = new Date(emp.date_of_exit);
+        
+        // Handle Excel serial numbers or string dates
+        if (isNaN(exitDate.getTime())) {
+          const dateValue = parseFloat(emp.date_of_exit);
+          if (!isNaN(dateValue)) {
+            exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+          } else {
+            const dateParts = emp.date_of_exit.toString().split('/');
+            if (dateParts.length === 3) {
+              const month = parseInt(dateParts[0]) - 1;
+              const day = parseInt(dateParts[1]);
+              const year = parseInt(dateParts[2]);
+              exitDate = new Date(year, month, day);
+            }
+          }
+        }
+        
+        return !isNaN(exitDate.getTime()) ? exitDate.getFullYear() : null;
+      })
+      .filter(year => year !== null) as number[]))
+      .sort((a, b) => b - a); // Sort descending
+
+    // Add current year if not present
+    if (!availableYears.includes(turnoverYear)) {
+      availableYears.unshift(turnoverYear);
+      availableYears.sort((a, b) => b - a);
+    }
     
-    const maleEmployeesWhoLeft = employeeData.filter(emp => emp.date_of_exit && (emp.sex === 'M' || emp.sex === 'Male')).length;
-    const turnoverRateMale = totalMaleWorkers > 0 ? (maleEmployeesWhoLeft / totalMaleWorkers) * 100 : 0;
+    // Turnover rates for selected year
+    const employeesWhoLeftInYear = employeeData.filter(emp => {
+      if (!emp.date_of_exit) return false;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      // Handle Excel serial numbers or string dates
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+    }).length;
+
+    const turnoverRate = totalEmployees > 0 ? (employeesWhoLeftInYear / totalEmployees) * 100 : 0;
     
-    const femaleEmployeesWhoLeft = employeeData.filter(emp => emp.date_of_exit && (emp.sex === 'F' || emp.sex === 'Female')).length;
-    const turnoverRateFemale = totalFemaleWorkers > 0 ? (femaleEmployeesWhoLeft / totalFemaleWorkers) * 100 : 0;
+    const maleEmployeesWhoLeftInYear = employeeData.filter(emp => {
+      if (!emp.date_of_exit || (emp.sex !== 'M' && emp.sex !== 'Male')) return false;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+    }).length;
+
+    const turnoverRateMale = totalMaleWorkers > 0 ? (maleEmployeesWhoLeftInYear / totalMaleWorkers) * 100 : 0;
     
-    // Turnover by age group
+    const femaleEmployeesWhoLeftInYear = employeeData.filter(emp => {
+      if (!emp.date_of_exit || (emp.sex !== 'F' && emp.sex !== 'Female')) return false;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
+    }).length;
+
+    const turnoverRateFemale = totalFemaleWorkers > 0 ? (femaleEmployeesWhoLeftInYear / totalFemaleWorkers) * 100 : 0;
+    
+    // Turnover by age group (keeping existing logic for overall turnover)
     const under30WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
     const turnoverRateUnder30 = employeesUnder30 > 0 ? (under30WhoLeft / employeesUnder30) * 100 : 0;
     
@@ -225,7 +353,14 @@ const EmployeeProfile = () => {
       femaleExecutives,
       newHires2025,
       employeesByCountry,
+      availableYears,
     });
+  };
+
+  const handleYearChange = (year: string) => {
+    const selectedYear = parseInt(year);
+    setSelectedTurnoverYear(selectedYear);
+    calculateStats(employees, selectedYear);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -388,15 +523,54 @@ const EmployeeProfile = () => {
               onChange={handleFileUpload}
               disabled={uploading}
             />
-            <Button 
-              disabled={uploading}
-              className="w-full"
-            >
-              {uploading ? 'Uploading...' : 'Upload Excel File'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                disabled={uploading}
+                className="flex-1"
+              >
+                {uploading ? 'Uploading...' : 'Upload Excel File'}
+              </Button>
+              {employees.length > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={removeAllData}
+                  disabled={removing}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {removing ? 'Removing...' : 'Remove Data'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Turnover Year Filter */}
+      {stats.availableYears.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Turnover Rate Filter</CardTitle>
+            <CardDescription>
+              Select the year to view turnover rates for that specific year
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedTurnoverYear.toString()} onValueChange={handleYearChange}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                {stats.availableYears.map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Statistics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -512,7 +686,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRate}%</div>
             <p className="text-xs text-muted-foreground">
-              Based on exit records
+              For year {selectedTurnoverYear}
             </p>
           </CardContent>
         </Card>
@@ -525,7 +699,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRateMale}%</div>
             <p className="text-xs text-muted-foreground">
-              Male employees
+              Male employees ({selectedTurnoverYear})
             </p>
           </CardContent>
         </Card>
@@ -538,7 +712,7 @@ const EmployeeProfile = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.turnoverRateFemale}%</div>
             <p className="text-xs text-muted-foreground">
-              Female employees
+              Female employees ({selectedTurnoverYear})
             </p>
           </CardContent>
         </Card>
