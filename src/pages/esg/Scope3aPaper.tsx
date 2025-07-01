@@ -248,7 +248,7 @@ const Scope3aPaper = () => {
                 <Checkbox
                   id="recycle"
                   checked={recycles}
-                  onCheckedChange={setRecycles}
+                  onCheckedChange={(checked) => setRecycles(checked === true)}
                 />
                 <Label htmlFor="recycle">Do you recycle?</Label>
               </div>
@@ -256,7 +256,7 @@ const Scope3aPaper = () => {
                 <Checkbox
                   id="incinerate"
                   checked={incinerates}
-                  onCheckedChange={setIncinerates}
+                  onCheckedChange={(checked) => setIncinerates(checked === true)}
                 />
                 <Label htmlFor="incinerate">Do you incinerate/combust?</Label>
               </div>
@@ -264,7 +264,7 @@ const Scope3aPaper = () => {
                 <Checkbox
                   id="landfill"
                   checked={usesLandfill}
-                  onCheckedChange={setUsesLandfill}
+                  onCheckedChange={(checked) => setUsesLandfill(checked === true)}
                 />
                 <Label htmlFor="landfill">Do you use General Disposal/Landfill?</Label>
               </div>
