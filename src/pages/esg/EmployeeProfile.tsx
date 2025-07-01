@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -135,14 +134,8 @@ const EmployeeProfile = () => {
     const newHires2025 = employeeData.filter(emp => {
       if (!emp.date_of_employment) return false;
       
-      // Try to parse the date - handle both date objects and strings
-      let hireDate;
-      if (emp.date_of_employment instanceof Date) {
-        hireDate = emp.date_of_employment;
-      } else {
-        // Handle string dates
-        hireDate = new Date(emp.date_of_employment);
-      }
+      // Try to parse the date - handle string dates
+      let hireDate = new Date(emp.date_of_employment);
       
       // Check if the date is valid and extract year
       if (isNaN(hireDate.getTime())) {
