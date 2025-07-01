@@ -49,9 +49,9 @@ const AuthenticatedHeader = () => {
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-0 sm:px-0 lg:px-0">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center ml-0">
+          <div className="flex items-center ml-6">
             <Link to="/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/0944e168-7b64-403d-8c39-5976b7a5e5f7.png" 
