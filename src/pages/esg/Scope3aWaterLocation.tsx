@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { useToast } from '../../components/ui/use-toast';
+import { useToast } from '../../hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuthContext } from '../../contexts/AuthContext';
 
@@ -26,20 +27,27 @@ interface Scope3aWaterData {
   source_of_emission: string | null;
   office_location_id: string | null;
   office_location_name: string;
+  receives_bills_directly: string | null;
+  provide_prior_year: boolean | null;
+  organization_area: number | null;
+  total_building_area: number | null;
 }
 
 const Scope3aWaterLocation = () => {
   const { locationId } = useParams();
   const { user } = useAuthContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [currentLocation, setCurrentLocation] = useState<OfficeLocation | null>(null);
   const [scope3aWaterData, setScope3aWaterData] = useState<Scope3aWaterData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [receivesBillsDirectly, setReceivesBillsDirectly] = useState('');
   const [providePriorYear, setProvidePriorYear] = useState('');
   const [organizationArea, setOrganizationArea] = useState('');
   const [totalBuildingArea, setTotalBuildingArea] = useState('');
+  const [allLocations, setAllLocations] = useState<OfficeLocation[]>([]);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -53,7 +61,23 @@ const Scope3aWaterLocation = () => {
   })));
 
   useEffect(() => {
+    if (user && locationId) {
+      fetchData();
+      fetchAllLocations();
+    }
+  }, [user, locationId]);
+
+  useEffect(() => {
     if (scope3aWaterData.length > 0) {
+      const firstEntry = scope3aWaterData[0];
+      
+      // Set form state from saved data
+      setReceivesBillsDirectly(firstEntry.receives_bills_directly || '');
+      setProvidePriorYear(firstEntry.provide_prior_year ? 'yes' : 'no');
+      setOrganizationArea(firstEntry.organization_area?.toString() || '');
+      setTotalBuildingArea(firstEntry.total_building_area?.toString() || '');
+      
+      // Set table rows from saved data
       setTableRows(months.map(month => {
         const entry = scope3aWaterData.find(e => e.month === month);
         return {
@@ -65,56 +89,108 @@ const Scope3aWaterLocation = () => {
     }
   }, [scope3aWaterData]);
 
+  const fetchAllLocations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('office_locations')
+        .select('id, name, address')
+        .eq('user_id', user.id)
+        .order('name');
+      
+      if (error) throw error;
+      setAllLocations(data || []);
+    } catch (error) {
+      console.error('Error fetching all locations:', error);
+    }
+  };
+
   const handleTableChange = (idx: number, field: 'quantity' | 'lastYear', value: string) => {
     setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, [field]: value } : row));
   };
 
-  const handleSaveTable = async () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      for (const row of tableRows) {
-        const existing = scope3aWaterData.find(e => e.month === row.month);
-        if (existing) {
-          await (supabase.from as any)('scope3a_water').update({
-            quantity_used: row.quantity ? parseFloat(row.quantity) : null,
-            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null,
-            receives_bills_directly: receivesBillsDirectly,
-            provide_prior_year: providePriorYear === 'yes',
-            organization_area: receivesBillsDirectly === 'no' ? parseFloat(organizationArea) || null : null,
-            total_building_area: receivesBillsDirectly === 'no' ? parseFloat(totalBuildingArea) || null : null
-          }).eq('id', existing.id);
-        } else if (row.quantity) {
-          await (supabase.from as any)('scope3a_water').insert({
+      // Delete existing records for this location
+      await supabase
+        .from('scope3a_water')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('office_location_id', locationId);
+
+      // Insert new records
+      const recordsToInsert = [];
+      
+      if (receivesBillsDirectly === 'yes') {
+        // Insert monthly data
+        for (const row of tableRows) {
+          if (row.quantity) {
+            recordsToInsert.push({
+              user_id: user.id,
+              office_location_id: locationId,
+              month: row.month,
+              quantity_used: parseFloat(row.quantity),
+              quantity_used_prior_year: providePriorYear === 'yes' && row.lastYear ? parseFloat(row.lastYear) : null,
+              unit_of_measurement: 'm³',
+              receives_bills_directly: receivesBillsDirectly,
+              provide_prior_year: providePriorYear === 'yes',
+              organization_area: null,
+              total_building_area: null
+            });
+          }
+        }
+      } else {
+        // Insert area-based calculation (single record)
+        if (organizationArea && totalBuildingArea) {
+          recordsToInsert.push({
             user_id: user.id,
             office_location_id: locationId,
-            month: row.month,
-            quantity_used: row.quantity ? parseFloat(row.quantity) : null,
-            quantity_used_prior_year: providePriorYear === 'yes' ? (row.lastYear ? parseFloat(row.lastYear) : null) : null,
+            month: null,
+            quantity_used: null,
+            quantity_used_prior_year: null,
             unit_of_measurement: 'm³',
             receives_bills_directly: receivesBillsDirectly,
-            provide_prior_year: providePriorYear === 'yes',
-            organization_area: receivesBillsDirectly === 'no' ? parseFloat(organizationArea) || null : null,
-            total_building_area: receivesBillsDirectly === 'no' ? parseFloat(totalBuildingArea) || null : null
+            provide_prior_year: false,
+            organization_area: parseFloat(organizationArea),
+            total_building_area: parseFloat(totalBuildingArea)
           });
         }
       }
-      toast({ title: 'Success!', description: 'Water consumption data saved.' });
-      fetchData();
+
+      if (recordsToInsert.length > 0) {
+        const { error } = await supabase
+          .from('scope3a_water')
+          .insert(recordsToInsert);
+        
+        if (error) throw error;
+      }
+
+      toast({ title: 'Success!', description: 'Water consumption data saved successfully.' });
+      fetchData(); // Refresh data to show saved state
     } catch (error) {
       console.error('Error saving water data:', error);
       toast({ title: 'Error!', description: 'Failed to save water consumption data.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSaveArea = async () => {
-    // Optionally, save area data to a separate table or as notes
-    toast({ title: 'Saved!', description: 'Area data saved (not persisted in this demo).' });
-  };
-
-  useEffect(() => {
-    if (user && locationId) {
-      fetchData();
+  const handleNext = async () => {
+    // Save current data first
+    await handleSave();
+    
+    // Find current location index
+    const currentIndex = allLocations.findIndex(loc => loc.id === locationId);
+    
+    if (currentIndex < allLocations.length - 1) {
+      // Go to next location
+      const nextLocation = allLocations[currentIndex + 1];
+      navigate(`/my-esg/environmental/scope-3/waste/water/${nextLocation.id}`);
+    } else {
+      // All locations completed, go to results or next section
+      navigate('/my-esg/environmental/scope-3/waste/results');
     }
-  }, [user, locationId]);
+  };
 
   const fetchData = async () => {
     try {
@@ -126,12 +202,14 @@ const Scope3aWaterLocation = () => {
         .single();
       if (locError) throw locError;
       setCurrentLocation(location);
-      const { data: waterData, error: waterError } = await (supabase.from as any)('scope3a_water')
+      
+      const { data: waterData, error: waterError } = await supabase
+        .from('scope3a_water')
         .select('*')
         .eq('user_id', user.id)
         .eq('office_location_id', locationId);
       if (waterError) throw waterError;
-      setScope3aWaterData((waterData || []) as any);
+      setScope3aWaterData((waterData || []) as Scope3aWaterData[]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({ title: 'Error!', description: 'Failed to fetch data.', variant: 'destructive' });
@@ -171,6 +249,7 @@ const Scope3aWaterLocation = () => {
                 </div>
               </RadioGroup>
             </div>
+            
             {receivesBillsDirectly === 'yes' && (
               <>
                 <div className="mb-4">
@@ -237,13 +316,11 @@ const Scope3aWaterLocation = () => {
                     >
                       💡 Click here for source of emission factor
                     </Button>
-                    <Button onClick={handleSaveTable} className="bg-green-500 hover:bg-green-600 text-white ml-auto">
-                      Save Table
-                    </Button>
                   </div>
                 </div>
               </>
             )}
+            
             {receivesBillsDirectly === 'no' && (
               <>
                 <div className="mb-4">
@@ -269,11 +346,30 @@ const Scope3aWaterLocation = () => {
                 <div className="mt-2 text-sm text-gray-600 flex items-center gap-2">
                   <span>💡</span> Request the monthly total water figures of the building from the facility manager.
                 </div>
-                <Button onClick={handleSaveArea} className="bg-green-500 hover:bg-green-600 text-white mt-4">
-                  Save Table
-                </Button>
               </>
             )}
+
+            <div className="flex justify-between space-x-4 pt-6 border-t">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                variant="outline"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </Button>
+              
+              <Button
+                onClick={handleNext}
+                disabled={saving}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {allLocations.findIndex(loc => loc.id === locationId) < allLocations.length - 1 
+                  ? 'Next Location' 
+                  : 'Complete & View Results'
+                }
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -281,4 +377,4 @@ const Scope3aWaterLocation = () => {
   );
 };
 
-export default Scope3aWaterLocation; 
+export default Scope3aWaterLocation;
