@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -237,7 +236,6 @@ const Scope2Result = () => {
               <th className="py-2 px-3 font-semibold">Total Quantity (kWh)</th>
               <th className="py-2 px-3 font-semibold">GHG Emission Factor</th>
               <th className="py-2 px-3 font-semibold">CO2 Carbon Emitted (kgCO2e)</th>
-              <th className="py-2 px-3 font-semibold">Billing Method</th>
             </tr>
           </thead>
           <tbody>
@@ -247,7 +245,6 @@ const Scope2Result = () => {
                 <td className="py-2 px-3">{row.totalQuantity.toFixed(2)}</td>
                 <td className="py-2 px-3">{row.emissionFactor.toFixed(3)}</td>
                 <td className="py-2 px-3">{row.totalEmission.toFixed(2)}</td>
-                <td className="py-2 px-3">{row.receivesBillsDirectly === 'yes' ? 'Direct' : 'Indirect'}</td>
               </tr>
             ))}
           </tbody>

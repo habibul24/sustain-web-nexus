@@ -317,42 +317,48 @@ const Scope3aPaper = () => {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              <TableRow>
-                                <TableCell className="capitalize">Recycle</TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    value={quantityRecycle}
-                                    onChange={(e) => setQuantityRecycle(e.target.value)}
-                                    placeholder="Enter quantity"
-                                  />
-                                </TableCell>
-                                <TableCell>kg</TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="capitalize">Combust</TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    value={quantityCombust}
-                                    onChange={(e) => setQuantityCombust(e.target.value)}
-                                    placeholder="Enter quantity"
-                                  />
-                                </TableCell>
-                                <TableCell>kg</TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="capitalize">Landfill</TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    value={quantityLandfill}
-                                    onChange={(e) => setQuantityLandfill(e.target.value)}
-                                    placeholder="Enter quantity"
-                                  />
-                                </TableCell>
-                                <TableCell>kg</TableCell>
-                              </TableRow>
+                              {recycles && (
+                                <TableRow>
+                                  <TableCell className="capitalize">Recycle</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      value={quantityRecycle}
+                                      onChange={(e) => setQuantityRecycle(e.target.value)}
+                                      placeholder="Enter quantity"
+                                    />
+                                  </TableCell>
+                                  <TableCell>kg</TableCell>
+                                </TableRow>
+                              )}
+                              {incinerates && (
+                                <TableRow>
+                                  <TableCell className="capitalize">Combust</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      value={quantityCombust}
+                                      onChange={(e) => setQuantityCombust(e.target.value)}
+                                      placeholder="Enter quantity"
+                                    />
+                                  </TableCell>
+                                  <TableCell>kg</TableCell>
+                                </TableRow>
+                              )}
+                              {usesLandfill && (
+                                <TableRow>
+                                  <TableCell className="capitalize">Landfill</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      value={quantityLandfill}
+                                      onChange={(e) => setQuantityLandfill(e.target.value)}
+                                      placeholder="Enter quantity"
+                                    />
+                                  </TableCell>
+                                  <TableCell>kg</TableCell>
+                                </TableRow>
+                              )}
                             </TableBody>
                           </Table>
                         </div>
