@@ -205,11 +205,21 @@ const Scope3aWaterLocation = () => {
       
       const { data: waterData, error: waterError } = await supabase
         .from('scope3a_water')
-        .select('*')
+        .select(`
+          *,
+          office_locations!inner(name)
+        `)
         .eq('user_id', user.id)
         .eq('office_location_id', locationId);
       if (waterError) throw waterError;
-      setScope3aWaterData((waterData || []) as Scope3aWaterData[]);
+      
+      // Transform the data to match our interface
+      const formattedData = waterData?.map(item => ({
+        ...item,
+        office_location_name: (item as any).office_locations?.name || 'Unknown Location'
+      })) || [];
+      
+      setScope3aWaterData(formattedData as Scope3aWaterData[]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({ title: 'Error!', description: 'Failed to fetch data.', variant: 'destructive' });
