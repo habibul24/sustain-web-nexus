@@ -163,10 +163,50 @@ const Dashboard = () => {
     }));
   };
 
-  // Social data preparation functions
+  // Helper function to parse dates consistently
+  const parseDate = (dateString: string | null): Date | null => {
+    if (!dateString) return null;
+    
+    let date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      const dateValue = parseFloat(dateString);
+      if (!isNaN(dateValue)) {
+        date = new Date((dateValue - 25569) * 86400 * 1000);
+      } else {
+        const dateParts = dateString.toString().split('/');
+        if (dateParts.length === 3) {
+          const month = parseInt(dateParts[0]) - 1;
+          const day = parseInt(dateParts[1]);
+          const year = parseInt(dateParts[2]);
+          date = new Date(year, month, day);
+        }
+      }
+    }
+    
+    return isNaN(date.getTime()) ? null : date;
+  };
+
+  // Filter employees for 2025 only
+  const employees2025 = employees.filter(emp => {
+    const hireDate = parseDate(emp.date_of_employment);
+    const exitDate = parseDate(emp.date_of_exit);
+    
+    if (!hireDate) return false;
+    
+    // Employee was hired before or during 2025
+    const hiredBeforeOrDuring2025 = hireDate.getFullYear() <= 2025;
+    
+    // Employee was still employed during 2025 (no exit date or exited after 2025)
+    const stillEmployedIn2025 = !exitDate || exitDate.getFullYear() > 2025;
+    
+    return hiredBeforeOrDuring2025 && stillEmployedIn2025;
+  });
+
+  // Social data preparation functions - filtered for 2025
   const getGenderDistributionData = () => {
-    const maleCount = employees.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
-    const femaleCount = employees.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
+    const maleCount = employees2025.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
+    const femaleCount = employees2025.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
     return [
       { name: 'Male', value: maleCount, fill: '#3b82f6' },
@@ -175,7 +215,7 @@ const Dashboard = () => {
   };
 
   const getExecutiveGenderData = () => {
-    const executives = employees.filter(emp => emp.position === 'Yes');
+    const executives = employees2025.filter(emp => emp.position === 'Yes');
     const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
     const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
     
@@ -186,9 +226,9 @@ const Dashboard = () => {
   };
 
   const getAgeDistributionData = () => {
-    const under30 = employees.filter(emp => emp.age && emp.age < 30).length;
-    const age30to50 = employees.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
-    const above50 = employees.filter(emp => emp.age && emp.age > 50).length;
+    const under30 = employees2025.filter(emp => emp.age && emp.age < 30).length;
+    const age30to50 = employees2025.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
+    const above50 = employees2025.filter(emp => emp.age && emp.age > 50).length;
     
     return [
       { name: 'Under 30', value: under30, fill: '#22c55e' },
@@ -198,7 +238,7 @@ const Dashboard = () => {
   };
 
   const getEmployeesByCountryData = () => {
-    const countryCount = employees.reduce((acc, emp) => {
+    const countryCount = employees2025.reduce((acc, emp) => {
       if (emp.country_of_assignment) {
         acc[emp.country_of_assignment] = (acc[emp.country_of_assignment] || 0) + 1;
       }
@@ -213,15 +253,52 @@ const Dashboard = () => {
   };
 
   const getTurnoverByGenderData = () => {
+    // Use the full employees array for turnover calculation
     const maleEmployees = employees.filter(emp => emp.sex === 'M' || emp.sex === 'Male');
     const femaleEmployees = employees.filter(emp => emp.sex === 'F' || emp.sex === 'Female');
-    
-    const maleLeft = maleEmployees.filter(emp => emp.date_of_exit).length;
-    const femaleLeft = femaleEmployees.filter(emp => emp.date_of_exit).length;
-    
-    const maleTurnover = maleEmployees.length > 0 ? (maleLeft / maleEmployees.length) * 100 : 0;
-    const femaleTurnover = femaleEmployees.length > 0 ? (femaleLeft / femaleEmployees.length) * 100 : 0;
-    
+
+    // Count employees who left in 2025
+    const maleEmployeesWhoLeftIn2025 = maleEmployees.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === 2025;
+    }).length;
+
+    const femaleEmployeesWhoLeftIn2025 = femaleEmployees.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === 2025;
+    }).length;
+
+    // Calculate average employees during 2025
+    const maleEmployeesAtStartOf2025 = maleEmployees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= 2025;
+    }).length;
+
+    const maleEmployeesAtEndOf2025 = maleEmployees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > 2025) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > 2025;
+    }).length;
+
+    const femaleEmployeesAtStartOf2025 = femaleEmployees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= 2025;
+    }).length;
+
+    const femaleEmployeesAtEndOf2025 = femaleEmployees.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > 2025) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > 2025;
+    }).length;
+
+    const averageMaleEmployees = (maleEmployeesAtStartOf2025 + maleEmployeesAtEndOf2025) / 2;
+    const averageFemaleEmployees = (femaleEmployeesAtStartOf2025 + femaleEmployeesAtEndOf2025) / 2;
+
+    const maleTurnover = averageMaleEmployees > 0 ? (maleEmployeesWhoLeftIn2025 / averageMaleEmployees) * 100 : 0;
+    const femaleTurnover = averageFemaleEmployees > 0 ? (femaleEmployeesWhoLeftIn2025 / averageFemaleEmployees) * 100 : 0;
+
     return [
       { gender: 'Male', turnover: Number(maleTurnover.toFixed(2)), fill: '#3b82f6' },
       { gender: 'Female', turnover: Number(femaleTurnover.toFixed(2)), fill: '#ec4899' }
@@ -229,18 +306,72 @@ const Dashboard = () => {
   };
 
   const getTurnoverByAgeData = () => {
+    // Use the full employees array for turnover calculation
     const under30 = employees.filter(emp => emp.age && emp.age < 30);
     const age30to50 = employees.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50);
     const above50 = employees.filter(emp => emp.age && emp.age > 50);
-    
-    const under30Left = under30.filter(emp => emp.date_of_exit).length;
-    const age30to50Left = age30to50.filter(emp => emp.date_of_exit).length;
-    const above50Left = above50.filter(emp => emp.date_of_exit).length;
-    
-    const under30Turnover = under30.length > 0 ? (under30Left / under30.length) * 100 : 0;
-    const age30to50Turnover = age30to50.length > 0 ? (age30to50Left / age30to50.length) * 100 : 0;
-    const above50Turnover = above50.length > 0 ? (above50Left / above50.length) * 100 : 0;
-    
+
+    // Count employees who left in 2025 by age group
+    const under30WhoLeftIn2025 = under30.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === 2025;
+    }).length;
+
+    const age30to50WhoLeftIn2025 = age30to50.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === 2025;
+    }).length;
+
+    const above50WhoLeftIn2025 = above50.filter(emp => {
+      const exitDate = parseDate(emp.date_of_exit);
+      return exitDate && exitDate.getFullYear() === 2025;
+    }).length;
+
+    // Calculate average employees during 2025 by age group
+    const under30AtStartOf2025 = under30.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= 2025;
+    }).length;
+
+    const under30AtEndOf2025 = under30.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > 2025) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > 2025;
+    }).length;
+
+    const age30to50AtStartOf2025 = age30to50.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= 2025;
+    }).length;
+
+    const age30to50AtEndOf2025 = age30to50.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > 2025) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > 2025;
+    }).length;
+
+    const above50AtStartOf2025 = above50.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      return hireDate && hireDate.getFullYear() <= 2025;
+    }).length;
+
+    const above50AtEndOf2025 = above50.filter(emp => {
+      const hireDate = parseDate(emp.date_of_employment);
+      if (!hireDate || hireDate.getFullYear() > 2025) return false;
+      const exitDate = parseDate(emp.date_of_exit);
+      return !exitDate || exitDate.getFullYear() > 2025;
+    }).length;
+
+    const averageUnder30 = (under30AtStartOf2025 + under30AtEndOf2025) / 2;
+    const averageAge30to50 = (age30to50AtStartOf2025 + age30to50AtEndOf2025) / 2;
+    const averageAbove50 = (above50AtStartOf2025 + above50AtEndOf2025) / 2;
+
+    const under30Turnover = averageUnder30 > 0 ? (under30WhoLeftIn2025 / averageUnder30) * 100 : 0;
+    const age30to50Turnover = averageAge30to50 > 0 ? (age30to50WhoLeftIn2025 / averageAge30to50) * 100 : 0;
+    const above50Turnover = averageAbove50 > 0 ? (above50WhoLeftIn2025 / averageAbove50) * 100 : 0;
+
     return [
       { ageGroup: 'Under 30', turnover: Number(under30Turnover.toFixed(2)), fill: '#22c55e' },
       { ageGroup: '30-50', turnover: Number(age30to50Turnover.toFixed(2)), fill: '#f59e0b' },
@@ -530,7 +661,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Gender Distribution</CardTitle>
-                    <CardDescription className="text-xs">All employees</CardDescription>
+                    <CardDescription className="text-xs">All employees (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -558,7 +689,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Executive Gender Distribution</CardTitle>
-                    <CardDescription className="text-xs">Leadership positions</CardDescription>
+                    <CardDescription className="text-xs">Leadership positions (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -586,7 +717,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Age Distribution</CardTitle>
-                    <CardDescription className="text-xs">Employee age groups</CardDescription>
+                    <CardDescription className="text-xs">Employee age groups (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -614,7 +745,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Employees by Country</CardTitle>
-                    <CardDescription className="text-xs">Geographic distribution</CardDescription>
+                    <CardDescription className="text-xs">Geographic distribution (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -633,7 +764,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Turnover Rate by Gender</CardTitle>
-                    <CardDescription className="text-xs">Percentage by gender</CardDescription>
+                    <CardDescription className="text-xs">Percentage by gender (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -652,7 +783,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Turnover Rate by Age Group</CardTitle>
-                    <CardDescription className="text-xs">Percentage by age range</CardDescription>
+                    <CardDescription className="text-xs">Percentage by age range (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-48">
@@ -673,11 +804,11 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Total Employees</CardTitle>
-                    <CardDescription>Current workforce</CardDescription>
+                    <CardDescription>Current workforce (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-600">
-                      {employees.length}
+                      {employees2025.length}
                     </div>
                   </CardContent>
                 </Card>
@@ -685,7 +816,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Gender Ratio</CardTitle>
-                    <CardDescription>Male to Female</CardDescription>
+                    <CardDescription>Male to Female (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-purple-600">
@@ -697,11 +828,11 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Executives</CardTitle>
-                    <CardDescription>Leadership positions</CardDescription>
+                    <CardDescription>Leadership positions (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      {employees.filter(emp => emp.position === 'Yes').length}
+                      {employees2025.filter(emp => emp.position === 'Yes').length}
                     </div>
                   </CardContent>
                 </Card>
@@ -709,7 +840,7 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Countries</CardTitle>
-                    <CardDescription>Operating locations</CardDescription>
+                    <CardDescription>Operating locations (2025)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-orange-600">
