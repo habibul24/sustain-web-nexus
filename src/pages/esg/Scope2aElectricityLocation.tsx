@@ -56,6 +56,7 @@ const Scope2aElectricityLocation = () => {
   const [organizationArea, setOrganizationArea] = useState<string>('');
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   const [totalBuildingElectricity, setTotalBuildingElectricity] = useState<string>('');
+  const [priorYearEmissionValue, setPriorYearEmissionValue] = useState<string>('');
 
   // Remove stepper and back button, show all questions in a single form for the selected location
   // Add state for table rows (months)
@@ -401,6 +402,18 @@ const Scope2aElectricityLocation = () => {
                     </Label>
                   </div>
                 </RadioGroup>
+                {providePriorYear === 'yes' && (
+                  <div>
+                    <Label htmlFor="prior-year-emission-value">Enter prior year emission value (kg CO2):</Label>
+                    <Input
+                      id="prior-year-emission-value"
+                      type="number"
+                      value={priorYearEmissionValue}
+                      onChange={e => setPriorYearEmissionValue(e.target.value)}
+                      placeholder="Enter prior year emission value"
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -579,7 +592,7 @@ const Scope2aElectricityLocation = () => {
             {receivesBillsDirectly === 'yes' && (
               <>
                 <div className="space-y-4">
-                  <Label>Do you want to provide prior year details?</Label>
+                  <Label>Do you want to provide prior year's Carbon Emission equivalent?</Label>
                   <RadioGroup value={providePriorYear} onValueChange={setProvidePriorYear}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="prior-yes" />
@@ -590,6 +603,18 @@ const Scope2aElectricityLocation = () => {
                       <Label htmlFor="prior-no" className="cursor-pointer">No</Label>
                     </div>
                   </RadioGroup>
+                  {providePriorYear === 'yes' && (
+                    <div>
+                      <Label htmlFor="prior-year-emission-value">Enter prior year emission value (kg CO2):</Label>
+                      <Input
+                        id="prior-year-emission-value"
+                        type="number"
+                        value={priorYearEmissionValue}
+                        onChange={e => setPriorYearEmissionValue(e.target.value)}
+                        placeholder="Enter prior year emission value"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-left">
@@ -598,9 +623,6 @@ const Scope2aElectricityLocation = () => {
                         <th className="py-2 px-3 font-semibold">Month</th>
                         <th className="py-2 px-3 font-semibold">Invoice Quantity</th>
                         <th className="py-2 px-3 font-semibold">Unit of Measurement</th>
-                        {providePriorYear === 'yes' && (
-                          <th className="py-2 px-3 font-semibold">Last Year Emission Figure</th>
-                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -616,16 +638,6 @@ const Scope2aElectricityLocation = () => {
                             />
                           </td>
                           <td className="py-2 px-3">kWh</td>
-                          {providePriorYear === 'yes' && (
-                            <td className="py-2 px-3">
-                              <Input
-                                type="number"
-                                value={row.lastYear}
-                                onChange={e => handleTableChange(idx, 'lastYear', e.target.value)}
-                                placeholder="Last year emission"
-                              />
-                            </td>
-                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -688,6 +700,9 @@ const Scope2aElectricityLocation = () => {
           </div>
         </CardContent>
       </Card>
+      <div className="flex justify-end mt-8">
+        <Button onClick={() => navigate('/next-page-url')} className="bg-blue-600 hover:bg-blue-700 text-white">Next</Button>
+      </div>
     </div>
   );
 };

@@ -24,6 +24,7 @@ const Onboarding = () => {
     operations: '',
     firstYearReporting: '',
     framework: '',
+    reportingYearEndDate: '',
     hasMultipleLocations: '',
     hasSubsidiaries: '',
     numberOfSubsidiaries: '',
@@ -62,6 +63,7 @@ const Onboarding = () => {
           operations_description: formData.operations,
           first_year_reporting: formData.firstYearReporting === 'yes',
           applicable_framework: formData.framework,
+          reporting_year_end_date: formData.reportingYearEndDate,
           has_multiple_locations: formData.hasMultipleLocations === 'yes',
           has_subsidiaries: formData.hasSubsidiaries === 'yes',
           number_of_subsidiaries: formData.numberOfSubsidiaries ? parseInt(formData.numberOfSubsidiaries) : null,
@@ -233,6 +235,22 @@ const Onboarding = () => {
                     <SelectItem value="lca">Life Cycle Assessment (LCA)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="reportingYearEndDate" className="text-sm font-medium text-gray-700">
+                  State the end date of the year for which you are reporting data?
+                </Label>
+                <Input
+                  id="reportingYearEndDate"
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  value={formData.reportingYearEndDate}
+                  onChange={e => setFormData(prev => ({ ...prev, reportingYearEndDate: e.target.value }))}
+                  className="mt-1"
+                  pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+                  required
+                />
               </div>
 
               <div>
