@@ -106,7 +106,7 @@ const EmployeeProfile = () => {
 
   const fetchTemplatePreview = async () => {
     try {
-      const response = await fetch('/Employee%20Profile%20Template.xlsx');
+      const response = await fetch('/Employee Profile Template.xlsx');
       const arrayBuffer = await response.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
@@ -545,7 +545,7 @@ const EmployeeProfile = () => {
           <div>
             <div className="font-semibold mb-1">Download Employee Profile Template</div>
             <a
-              href="/Employee%20Profile%20Template.xlsx"
+              href="/Employee Profile Template.xlsx"
               download
               className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium mb-2"
             >
