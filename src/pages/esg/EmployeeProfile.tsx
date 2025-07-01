@@ -247,7 +247,7 @@ const EmployeeProfile = () => {
       availableYears.sort((a, b) => b - a);
     }
     
-    // Turnover rates for selected year
+    // Turnover rates for selected year - using standard formula with average employees
     const employeesWhoLeftInYear = employeeData.filter(emp => {
       if (!emp.date_of_exit) return false;
       
@@ -272,8 +272,62 @@ const EmployeeProfile = () => {
       return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
     }).length;
 
-    const turnoverRate = totalEmployees > 0 ? (employeesWhoLeftInYear / totalEmployees) * 100 : 0;
+    // Calculate employees at start of year (hired before or during the year)
+    const employeesAtStartOfYear = employeeData.filter(emp => {
+      if (!emp.date_of_employment) return false;
+      
+      let hireDate = new Date(emp.date_of_employment);
+      
+      // Handle Excel serial numbers or string dates
+      if (isNaN(hireDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_employment);
+        if (!isNaN(dateValue)) {
+          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_employment.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            hireDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+    }).length;
+
+    // Calculate employees at end of year (still employed or left after the year)
+    const employeesAtEndOfYear = employeeData.filter(emp => {
+      // If no exit date, still employed
+      if (!emp.date_of_exit) return true;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      // Handle Excel serial numbers or string dates
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+    }).length;
+
+    // Calculate average employees during the year
+    const averageEmployees = (employeesAtStartOfYear + employeesAtEndOfYear) / 2;
+    const turnoverRate = averageEmployees > 0 ? (employeesWhoLeftInYear / averageEmployees) * 100 : 0;
     
+    // Male turnover rate for selected year
     const maleEmployeesWhoLeftInYear = employeeData.filter(emp => {
       if (!emp.date_of_exit || (emp.sex !== 'M' && emp.sex !== 'Male')) return false;
       
@@ -297,8 +351,60 @@ const EmployeeProfile = () => {
       return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
     }).length;
 
-    const turnoverRateMale = totalMaleWorkers > 0 ? (maleEmployeesWhoLeftInYear / totalMaleWorkers) * 100 : 0;
+    // Calculate male employees at start of year
+    const maleEmployeesAtStartOfYear = employeeData.filter(emp => {
+      if (!emp.date_of_employment || (emp.sex !== 'M' && emp.sex !== 'Male')) return false;
+      
+      let hireDate = new Date(emp.date_of_employment);
+      
+      if (isNaN(hireDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_employment);
+        if (!isNaN(dateValue)) {
+          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_employment.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            hireDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+    }).length;
+
+    // Calculate male employees at end of year
+    const maleEmployeesAtEndOfYear = employeeData.filter(emp => {
+      if (emp.sex !== 'M' && emp.sex !== 'Male') return false;
+      
+      if (!emp.date_of_exit) return true;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+    }).length;
+
+    const averageMaleEmployees = (maleEmployeesAtStartOfYear + maleEmployeesAtEndOfYear) / 2;
+    const turnoverRateMale = averageMaleEmployees > 0 ? (maleEmployeesWhoLeftInYear / averageMaleEmployees) * 100 : 0;
     
+    // Female turnover rate for selected year
     const femaleEmployeesWhoLeftInYear = employeeData.filter(emp => {
       if (!emp.date_of_exit || (emp.sex !== 'F' && emp.sex !== 'Female')) return false;
       
@@ -322,7 +428,58 @@ const EmployeeProfile = () => {
       return !isNaN(exitDate.getTime()) && exitDate.getFullYear() === turnoverYear;
     }).length;
 
-    const turnoverRateFemale = totalFemaleWorkers > 0 ? (femaleEmployeesWhoLeftInYear / totalFemaleWorkers) * 100 : 0;
+    // Calculate female employees at start of year
+    const femaleEmployeesAtStartOfYear = employeeData.filter(emp => {
+      if (!emp.date_of_employment || (emp.sex !== 'F' && emp.sex !== 'Female')) return false;
+      
+      let hireDate = new Date(emp.date_of_employment);
+      
+      if (isNaN(hireDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_employment);
+        if (!isNaN(dateValue)) {
+          hireDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_employment.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            hireDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(hireDate.getTime()) && hireDate.getFullYear() <= turnoverYear;
+    }).length;
+
+    // Calculate female employees at end of year
+    const femaleEmployeesAtEndOfYear = employeeData.filter(emp => {
+      if (emp.sex !== 'F' && emp.sex !== 'Female') return false;
+      
+      if (!emp.date_of_exit) return true;
+      
+      let exitDate = new Date(emp.date_of_exit);
+      
+      if (isNaN(exitDate.getTime())) {
+        const dateValue = parseFloat(emp.date_of_exit);
+        if (!isNaN(dateValue)) {
+          exitDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          const dateParts = emp.date_of_exit.toString().split('/');
+          if (dateParts.length === 3) {
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            exitDate = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return !isNaN(exitDate.getTime()) && exitDate.getFullYear() > turnoverYear;
+    }).length;
+
+    const averageFemaleEmployees = (femaleEmployeesAtStartOfYear + femaleEmployeesAtEndOfYear) / 2;
+    const turnoverRateFemale = averageFemaleEmployees > 0 ? (femaleEmployeesWhoLeftInYear / averageFemaleEmployees) * 100 : 0;
     
     // Turnover by age group (keeping existing logic for overall turnover)
     const under30WhoLeft = employeeData.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
