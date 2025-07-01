@@ -51,7 +51,7 @@ export const LoginForm = () => {
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
-          Sign in to your SustainTech account
+          Sign in to your GreenData account
         </CardDescription>
       </CardHeader>
       <CardContent>

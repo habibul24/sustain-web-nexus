@@ -19,7 +19,7 @@ const SignIn = () => {
             </Link>
             <h1 className="text-4xl font-bold text-gray-900 mb-4 text-center">Welcome Back</h1>
             <p className="text-gray-600 text-center">
-              Sign in to your SustainTech account to continue your sustainability journey
+              Sign in to your GreenData account to continue your sustainability journey
             </p>
           </div>
 
