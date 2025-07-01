@@ -159,7 +159,11 @@ const ESGSidebar = () => {
                         <ul className="pl-2 space-y-1">
                           <Accordion type="single" collapsible className="border-none">
                             <AccordionItem value="waste">
-                              <AccordionTrigger className={triggerClass + ' text-sm font-medium pl-6'}>3.a) Waste</AccordionTrigger>
+                              <AccordionTrigger className={triggerClass + ' text-sm font-medium pl-6'} asChild>
+                                <NavLink to="/my-esg/environmental/scope-3/waste" className={({ isActive }) => isActive ? `${triggerClass} bg-green-100 text-sm font-medium pl-6` : `${triggerClass} text-sm font-medium pl-6`}>
+                                  3.a) Waste
+                                </NavLink>
+                              </AccordionTrigger>
                               <AccordionContent>
                                 <ul className="pl-4 space-y-1">
                                   <li>
