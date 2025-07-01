@@ -57,6 +57,7 @@ const Scope2aElectricityLocation = () => {
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   const [totalBuildingElectricity, setTotalBuildingElectricity] = useState<string>('');
   const [priorYearEmissionValue, setPriorYearEmissionValue] = useState<string>('');
+  const [emissionFactor, setEmissionFactor] = useState<number>(0);
 
   // Remove stepper and back button, show all questions in a single form for the selected location
   // Add state for table rows (months)
@@ -186,7 +187,7 @@ const Scope2aElectricityLocation = () => {
     setOrganizationArea('');
     setTotalBuildingArea('');
     setTotalBuildingElectricity('');
-    setPriorYearEmissionValue('');
+    setEmissionFactor(0);
     setTableRows(months.map(month => ({ month, quantity: '', lastYear: '' })));
     setScope2Data([]);
     setCurrentStep(1);
@@ -237,15 +238,16 @@ const Scope2aElectricityLocation = () => {
       })) || [];
 
       setScope2Data(formattedData);
-      // After fetching scope2Data in fetchData, set electricityProvider and receivesBillsDirectly from the most recent record for this location/provider
+      // After fetching scope2Data in fetchData, set all form fields from the most recent record for this location
       if (formattedData.length > 0) {
-        // If electricityProvider is set, use the most recent record for that provider, else use the most recent record for the location
-        let latestRecord = electricityProvider
-          ? formattedData.find(e => e.source_of_energy === electricityProvider)
-          : formattedData[0];
-        if (!latestRecord) latestRecord = formattedData[0];
+        // Find the most recent record (by created order, or just use the last one in the array)
+        const latestRecord = formattedData[formattedData.length - 1];
         setElectricityProvider(latestRecord.source_of_energy || '');
         setReceivesBillsDirectly((latestRecord.receives_bills_directly || '').toLowerCase());
+        setOrganizationArea(latestRecord.organization_area?.toString() || '');
+        setTotalBuildingArea(latestRecord.total_building_area?.toString() || '');
+        setTotalBuildingElectricity(latestRecord.total_building_electricity?.toString() || '');
+        setEmissionFactor(latestRecord.emission_factor || 0);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -348,6 +350,7 @@ const Scope2aElectricityLocation = () => {
     setOrganizationArea('');
     setTotalBuildingArea('');
     setTotalBuildingElectricity('');
+    setEmissionFactor(0);
   };
 
   const renderStepContent = () => {
@@ -554,7 +557,60 @@ const Scope2aElectricityLocation = () => {
                       />
                     </div>
                   )}
+                  <div>
+                    <Label htmlFor="emission-factor">GHG Emission Factor (kgCO2e/kWh)</Label>
+                    <Input
+                      id="emission-factor"
+                      type="number"
+                      value={emissionFactor}
+                      readOnly
+                      className="bg-gray-100"
+                    />
+                  </div>
                 </div>
+                <Button className="mt-4 bg-green-600 hover:bg-green-700 text-white" onClick={async () => {
+                  // Fetch the most recent emission_factor for this provider/location if not present
+                  let ef = 0;
+                  const { data: efData } = await supabase
+                    .from('scope2a_electricity')
+                    .select('emission_factor')
+                    .eq('user_id', user.id)
+                    .eq('office_location_id', locationId)
+                    .eq('source_of_energy', electricityProvider)
+                    .limit(1)
+                    .single();
+                  if (efData && efData.emission_factor) ef = typeof efData.emission_factor === 'string' ? parseFloat(efData.emission_factor) : (typeof efData.emission_factor === 'number' ? efData.emission_factor : 0);
+                  // If not found, fallback to 0
+                  const orgArea = parseFloat(organizationArea) || 0;
+                  const bldgArea = parseFloat(totalBuildingArea) || 1;
+                  const bldgElec = parseFloat(totalBuildingElectricity) || 0;
+                  const quantityUsed = (orgArea / bldgArea) * bldgElec;
+                  const emissions = quantityUsed * ef;
+                  const { error } = await supabase.from('scope2a_electricity').insert({
+                    user_id: user.id,
+                    office_location_id: locationId,
+                    source_of_energy: electricityProvider,
+                    unit_of_measurement: 'kWh',
+                    organization_area: orgArea,
+                    total_building_area: bldgArea,
+                    total_building_electricity: bldgElec,
+                    emission_factor: ef,
+                    quantity_used: quantityUsed,
+                    emissions_kg_co2: emissions,
+                    receives_bills_directly: 'no',
+                    month,
+                    provide_prior_year: providePriorYear === 'yes'
+                  });
+                  if (error) {
+                    toast({ title: 'Error!', description: 'Failed to save building area data.', variant: 'destructive' });
+                  } else {
+                    toast({ title: 'Success!', description: 'Building area data saved.' });
+                    setReceivesBillsDirectly('no');
+                    fetchData();
+                  }
+                }}>
+                  Save
+                </Button>
               </CardContent>
             </Card>
           );
@@ -580,6 +636,17 @@ const Scope2aElectricityLocation = () => {
     };
     fetchLocations();
   }, [user]);
+
+  // Add emission factor mapping
+  const providerEmissionFactors: Record<string, number> = {
+    'Hong Kong Electric': 0.45, // Example value, replace with actual
+    'CLP Power Hong Kong Limited (CLP)': 0.54 // Example value, replace with actual
+  };
+
+  // Auto-fill emission factor when provider changes
+  useEffect(() => {
+    setEmissionFactor(providerEmissionFactors[electricityProvider] || 0);
+  }, [electricityProvider]);
 
   if (loading) {
     return (
@@ -708,7 +775,7 @@ const Scope2aElectricityLocation = () => {
             {receivesBillsDirectly === 'no' && (
               <>
                 <div className="space-y-4">
-                  <Label>Area of Organization Space (sq ft)</Label>
+                  <Label htmlFor="org-area">Area of Organization Space (sq ft)</Label>
                   <Input
                     id="org-area"
                     type="number"
@@ -718,7 +785,7 @@ const Scope2aElectricityLocation = () => {
                   />
                 </div>
                 <div className="space-y-4">
-                  <Label>Total Building Area (sq ft)</Label>
+                  <Label htmlFor="total-building-area">Total Building Area (sq ft)</Label>
                   <Input
                     id="total-building-area"
                     type="number"
@@ -728,7 +795,7 @@ const Scope2aElectricityLocation = () => {
                   />
                 </div>
                 <div className="space-y-4">
-                  <Label>Total Building Electricity (kWh)</Label>
+                  <Label htmlFor="total-building-electricity">Total Building Electricity (kWh)</Label>
                   <Input
                     id="total-building-electricity"
                     type="number"
@@ -740,6 +807,47 @@ const Scope2aElectricityLocation = () => {
                 <div className="mt-2 text-sm text-gray-600 flex items-center gap-2">
                   <span>💡</span> Request the monthly total electricity figures of the building from the facility manager.
                 </div>
+                <Button className="mt-4 bg-green-600 hover:bg-green-700 text-white" onClick={async () => {
+                  // Fetch the most recent emission_factor for this provider/location if not present
+                  let ef = 0;
+                  const { data: efData } = await supabase
+                    .from('scope2a_electricity')
+                    .select('emission_factor')
+                    .eq('user_id', user.id)
+                    .eq('office_location_id', locationId)
+                    .eq('source_of_energy', electricityProvider)
+                    .limit(1)
+                    .single();
+                  if (efData && efData.emission_factor) ef = typeof efData.emission_factor === 'string' ? parseFloat(efData.emission_factor) : (typeof efData.emission_factor === 'number' ? efData.emission_factor : 0);
+                  // If not found, fallback to 0
+                  const orgArea = parseFloat(organizationArea) || 0;
+                  const bldgArea = parseFloat(totalBuildingArea) || 1;
+                  const bldgElec = parseFloat(totalBuildingElectricity) || 0;
+                  const emissions = (orgArea / bldgArea) * bldgElec * ef;
+                  const { error } = await supabase.from('scope2a_electricity').insert({
+                    user_id: user.id,
+                    office_location_id: locationId,
+                    source_of_energy: electricityProvider,
+                    unit_of_measurement: 'kWh',
+                    organization_area: orgArea,
+                    total_building_area: bldgArea,
+                    total_building_electricity: bldgElec,
+                    emission_factor: ef,
+                    emissions_kg_co2: emissions,
+                    receives_bills_directly: 'no',
+                    month,
+                    provide_prior_year: providePriorYear === 'yes'
+                  });
+                  if (error) {
+                    toast({ title: 'Error!', description: 'Failed to save building area data.', variant: 'destructive' });
+                  } else {
+                    toast({ title: 'Success!', description: 'Building area data saved.' });
+                    setReceivesBillsDirectly('no');
+                    fetchData();
+                  }
+                }}>
+                  Save
+                </Button>
               </>
             )}
           </div>

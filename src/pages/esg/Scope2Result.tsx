@@ -17,6 +17,8 @@ interface Scope2Data {
   total_building_area: number | null;
   office_location_name: string;
   month: string | null;
+  receives_bills_directly: string;
+  total_building_electricity: number | null;
 }
 
 const Scope2Result = () => {
@@ -44,7 +46,9 @@ const Scope2Result = () => {
           organization_area,
           total_building_area,
           month,
-          office_locations!inner(name)
+          office_locations!inner(name),
+          receives_bills_directly,
+          total_building_electricity
         `)
         .eq('user_id', user.id)
         .not('quantity_used', 'is', null);
@@ -65,37 +69,56 @@ const Scope2Result = () => {
   };
 
   const calculateCO2Emission = (item: Scope2Data) => {
+    if (item.receives_bills_directly === 'no' && item.total_building_electricity && item.organization_area && item.total_building_area && item.emission_factor) {
+      return (item.organization_area / item.total_building_area) * item.total_building_electricity * item.emission_factor;
+    }
     if (!item.quantity_used || !item.emission_factor) return 0;
-    
     // If organization area and total building area are available
     if (item.organization_area && item.total_building_area) {
       return (item.organization_area / item.total_building_area) * item.quantity_used * item.emission_factor;
     }
-    
     // Standard calculation: Quantity * GHG Emission Factor
     return item.quantity_used * item.emission_factor;
   };
 
-  // Group scope2Data by location
-  const scope2ByLocation: Record<string, { location: string, totalQuantity: number, emissionFactor: number, totalEmission: number }> = {};
+  // Group scope2Data by location, using the most recent 'no' record if it exists, otherwise the most recent 'yes' record
+  const latestByLocation: Record<string, Scope2Data> = {};
   scope2Data.forEach(row => {
     const loc = row.office_location_name || 'Unknown';
-    const q = parseFloat(row.quantity_used as any) || 0;
-    const ef = parseFloat(row.emission_factor as any) || 0;
-    if (!scope2ByLocation[loc]) {
-      scope2ByLocation[loc] = { location: loc, totalQuantity: 0, emissionFactor: ef, totalEmission: 0 };
-    }
-    scope2ByLocation[loc].totalQuantity += q;
-    // If emission factor varies, you could average or just use the last one
-    scope2ByLocation[loc].emissionFactor = ef;
-    // Use the same calculation as before
-    if (row.organization_area && row.total_building_area) {
-      scope2ByLocation[loc].totalEmission += (row.organization_area / row.total_building_area) * q * ef;
+    // Always overwrite, so the last (most recent) record for each location is used
+    if (!latestByLocation[loc]) {
+      latestByLocation[loc] = row;
     } else {
-      scope2ByLocation[loc].totalEmission += q * ef;
+      // Prefer 'no' bills directly if it exists
+      if (row.receives_bills_directly === 'no') {
+        latestByLocation[loc] = row;
+      } else if (latestByLocation[loc].receives_bills_directly !== 'no') {
+        latestByLocation[loc] = row;
+      }
     }
   });
-  const scope2Rows = Object.values(scope2ByLocation);
+  const scope2Rows = Object.entries(latestByLocation).map(([location, row]) => {
+    const ef = parseFloat(row.emission_factor as any) || 0;
+    let totalQuantity = 0;
+    let totalEmission = 0;
+    if (row.receives_bills_directly === 'no' && row.total_building_electricity && row.organization_area && row.total_building_area) {
+      totalQuantity = parseFloat(row.total_building_electricity as any) || 0;
+      totalEmission = (row.organization_area / row.total_building_area) * totalQuantity * ef;
+    } else if (row.quantity_used) {
+      totalQuantity = parseFloat(row.quantity_used as any) || 0;
+      if (row.organization_area && row.total_building_area) {
+        totalEmission = (row.organization_area / row.total_building_area) * totalQuantity * ef;
+      } else {
+        totalEmission = totalQuantity * ef;
+      }
+    }
+    return {
+      location,
+      totalQuantity,
+      emissionFactor: ef,
+      totalEmission
+    };
+  });
 
   const getTotalQuantity = () => {
     return scope2Rows.reduce((sum, item) => sum + item.totalQuantity, 0);
