@@ -470,7 +470,7 @@ const Dashboard = () => {
   const turnoverByAgeData = getTurnoverByAgeData();
 
   // --- Social Year Comparison Data ---
-  const socialYears = [2023, 2024, 2025];
+  const socialYears = [2025, 2024, 2023];
 
   // Helper to calculate stats for a given year
   const getSocialStatsForYear = (year: number) => {

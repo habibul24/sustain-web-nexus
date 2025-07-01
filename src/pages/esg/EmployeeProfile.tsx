@@ -93,6 +93,17 @@ const EmployeeProfile = () => {
     fetchTemplatePreview();
   }, [user]);
 
+  // Example rows to show in the preview
+  const exampleRows = [
+    [3, 'Maria', 'No', 28, 'F', 1002, 'Full Time', 'Singapore', 'Headquarters', '2/1/2022', '', 'Corporate Affairs', 'junior staff', 12000],
+    [4, 'John', 'Yes', 45, 'M', 1003, 'Full Time', 'USA', 'Regional Office', '5/10/2010', '', 'Operations', 'senior management', 40000],
+  ];
+
+  const getPreviewRows = () => {
+    // Show up to 3 rows from the template, then the example rows
+    return [...templatePreview, ...exampleRows].slice(0, 5);
+  };
+
   const fetchTemplatePreview = async () => {
     try {
       const response = await fetch('/Employee%20Profile%20Template.xlsx');
@@ -553,7 +564,7 @@ const EmployeeProfile = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {templatePreview.map((row, i) => (
+                      {getPreviewRows().map((row, i) => (
                         <tr key={i}>
                           {templateHeaders.map((_, j) => (
                             <td key={j} className="px-2 py-1 border-b">{row[j] ?? ''}</td>
