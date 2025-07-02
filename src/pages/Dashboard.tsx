@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '../contexts/AuthContext';
 import { supabase } from '../integrations/supabase/client';
@@ -155,7 +154,7 @@ const Dashboard = () => {
         emission_factor: item.emission_factor || 0,
         emissions_kg_co2: item.emissions_kg_co2 || 0,
         created_at: item.created_at,
-        receives_bills_directly: item.receives_bills_directly || false
+        receives_bills_directly: Boolean(item.receives_bills_directly)
       }));
 
       setScope2Data(formattedData);
@@ -185,6 +184,9 @@ const Dashboard = () => {
 
       if (waterError) throw waterError;
 
+      console.log('Paper data:', paperData);
+      console.log('Water data:', waterData);
+
       // Combine all Scope 3 data
       const combinedData: Scope3Data[] = [
         ...(paperData || []).map(item => {
@@ -211,7 +213,7 @@ const Dashboard = () => {
           quantity_used: item.quantity_used,
           emission_factor: item.emission_factor || 0,
           emissions_kg_co2: item.quantity_used * (item.emission_factor || 0),
-          receives_bills_directly: item.receives_bills_directly,
+          receives_bills_directly: Boolean(item.receives_bills_directly),
           created_at: item.created_at
         }))
       ];
