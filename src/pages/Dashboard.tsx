@@ -117,12 +117,32 @@ const Dashboard = () => {
     ];
   };
 
-  // Prepare data for monthly pie chart with different colors and highlighting
+  // Month name mapping
+  const getMonthName = (monthNumber: string) => {
+    const monthNames = {
+      '1': 'January',
+      '2': 'February', 
+      '3': 'March',
+      '4': 'April',
+      '5': 'May',
+      '6': 'June',
+      '7': 'July',
+      '8': 'August',
+      '9': 'September',
+      '10': 'October',
+      '11': 'November',
+      '12': 'December'
+    };
+    return monthNames[monthNumber as keyof typeof monthNames] || monthNumber;
+  };
+
+  // Prepare data for monthly pie chart with proper month names
   const getMonthlyData = () => {
     const monthlyEmissions = scope2Data.reduce((acc, item) => {
-      const month = item.month || 'Unknown';
+      const monthKey = item.month || 'Unknown';
+      const monthName = getMonthName(monthKey);
       const emissions = calculateCO2Emission(item);
-      acc[month] = (acc[month] || 0) + emissions;
+      acc[monthName] = (acc[monthName] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
 
@@ -147,7 +167,7 @@ const Dashboard = () => {
     }));
   };
 
-  // Prepare data for location pie chart
+  // Prepare data for location pie chart with proper location names
   const getLocationData = () => {
     const locationEmissions = scope2Data.reduce((acc, item) => {
       const location = item.office_location_name;
@@ -431,6 +451,32 @@ const Dashboard = () => {
     );
   };
 
+  // Custom label function for location pie chart with external labels
+  const renderLocationLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, location
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 20; // Position labels outside the pie
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    if (percent < 0.05) return null; // Don't show label for very small slices
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="#374151" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+      >
+        {`${location} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
+
   // Custom label function for social pie charts with external labels
   const renderSocialLabel = ({
     cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value
@@ -643,7 +689,7 @@ const Dashboard = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={renderCustomizedLabel}
+                          label={renderLocationLabel}
                           outerRadius={60}
                           dataKey="emissions"
                         >
