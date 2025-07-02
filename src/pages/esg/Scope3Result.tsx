@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { supabase } from '../../integrations/supabase/client';
@@ -6,6 +5,8 @@ import { Button } from '../../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { generatePDF, generateExcel } from '../../utils/exportUtils';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface PaperData {
   quantity_landfill: number | null;
@@ -291,68 +292,125 @@ const Scope3Result = () => {
       const totalQuantity = (paper?.quantity_landfill || 0) + (paper?.quantity_recycle || 0) + 
                            (paper?.quantity_combust || 0) + (paper?.quantity_vendor || 0) +
                            waterRows.reduce((sum, row) => sum + row.totalQuantity, 0);
-      
       const summary = {
         totalQuantity,
         totalActiveSources: (paper ? 1 : 0) + waterRows.length,
         totalEmission
       };
-      
-      // Combine paper and water data for table
-      const tableData = [];
-      
+      // Only generate the PDF with summary, table, and footer (no charts)
+      const doc = new jsPDF();
+      let currentY = 22;
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Scope 3 Carbon Emission Report`, 14, currentY);
+      currentY += 20;
+      // Add onboarding information if available
+      if (onboardingData && (onboardingData.companyName || onboardingData.operationsDescription || onboardingData.reportingYearEndDate)) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Company Information:', 14, currentY);
+        currentY += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        if (onboardingData.companyName) {
+          doc.text(`Company Name: ${onboardingData.companyName}`, 14, currentY);
+          currentY += 8;
+        }
+        if (onboardingData.operationsDescription) {
+          const descriptionLines = doc.splitTextToSize(`Operations Description: ${onboardingData.operationsDescription}`, 180);
+          doc.text(descriptionLines, 14, currentY);
+          currentY += descriptionLines.length * 6;
+        }
+        if (onboardingData.reportingYearEndDate) {
+          doc.text(`Reporting Year End Date: ${onboardingData.reportingYearEndDate}`, 14, currentY);
+          currentY += 8;
+        }
+        currentY += 10;
+      }
+      // Add summary section
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary:', 14, currentY);
+      currentY += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Quantity Till Date: ${summary.totalQuantity.toFixed(4)}`, 14, currentY);
+      currentY += 8;
+      doc.text(`Total Active Sources Of Emission: ${summary.totalActiveSources}`, 14, currentY);
+      currentY += 8;
+      doc.text(`Total Emission: ${summary.totalEmission.toFixed(4)} kgCO2e`, 14, currentY);
+      currentY += 15;
+      // Add detailed data table
+      const tableHeaders = [
+        'Description Of Sources',
+        'Quantity Till Date',
+        'GHG Emission Factor',
+        'Co2 Carbon Emitted'
+      ];
+      const tableRows = [];
       if (paper) {
         if (paper.quantity_landfill) {
-          tableData.push({
-            source: 'Paper - Landfill',
-            quantity: paper.quantity_landfill,
-            ghgFactor: paper.carbon_dioxide_emitted_co2_landfill || 0,
-            co2Emitted: (paper.quantity_landfill || 0) * (paper.carbon_dioxide_emitted_co2_landfill || 0)
-          });
+          tableRows.push([
+            'Paper - Landfill',
+            paper.quantity_landfill.toFixed(4),
+            (paper.carbon_dioxide_emitted_co2_landfill || 0).toFixed(4),
+            ((paper.quantity_landfill || 0) * (paper.carbon_dioxide_emitted_co2_landfill || 0)).toFixed(4)
+          ]);
         }
         if (paper.quantity_recycle) {
-          tableData.push({
-            source: 'Paper - Recycle',
-            quantity: paper.quantity_recycle,
-            ghgFactor: paper.carbon_dioxide_emitted_co2_recycle || 0,
-            co2Emitted: (paper.quantity_recycle || 0) * (paper.carbon_dioxide_emitted_co2_recycle || 0)
-          });
+          tableRows.push([
+            'Paper - Recycle',
+            paper.quantity_recycle.toFixed(4),
+            (paper.carbon_dioxide_emitted_co2_recycle || 0).toFixed(4),
+            ((paper.quantity_recycle || 0) * (paper.carbon_dioxide_emitted_co2_recycle || 0)).toFixed(4)
+          ]);
         }
         if (paper.quantity_combust) {
-          tableData.push({
-            source: 'Paper - Combust',
-            quantity: paper.quantity_combust,
-            ghgFactor: paper.carbon_dioxide_emitted_co2_combust || 0,
-            co2Emitted: (paper.quantity_combust || 0) * (paper.carbon_dioxide_emitted_co2_combust || 0)
-          });
+          tableRows.push([
+            'Paper - Combust',
+            paper.quantity_combust.toFixed(4),
+            (paper.carbon_dioxide_emitted_co2_combust || 0).toFixed(4),
+            ((paper.quantity_combust || 0) * (paper.carbon_dioxide_emitted_co2_combust || 0)).toFixed(4)
+          ]);
         }
         if (paper.quantity_vendor) {
-          tableData.push({
-            source: 'Paper - Vendor',
-            quantity: paper.quantity_vendor,
-            ghgFactor: 1,
-            co2Emitted: paper.quantity_vendor
-          });
+          tableRows.push([
+            'Paper - Vendor',
+            paper.quantity_vendor.toFixed(4),
+            '0.0000',
+            paper.quantity_vendor.toFixed(4)
+          ]);
         }
       }
-      
       waterRows.forEach(row => {
-        tableData.push({
-          source: `Water - ${row.name}`,
-          quantity: row.totalQuantity,
-          ghgFactor: row.emissionFactor,
-          co2Emitted: row.totalEmission
-        });
+        tableRows.push([
+          `Water - ${row.name}`,
+          row.totalQuantity.toFixed(4),
+          row.emissionFactor.toFixed(4),
+          row.totalEmission.toFixed(4)
+        ]);
       });
-      
-      generatePDF(
-        tableData, 
-        summary, 
-        onboardingData, 
-        chartData, 
-        comparisonData || undefined,
-        3
-      );
+      autoTable(doc, {
+        head: [tableHeaders],
+        body: tableRows,
+        startY: currentY,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [34, 197, 94] }
+      });
+      // Add footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
+          14,
+          doc.internal.pageSize.height - 10
+        );
+      }
+      // Save the PDF
+      doc.save(`scope-3-emissions-report.pdf`);
       toast.success('PDF generated successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);

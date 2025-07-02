@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -6,6 +5,8 @@ import { supabase } from '../../integrations/supabase/client';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import { generatePDF, generateExcel } from '../../utils/exportUtils';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Scope2Data {
   id: string;
@@ -274,22 +275,83 @@ const Scope2Result = () => {
         totalActiveSources: getActiveSources(),
         totalEmission: getTotalEmissions()
       };
-      
-      const tableData = locationSummaries.map(row => ({
-        source: row.location,
-        quantity: row.totalQuantity,
-        ghgFactor: row.emissionFactor,
-        co2Emitted: row.totalEmission
-      }));
-      
-      generatePDF(
-        tableData, 
-        summary, 
-        onboardingData, 
-        chartData, 
-        comparisonData || undefined,
-        2
-      );
+      // Only generate the PDF with summary, table, and footer (no charts)
+      const doc = new jsPDF();
+      let currentY = 22;
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Scope 2 Carbon Emission Report`, 14, currentY);
+      currentY += 20;
+      // Add onboarding information if available
+      if (onboardingData && (onboardingData.companyName || onboardingData.operationsDescription || onboardingData.reportingYearEndDate)) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Company Information:', 14, currentY);
+        currentY += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        if (onboardingData.companyName) {
+          doc.text(`Company Name: ${onboardingData.companyName}`, 14, currentY);
+          currentY += 8;
+        }
+        if (onboardingData.operationsDescription) {
+          const descriptionLines = doc.splitTextToSize(`Operations Description: ${onboardingData.operationsDescription}`, 180);
+          doc.text(descriptionLines, 14, currentY);
+          currentY += descriptionLines.length * 6;
+        }
+        if (onboardingData.reportingYearEndDate) {
+          doc.text(`Reporting Year End Date: ${onboardingData.reportingYearEndDate}`, 14, currentY);
+          currentY += 8;
+        }
+        currentY += 10;
+      }
+      // Add summary section
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary:', 14, currentY);
+      currentY += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Quantity Till Date: ${summary.totalQuantity.toFixed(4)}`, 14, currentY);
+      currentY += 8;
+      doc.text(`Total Active Sources Of Emission: ${summary.totalActiveSources}`, 14, currentY);
+      currentY += 8;
+      doc.text(`Total Emission: ${summary.totalEmission.toFixed(4)} kgCO2e`, 14, currentY);
+      currentY += 15;
+      // Add detailed data table
+      const tableHeaders = [
+        'Description Of Sources',
+        'Quantity Till Date',
+        'GHG Emission Factor',
+        'Co2 Carbon Emitted'
+      ];
+      const tableRows = locationSummaries.map(row => [
+        row.location,
+        row.totalQuantity.toFixed(4),
+        row.emissionFactor.toFixed(4),
+        row.totalEmission.toFixed(4)
+      ]);
+      autoTable(doc, {
+        head: [tableHeaders],
+        body: tableRows,
+        startY: currentY,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [34, 197, 94] }
+      });
+      // Add footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
+          14,
+          doc.internal.pageSize.height - 10
+        );
+      }
+      // Save the PDF
+      doc.save(`scope-2-emissions-report.pdf`);
       toast.success('PDF generated successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);
