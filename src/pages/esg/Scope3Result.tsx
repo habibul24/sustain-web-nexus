@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { supabase } from '../../integrations/supabase/client';
@@ -619,7 +620,7 @@ const Scope3Result = () => {
         </>
       )}
       <div className="flex flex-row gap-4 justify-end fixed bottom-8 right-8 z-50">
-        <Button onClick={generateExcel} className="bg-green-600 hover:bg-green-700 text-white">Generate Excel</Button>
+        <Button onClick={handleGenerateExcel} className="bg-green-600 hover:bg-green-700 text-white">Generate Excel</Button>
         <Button onClick={handleGeneratePDF} className="bg-green-600 hover:bg-green-700 text-white">Generate PDF</Button>
         <Button onClick={() => navigate('/my-esg/social/employee-profile')} className="bg-green-600 hover:bg-green-700 text-white">Next</Button>
       </div>
