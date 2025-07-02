@@ -67,9 +67,10 @@ const Dashboard = () => {
 
       const formattedData = data?.map(item => ({
         ...item,
-        office_location_name: item.office_locations?.name || 'Unknown Location'
+        office_location_name: (item as any).office_locations?.name || 'Unknown Location'
       })) || [];
 
+      console.log('Formatted Scope2 Data:', formattedData);
       setScope2Data(formattedData);
     } catch (error) {
       console.error('Error fetching Scope 2 data:', error);
@@ -117,34 +118,39 @@ const Dashboard = () => {
     ];
   };
 
-  // Month name mapping
-  const getMonthName = (monthNumber: string) => {
-    const monthNames = {
-      '1': 'January',
-      '2': 'February', 
-      '3': 'March',
-      '4': 'April',
-      '5': 'May',
-      '6': 'June',
-      '7': 'July',
-      '8': 'August',
-      '9': 'September',
-      '10': 'October',
-      '11': 'November',
-      '12': 'December'
-    };
-    return monthNames[monthNumber as keyof typeof monthNames] || monthNumber;
+  // Fixed month name mapping
+  const getMonthName = (monthValue: string | null) => {
+    if (!monthValue) return 'Unknown';
+    
+    // Handle both string numbers and month names
+    const monthNum = parseInt(monthValue);
+    if (isNaN(monthNum)) {
+      // If it's already a month name, return it
+      return monthValue;
+    }
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    return monthNames[monthNum - 1] || 'Unknown';
   };
 
-  // Prepare data for monthly pie chart with proper month names
+  // Fixed monthly data preparation
   const getMonthlyData = () => {
     const monthlyEmissions = scope2Data.reduce((acc, item) => {
-      const monthKey = item.month || 'Unknown';
-      const monthName = getMonthName(monthKey);
+      const monthValue = item.month;
+      const monthName = getMonthName(monthValue);
       const emissions = calculateCO2Emission(item);
+      
+      console.log('Processing month:', monthValue, 'mapped to:', monthName, 'emissions:', emissions);
+      
       acc[monthName] = (acc[monthName] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
+
+    console.log('Monthly emissions breakdown:', monthlyEmissions);
 
     const sortedMonths = Object.entries(monthlyEmissions)
       .map(([month, emissions]) => ({
@@ -167,14 +173,19 @@ const Dashboard = () => {
     }));
   };
 
-  // Prepare data for location pie chart with proper location names
+  // Fixed location data preparation
   const getLocationData = () => {
     const locationEmissions = scope2Data.reduce((acc, item) => {
-      const location = item.office_location_name;
+      const location = item.office_location_name || 'Unknown Location';
       const emissions = calculateCO2Emission(item);
+      
+      console.log('Processing location:', location, 'emissions:', emissions);
+      
       acc[location] = (acc[location] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
+
+    console.log('Location emissions breakdown:', locationEmissions);
 
     return Object.entries(locationEmissions).map(([location, emissions], index) => ({
       location,
@@ -427,7 +438,7 @@ const Dashboard = () => {
 
   // Custom label function for monthly pie chart with external labels
   const renderMonthlyLabel = ({
-    cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, month, isTop5
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, month, isTop5
   }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = outerRadius + 20; // Position labels outside the pie
