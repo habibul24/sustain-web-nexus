@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,9 +38,7 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      const { error } = await signUp({
-        email: formData.email,
-        password: formData.password,
+      const userData = {
         fullName: `${formData.name} ${formData.surname}`,
         companyName: formData.companyName,
         businessRegistrationNumber: formData.businessRegistrationNumber,
@@ -49,7 +46,9 @@ const SignUp = () => {
         phoneNumber: formData.phoneNumber,
         serviceNeeded: formData.serviceNeeded,
         preferredContact: formData.preferredContact,
-      });
+      };
+
+      const { error } = await signUp(formData.email, formData.password, userData);
 
       if (error) {
         toast({
