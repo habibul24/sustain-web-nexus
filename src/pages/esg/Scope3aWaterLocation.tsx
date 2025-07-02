@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -44,6 +45,7 @@ const Scope3aWaterLocation = () => {
   const [saving, setSaving] = useState(false);
   const [receivesBillsDirectly, setReceivesBillsDirectly] = useState('');
   const [providePriorYear, setProvidePriorYear] = useState('');
+  const [priorYearValue, setPriorYearValue] = useState('');
   const [organizationArea, setOrganizationArea] = useState('');
   const [totalBuildingArea, setTotalBuildingArea] = useState('');
   const [allLocations, setAllLocations] = useState<OfficeLocation[]>([]);
@@ -55,8 +57,7 @@ const Scope3aWaterLocation = () => {
 
   const [tableRows, setTableRows] = useState(() => months.map(month => ({
     month,
-    quantity: '',
-    lastYear: ''
+    quantity: ''
   })));
 
   useEffect(() => {
@@ -81,25 +82,29 @@ const Scope3aWaterLocation = () => {
         setOrganizationArea(firstEntry.organization_area?.toString() || '');
         setTotalBuildingArea(firstEntry.total_building_area?.toString() || '');
         
+        // Set prior year value from any entry (since it's the same for all months)
+        if (firstEntry.quantity_used_prior_year) {
+          setPriorYearValue(firstEntry.quantity_used_prior_year.toString());
+        }
+        
         // Set table rows from saved data for current location
         setTableRows(months.map(month => {
           const entry = currentLocationData.find(e => e.month === month);
           return {
             month,
-            quantity: entry ? (entry.quantity_used?.toString() || '') : '',
-            lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
+            quantity: entry ? (entry.quantity_used?.toString() || '') : ''
           };
         }));
       } else {
         // Reset form state if no data for current location
         setReceivesBillsDirectly('');
         setProvidePriorYear('');
+        setPriorYearValue('');
         setOrganizationArea('');
         setTotalBuildingArea('');
         setTableRows(months.map(month => ({
           month,
-          quantity: '',
-          lastYear: ''
+          quantity: ''
         })));
       }
     }
@@ -120,8 +125,8 @@ const Scope3aWaterLocation = () => {
     }
   };
 
-  const handleTableChange = (idx: number, field: 'quantity' | 'lastYear', value: string) => {
-    setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+  const handleTableChange = (idx: number, value: string) => {
+    setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, quantity: value } : row));
   };
 
   const handleSave = async () => {
@@ -141,12 +146,14 @@ const Scope3aWaterLocation = () => {
         // Insert monthly data
         for (const row of tableRows) {
           if (row.quantity) {
+            const quantityPriorYear = providePriorYear === 'yes' && priorYearValue ? parseFloat(priorYearValue) : null;
+            
             recordsToInsert.push({
               user_id: user.id,
               office_location_id: locationId,
               month: row.month,
               quantity_used: parseFloat(row.quantity),
-              quantity_used_prior_year: providePriorYear === 'yes' && row.lastYear ? parseFloat(row.lastYear) : null,
+              quantity_used_prior_year: quantityPriorYear,
               unit_of_measurement: 'm³',
               receives_bills_directly: receivesBillsDirectly,
               provide_prior_year: providePriorYear === 'yes',
@@ -291,6 +298,21 @@ const Scope3aWaterLocation = () => {
                     </div>
                   </RadioGroup>
                 </div>
+
+                {providePriorYear === 'yes' && (
+                  <div className="mb-4">
+                    <Label htmlFor="prior-year-value">Prior Year Total Water Consumption (m³)</Label>
+                    <Input
+                      id="prior-year-value"
+                      type="number"
+                      value={priorYearValue}
+                      onChange={(e) => setPriorYearValue(e.target.value)}
+                      placeholder="Enter total m³ for prior year"
+                      step="0.01"
+                    />
+                  </div>
+                )}
+
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-left">
                     <thead>
@@ -298,9 +320,6 @@ const Scope3aWaterLocation = () => {
                         <th className="py-2 px-3 font-semibold">Month</th>
                         <th className="py-2 px-3 font-semibold">Invoice Quantity</th>
                         <th className="py-2 px-3 font-semibold">Unit</th>
-                        {providePriorYear === 'yes' && (
-                          <th className="py-2 px-3 font-semibold">Last Year Emission Figure</th>
-                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -311,23 +330,12 @@ const Scope3aWaterLocation = () => {
                             <Input
                               type="number"
                               value={row.quantity}
-                              onChange={e => handleTableChange(idx, 'quantity', e.target.value)}
+                              onChange={e => handleTableChange(idx, e.target.value)}
                               placeholder="Enter quantity"
                               step="0.01"
                             />
                           </td>
                           <td className="py-2 px-3">m³</td>
-                          {providePriorYear === 'yes' && (
-                            <td className="py-2 px-3">
-                              <Input
-                                type="number"
-                                value={row.lastYear}
-                                onChange={e => handleTableChange(idx, 'lastYear', e.target.value)}
-                                placeholder="Last year emission"
-                                step="0.01"
-                              />
-                            </td>
-                          )}
                         </tr>
                       ))}
                     </tbody>

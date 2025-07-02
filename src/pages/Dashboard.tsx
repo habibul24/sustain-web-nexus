@@ -16,6 +16,7 @@ interface Scope2Data {
   total_building_area: number | null;
   office_location_name: string;
   month: string | null;
+  receives_bills_directly: string | null;
   created_at: string;
 }
 
@@ -57,6 +58,7 @@ const Dashboard = () => {
           organization_area,
           total_building_area,
           month,
+          receives_bills_directly,
           created_at,
           office_locations!inner(name)
         `)
@@ -137,9 +139,12 @@ const Dashboard = () => {
     return monthNames[monthNum - 1] || 'Unknown';
   };
 
-  // Fixed monthly data preparation
+  // Updated monthly data preparation - exclude data where bills aren't received directly
   const getMonthlyData = () => {
-    const monthlyEmissions = scope2Data.reduce((acc, item) => {
+    // Filter out data where bills aren't received directly (no monthly breakdown)
+    const directBillData = scope2Data.filter(item => item.receives_bills_directly === 'yes');
+    
+    const monthlyEmissions = directBillData.reduce((acc, item) => {
       const monthValue = item.month;
       const monthName = getMonthName(monthValue);
       const emissions = calculateCO2Emission(item);
@@ -658,33 +663,47 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Monthly Emissions Pie Chart */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
-                    <CardDescription className="text-xs">Top 5 months highlighted</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <PieChart>
-                        <Pie
-                          data={monthlyData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={renderMonthlyLabel}
-                          outerRadius={60}
-                          dataKey="emissions"
-                        >
-                          {monthlyData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
+                {/* Monthly Emissions Pie Chart - Only show if there's monthly data */}
+                {monthlyData.length > 0 ? (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
+                      <CardDescription className="text-xs">Direct billing only</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <PieChart>
+                          <Pie
+                            data={monthlyData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderMonthlyLabel}
+                            outerRadius={60}
+                            dataKey="emissions"
+                          >
+                            {monthlyData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
+                      <CardDescription className="text-xs">No monthly data available</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                        Monthly breakdown not available for area-based calculations
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Location Emissions Pie Chart */}
                 <Card>

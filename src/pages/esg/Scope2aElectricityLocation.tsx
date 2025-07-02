@@ -49,6 +49,7 @@ const Scope2aElectricityLocation = () => {
   const [electricityProvider, setElectricityProvider] = useState<string>('');
   const [receivesBillsDirectly, setReceivesBillsDirectly] = useState<string>('');
   const [providePriorYear, setProvidePriorYear] = useState<string>('');
+  const [priorYearValue, setPriorYearValue] = useState<string>('');
   const [organizationArea, setOrganizationArea] = useState<string>('');
   const [totalBuildingArea, setTotalBuildingArea] = useState<string>('');
   const [totalBuildingElectricity, setTotalBuildingElectricity] = useState<string>('');
@@ -61,8 +62,7 @@ const Scope2aElectricityLocation = () => {
 
   const [tableRows, setTableRows] = useState(() => months.map(month => ({
     month,
-    quantity: '',
-    lastYear: ''
+    quantity: ''
   })));
 
   const [allLocations, setAllLocations] = useState<OfficeLocation[]>([]);
@@ -89,11 +89,12 @@ const Scope2aElectricityLocation = () => {
     setElectricityProvider('');
     setReceivesBillsDirectly('');
     setProvidePriorYear('');
+    setPriorYearValue('');
     setOrganizationArea('');
     setTotalBuildingArea('');
     setTotalBuildingElectricity('');
     setEmissionFactor(0);
-    setTableRows(months.map(month => ({ month, quantity: '', lastYear: '' })));
+    setTableRows(months.map(month => ({ month, quantity: '' })));
     setScope2Data([]);
   }, [locationId]);
 
@@ -104,10 +105,15 @@ const Scope2aElectricityLocation = () => {
         const entry = scope2Data.find(e => e.month === month && e.source_of_energy === electricityProvider);
         return {
           month,
-          quantity: entry ? (entry.quantity_used?.toString() || '') : '',
-          lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
+          quantity: entry ? (entry.quantity_used?.toString() || '') : ''
         };
       }));
+      
+      // Set prior year value from any entry (since it's the same for all months)
+      const firstEntry = scope2Data[0];
+      if (firstEntry && firstEntry.quantity_used_prior_year) {
+        setPriorYearValue(firstEntry.quantity_used_prior_year.toString());
+      }
     }
   }, [scope2Data, receivesBillsDirectly, electricityProvider]);
 
@@ -195,8 +201,8 @@ const Scope2aElectricityLocation = () => {
   }, [user]);
 
   // Handle table input change
-  const handleTableChange = (idx: number, field: 'quantity' | 'lastYear', value: string) => {
-    setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+  const handleTableChange = (idx: number, value: string) => {
+    setTableRows(rows => rows.map((row, i) => i === idx ? { ...row, quantity: value } : row));
   };
 
   // Save all table rows for this location (for direct billing)
@@ -214,7 +220,7 @@ const Scope2aElectricityLocation = () => {
       for (const row of tableRows) {
         if (row.quantity) {
           const quantityUsed = parseFloat(row.quantity);
-          const quantityPriorYear = providePriorYear === 'yes' && row.lastYear ? parseFloat(row.lastYear) : null;
+          const quantityPriorYear = providePriorYear === 'yes' && priorYearValue ? parseFloat(priorYearValue) : null;
           const emissions = quantityUsed * emissionFactor;
 
           recordsToInsert.push({
@@ -365,6 +371,20 @@ const Scope2aElectricityLocation = () => {
               </RadioGroup>
             </div>
 
+            {providePriorYear === 'yes' && (
+              <div className="space-y-4">
+                <Label htmlFor="prior-year-value">Prior Year Total Electricity Consumption (kWh)</Label>
+                <Input
+                  id="prior-year-value"
+                  type="number"
+                  value={priorYearValue}
+                  onChange={(e) => setPriorYearValue(e.target.value)}
+                  placeholder="Enter total kWh for prior year"
+                  step="0.01"
+                />
+              </div>
+            )}
+
             {receivesBillsDirectly === 'yes' && (
               <>
                 <div className="overflow-x-auto">
@@ -374,9 +394,6 @@ const Scope2aElectricityLocation = () => {
                         <th className="py-2 px-3 font-semibold">Month</th>
                         <th className="py-2 px-3 font-semibold">Invoice Quantity (kWh)</th>
                         <th className="py-2 px-3 font-semibold">Unit of Measurement</th>
-                        {providePriorYear === 'yes' && (
-                          <th className="py-2 px-3 font-semibold">Prior Year Quantity (kWh)</th>
-                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -387,21 +404,11 @@ const Scope2aElectricityLocation = () => {
                             <Input
                               type="number"
                               value={row.quantity}
-                              onChange={e => handleTableChange(idx, 'quantity', e.target.value)}
+                              onChange={e => handleTableChange(idx, e.target.value)}
                               placeholder="Enter quantity"
                             />
                           </td>
                           <td className="py-2 px-3">kWh</td>
-                          {providePriorYear === 'yes' && (
-                            <td className="py-2 px-3">
-                              <Input
-                                type="number"
-                                value={row.lastYear}
-                                onChange={e => handleTableChange(idx, 'lastYear', e.target.value)}
-                                placeholder="Enter prior year quantity"
-                              />
-                            </td>
-                          )}
                         </tr>
                       ))}
                     </tbody>
