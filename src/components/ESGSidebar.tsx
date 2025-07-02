@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -68,6 +67,11 @@ const ESGSidebar = () => {
           <li>
             <NavLink to="/my-esg" end className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
               Connecting Software
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/my-esg/profile" className={({ isActive }) => isActive ? `${linkClass} bg-green-200` : linkClass}>
+              Profile
             </NavLink>
           </li>
           <Accordion type="multiple" className="border-none">
