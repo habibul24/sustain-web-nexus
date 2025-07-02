@@ -24,6 +24,7 @@ interface ChartData {
   data: number[];
   title: string;
   type: 'pie' | 'bar' | 'doughnut';
+  colors?: string[];
 }
 
 interface ComparisonData {
@@ -84,7 +85,7 @@ const Scope1Result = () => {
     
     if (allData.length === 0) return charts;
 
-    // Group data by categories for Scope 1 subcategories
+    // Group data by categories for Scope 1 subcategories (matching dashboard logic)
     const stationaryData = allData.filter(item => 
       item.source.includes('Diesel oil') || 
       item.source.includes('Kerosene') || 
@@ -115,67 +116,71 @@ const Scope1Result = () => {
       item.source.includes('HFC')
     );
 
-    // Chart 1a: Stationary Combustion Breakdown
+    // Chart 1a: Stationary Combustion Breakdown (matching dashboard colors)
     if (stationaryData.length > 0) {
       const stationaryLabels = stationaryData.map(item => item.source);
       const stationaryValues = stationaryData.map(item => item.co2Emitted);
       charts.push({
-        title: 'Scope 1a: Stationary Combustion',
+        title: 'Stationary Combustion (1a)',
         labels: stationaryLabels,
         data: stationaryValues,
-        type: 'doughnut'
+        type: 'doughnut',
+        colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
       });
     }
 
-    // Chart 1b: Mobile Combustion Breakdown
+    // Chart 1b: Mobile Combustion Breakdown (matching dashboard colors)
     if (mobileData.length > 0) {
       const mobileLabels = mobileData.map(item => item.source);
       const mobileValues = mobileData.map(item => item.co2Emitted);
       charts.push({
-        title: 'Scope 1b: Mobile Combustion',
+        title: 'Mobile Combustion (1c)',
         labels: mobileLabels,
         data: mobileValues,
-        type: 'doughnut'
+        type: 'doughnut',
+        colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
       });
     }
 
-    // Chart 1c: Process Emissions Breakdown
+    // Chart 1c: Process Emissions Breakdown (matching dashboard colors)
     if (processData.length > 0) {
       const processLabels = processData.map(item => item.source);
       const processValues = processData.map(item => item.co2Emitted);
       charts.push({
-        title: 'Scope 1c: Process Emissions',
+        title: 'Process Emissions (1b)',
         labels: processLabels,
         data: processValues,
-        type: 'doughnut'
+        type: 'doughnut',
+        colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
       });
     }
 
-    // Chart 1d: Refrigerant Emissions Breakdown
+    // Chart 1d: Refrigerant Emissions Breakdown (matching dashboard colors)
     if (refrigerantData.length > 0) {
       const refrigerantLabels = refrigerantData.map(item => item.source);
       const refrigerantValues = refrigerantData.map(item => item.co2Emitted);
       charts.push({
-        title: 'Scope 1d: Refrigerant Emissions',
+        title: 'Refrigerant Emissions (1d)',
         labels: refrigerantLabels,
         data: refrigerantValues,
-        type: 'doughnut'
+        type: 'doughnut',
+        colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
       });
     }
 
-    // Scope 1 Emissions by Year (Bar chart)
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
+    // Scope 1 Emissions by Year (Bar chart) - matching dashboard yearly comparison
+    const years = [2024, 2025];
     const yearlyEmissions = years.map((year, index) => {
-      if (index === 2) return totalEmission; // Current year
-      return totalEmission * (0.8 + Math.random() * 0.4); // Simulated past data
+      if (year === 2025) return totalEmission; // Current year
+      return totalEmission * 1.15; // Previous year (simulated)
     });
 
     charts.push({
       title: 'Scope 1 Emissions by Year',
       labels: years.map(year => year.toString()),
       data: yearlyEmissions,
-      type: 'bar'
+      type: 'bar',
+      colors: ['#ef4444', '#22c55e'] // Red for 2024, Green for 2025
     });
 
     return charts;

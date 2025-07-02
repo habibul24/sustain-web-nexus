@@ -28,6 +28,7 @@ interface ChartData {
   data: number[];
   title: string;
   type: 'pie' | 'bar' | 'doughnut';
+  colors?: string[];
 }
 
 interface ComparisonData {
@@ -86,7 +87,7 @@ const Scope3Result = () => {
   const generateDashboardCharts = (paperData: PaperData | null, waterRows: any[]): ChartData[] => {
     const charts: ChartData[] = [];
 
-    // Paper Waste Breakdown
+    // Paper Waste by Type (matching dashboard)
     if (paperData) {
       const paperLabels = [];
       const paperValues = [];
@@ -103,71 +104,68 @@ const Scope3Result = () => {
         paperLabels.push('Combust');
         paperValues.push((paperData.quantity_combust || 0) * (paperData.carbon_dioxide_emitted_co2_combust || 0));
       }
-      if (paperData.quantity_vendor) {
-        paperLabels.push('Vendor');
-        paperValues.push(paperData.quantity_vendor || 0);
-      }
 
       if (paperLabels.length > 0) {
         charts.push({
-          title: 'Scope 3a: Paper Waste Emissions Breakdown',
+          title: 'Paper Waste by Type',
           labels: paperLabels,
           data: paperValues,
-          type: 'doughnut'
+          type: 'doughnut',
+          colors: ['#22c55e', '#3b82f6', '#f59e0b']
         });
       }
     }
 
-    // Water Consumption by Location
+    // Water Emissions by Location (matching dashboard)
     if (waterRows.length > 0) {
       charts.push({
-        title: 'Scope 3a: Water Consumption by Location',
+        title: 'Water Emissions by Location',
         labels: waterRows.map(row => row.name),
-        data: waterRows.map(row => row.totalQuantity),
-        type: 'doughnut'
+        data: waterRows.map(row => row.totalEmission),
+        type: 'doughnut',
+        colors: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+      });
+    }
+
+    // Paper Emissions by Year (matching dashboard)
+    const totalPaperEmission = paperData ? 
+      ((paperData.quantity_landfill || 0) * (paperData.carbon_dioxide_emitted_co2_landfill || 0)) +
+      ((paperData.quantity_recycle || 0) * (paperData.carbon_dioxide_emitted_co2_recycle || 0)) +
+      ((paperData.quantity_combust || 0) * (paperData.carbon_dioxide_emitted_co2_combust || 0)) : 0;
+
+    if (totalPaperEmission > 0) {
+      const years = [2024, 2025];
+      const yearlyPaperEmissions = years.map((year) => {
+        if (year === 2025) return totalPaperEmission;
+        return totalPaperEmission * 0.95; // Previous year (simulated)
       });
 
       charts.push({
-        title: 'Scope 3a: Water Emissions by Location',
-        labels: waterRows.map(row => row.name),
-        data: waterRows.map(row => row.totalEmission),
-        type: 'doughnut'
+        title: 'Paper Emissions by Year',
+        labels: years.map(year => year.toString()),
+        data: yearlyPaperEmissions,
+        type: 'bar',
+        colors: ['#ef4444', '#22c55e'] // Red for 2024, Green for 2025
       });
     }
 
-    // Monthly Scope 3 Trend
-    const monthlyData = Array(12).fill(0);
-    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const totalEmission = getTotalEmissionWithWater();
-    if (totalEmission > 0) {
-      const avgMonthlyEmission = totalEmission / 12;
-      for (let i = 0; i < 12; i++) {
-        monthlyData[i] = avgMonthlyEmission * (0.8 + Math.random() * 0.4);
-      }
+    // Water Emissions by Year (matching dashboard)
+    const totalWaterEmission = waterRows.reduce((sum, row) => sum + row.totalEmission, 0);
+    if (totalWaterEmission > 0) {
+      const years = [2024, 2025];
+      const yearlyWaterEmissions = years.map((year) => {
+        if (year === 2025) return totalWaterEmission;
+        return totalWaterEmission * 0.95; // Previous year (simulated)
+      });
+
+      charts.push({
+        title: 'Water Emissions by Year',
+        labels: years.map(year => year.toString()),
+        data: yearlyWaterEmissions,
+        type: 'bar',
+        colors: ['#ef4444', '#22c55e'] // Red for 2024, Green for 2025
+      });
     }
-
-    charts.push({
-      title: 'Monthly Scope 3 Emissions Trend',
-      labels: monthLabels,
-      data: monthlyData,
-      type: 'bar'
-    });
-
-    // Scope 3 Emissions by Year
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
-    const yearlyEmissions = years.map((year, index) => {
-      if (index === 2) return totalEmission;
-      return totalEmission * (0.8 + Math.random() * 0.4);
-    });
-
-    charts.push({
-      title: 'Scope 3 Emissions by Year',
-      labels: years.map(year => year.toString()),
-      data: yearlyEmissions,
-      type: 'bar'
-    });
 
     return charts;
   };
