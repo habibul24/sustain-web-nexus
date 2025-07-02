@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -53,19 +54,25 @@ const Scope1Result = () => {
 
   const fetchOnboardingData = async () => {
     try {
+      // Fetch from user_profiles table
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('company_name, full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Fetch from governance_responses table for additional details
       const { data: governanceData } = await supabase
         .from('governance_responses')
-        .select('company_name, description, reporting_period')
+        .select('description, reporting_period')
         .eq('user_id', user?.id)
         .single();
 
-      if (governanceData) {
-        setOnboardingData({
-          companyName: governanceData.company_name || undefined,
-          description: governanceData.description || undefined,
-          reportingPeriod: governanceData.reporting_period || undefined,
-        });
-      }
+      setOnboardingData({
+        companyName: profileData?.company_name || undefined,
+        description: governanceData?.description || undefined,
+        reportingPeriod: governanceData?.reporting_period || undefined,
+      });
     } catch (error) {
       console.error('Error fetching onboarding data:', error);
     }
@@ -75,11 +82,82 @@ const Scope1Result = () => {
     const charts: ChartData[] = [];
     
     // Group data by categories for Scope 1 subcategories
-    const stationaryData = allData.filter(item => item.source.includes('Diesel oil') || item.source.includes('Kerosene') || item.source.includes('Liquefied Petroleum Gas') || item.source.includes('Charcoal') || item.source.includes('Towngas'));
-    const mobileData = allData.filter(item => item.source.includes('Motorcycle') || item.source.includes('Car') || item.source.includes('Van') || item.source.includes('bus') || item.source.includes('Vehicle') || item.source.includes('Ships') || item.source.includes('Aviation'));
-    const processData = allData.filter(item => !stationaryData.includes(item) && !mobileData.includes(item) && !item.source.includes('R-'));
-    const refrigerantData = allData.filter(item => item.source.includes('R-') || item.source.includes('HFC'));
+    const stationaryData = allData.filter(item => 
+      item.source.includes('Diesel oil') || 
+      item.source.includes('Kerosene') || 
+      item.source.includes('Liquefied Petroleum Gas') || 
+      item.source.includes('Charcoal') || 
+      item.source.includes('Towngas')
+    );
+    
+    const mobileData = allData.filter(item => 
+      item.source.includes('Motorcycle') || 
+      item.source.includes('Car') || 
+      item.source.includes('Van') || 
+      item.source.includes('bus') || 
+      item.source.includes('Vehicle') || 
+      item.source.includes('Ships') || 
+      item.source.includes('Aviation')
+    );
+    
+    const processData = allData.filter(item => 
+      !stationaryData.includes(item) && 
+      !mobileData.includes(item) && 
+      !item.source.includes('R-') && 
+      !item.source.includes('HFC')
+    );
+    
+    const refrigerantData = allData.filter(item => 
+      item.source.includes('R-') || 
+      item.source.includes('HFC')
+    );
 
+    // Create overall emissions chart
+    if (allData.length > 0) {
+      charts.push({
+        title: 'Scope 1 Total Emissions by Source',
+        labels: allData.map(item => item.source),
+        data: allData.map(item => item.co2Emitted)
+      });
+    }
+
+    // Create category breakdown chart
+    const categoryData = [];
+    const categoryLabels = [];
+    
+    if (stationaryData.length > 0) {
+      const stationaryTotal = stationaryData.reduce((sum, item) => sum + item.co2Emitted, 0);
+      categoryData.push(stationaryTotal);
+      categoryLabels.push('Stationary Combustion');
+    }
+    
+    if (mobileData.length > 0) {
+      const mobileTotal = mobileData.reduce((sum, item) => sum + item.co2Emitted, 0);
+      categoryData.push(mobileTotal);
+      categoryLabels.push('Mobile Combustion');
+    }
+    
+    if (processData.length > 0) {
+      const processTotal = processData.reduce((sum, item) => sum + item.co2Emitted, 0);
+      categoryData.push(processTotal);
+      categoryLabels.push('Process Emissions');
+    }
+    
+    if (refrigerantData.length > 0) {
+      const refrigerantTotal = refrigerantData.reduce((sum, item) => sum + item.co2Emitted, 0);
+      categoryData.push(refrigerantTotal);
+      categoryLabels.push('Refrigerant Emissions');
+    }
+
+    if (categoryData.length > 0) {
+      charts.push({
+        title: 'Scope 1 Emissions by Category',
+        labels: categoryLabels,
+        data: categoryData
+      });
+    }
+
+    // Individual category charts
     if (stationaryData.length > 0) {
       charts.push({
         title: 'Scope 1a - Stationary Combustion Emissions',
