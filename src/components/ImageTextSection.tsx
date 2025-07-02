@@ -21,7 +21,7 @@ const ImageTextSection = () => {
             </h2>
             */}
             <p className="text-gray-700 text-xl mb-8 leading-relaxed">
-              Getting started with ESG and sustainability can be complex. We make the process clear and straightforward for faster implementation.<br /><br />
+              Getting started with ESG and Sustainability can be complex. We make the process clear and straightforward for faster implementation.<br /><br />
               As your ESG consulting partner, we provide the practical tools, expertise and clear guidance from your first step to full compliance and handle the complexities of ESG regulations so you can make confident decisions.<br /><br />
               We elevate your existing ESG process through trusted technology and expert training, partnering with you to build a resilient and future-ready business.
             </p>
