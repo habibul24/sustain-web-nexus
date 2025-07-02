@@ -94,6 +94,8 @@ const Scope1StationaryCombustionForm: React.FC<Props> = ({ isApplicable, onAppli
           .insert({
             user_id: user.id,
             source_of_energy: 'N/A',
+            quantity_used: 0,
+            unit_of_measurement: 'L',
             is_applicable: false
           });
 
