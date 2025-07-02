@@ -14,7 +14,6 @@ const Profile = () => {
   const [profile, setProfile] = useState({
     company_name: '',
     operations_description: '',
-    reporting_year_end_date: '',
     software_used: '',
     first_year_reporting: false,
     applicable_framework: '',
@@ -45,7 +44,6 @@ const Profile = () => {
         setProfile({
           company_name: profileData.company_name || '',
           operations_description: profileData.operations_description || '',
-          reporting_year_end_date: profileData.reporting_year_end_date || '',
           software_used: profileData.software_used || '',
           first_year_reporting: profileData.first_year_reporting || false,
           applicable_framework: profileData.applicable_framework || '',
@@ -87,7 +85,6 @@ const Profile = () => {
       const updateData = {
         company_name: profile.company_name,
         operations_description: profile.operations_description,
-        reporting_year_end_date: profile.reporting_year_end_date || null,
         software_used: profile.software_used,
         first_year_reporting: profile.first_year_reporting,
         applicable_framework: profile.applicable_framework,
@@ -226,14 +223,6 @@ const Profile = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-lg font-semibold mb-4">ESG Reporting Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Reporting Year End Date</label>
-              <Input 
-                type="date"
-                value={profile.reporting_year_end_date} 
-                onChange={e => handleChange('reporting_year_end_date', e.target.value)}
-              />
-            </div>
             <div>
               <label className="block font-medium mb-1">Software Currently Used</label>
               <Input 
