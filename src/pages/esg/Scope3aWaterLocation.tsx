@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -68,26 +67,43 @@ const Scope3aWaterLocation = () => {
   }, [user, locationId]);
 
   useEffect(() => {
-    if (scope3aWaterData.length > 0) {
-      const firstEntry = scope3aWaterData[0];
+    // Only populate form state when we have data specifically for the current location
+    if (scope3aWaterData.length > 0 && locationId) {
+      // Filter data for current location only
+      const currentLocationData = scope3aWaterData.filter(item => item.office_location_id === locationId);
       
-      // Set form state from saved data
-      setReceivesBillsDirectly(firstEntry.receives_bills_directly || '');
-      setProvidePriorYear(firstEntry.provide_prior_year ? 'yes' : 'no');
-      setOrganizationArea(firstEntry.organization_area?.toString() || '');
-      setTotalBuildingArea(firstEntry.total_building_area?.toString() || '');
-      
-      // Set table rows from saved data
-      setTableRows(months.map(month => {
-        const entry = scope3aWaterData.find(e => e.month === month);
-        return {
+      if (currentLocationData.length > 0) {
+        const firstEntry = currentLocationData[0];
+        
+        // Set form state from saved data for current location
+        setReceivesBillsDirectly(firstEntry.receives_bills_directly || '');
+        setProvidePriorYear(firstEntry.provide_prior_year ? 'yes' : 'no');
+        setOrganizationArea(firstEntry.organization_area?.toString() || '');
+        setTotalBuildingArea(firstEntry.total_building_area?.toString() || '');
+        
+        // Set table rows from saved data for current location
+        setTableRows(months.map(month => {
+          const entry = currentLocationData.find(e => e.month === month);
+          return {
+            month,
+            quantity: entry ? (entry.quantity_used?.toString() || '') : '',
+            lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
+          };
+        }));
+      } else {
+        // Reset form state if no data for current location
+        setReceivesBillsDirectly('');
+        setProvidePriorYear('');
+        setOrganizationArea('');
+        setTotalBuildingArea('');
+        setTableRows(months.map(month => ({
           month,
-          quantity: entry ? (entry.quantity_used?.toString() || '') : '',
-          lastYear: entry ? (entry.quantity_used_prior_year?.toString() || '') : ''
-        };
-      }));
+          quantity: '',
+          lastYear: ''
+        })));
+      }
     }
-  }, [scope3aWaterData]);
+  }, [scope3aWaterData, locationId]);
 
   const fetchAllLocations = async () => {
     try {
