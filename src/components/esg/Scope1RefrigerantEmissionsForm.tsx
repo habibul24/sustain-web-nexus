@@ -30,15 +30,55 @@ const Scope1RefrigerantEmissionsForm: React.FC<Props> = ({ isApplicable, onAppli
   const [loading, setLoading] = useState(false);
 
   const refrigerantTypes = [
-    'R-134a',
-    'R-410A',
-    'R-22',
+    'R-401A',
+    'R-401B',
+    'R-401C',
+    'R-402A',
+    'R-402B',
+    'R-403B',
     'R-404A',
+    'R-406A',
+    'R-407A',
+    'R-407B',
     'R-407C',
+    'R-407D',
+    'R-408A',
+    'R-409A',
+    'R-410A',
+    'R-410B',
+    'R-411A',
+    'R-411B',
+    'R-414A',
+    'R-414B',
+    'R-417A',
+    'R-422A',
+    'R-422D',
+    'R-424A',
+    'R-426A',
+    'R-428A',
+    'R-434A',
     'R-507A',
-    'CO2 (R-744)',
-    'Ammonia (R-717)',
-    'Other'
+    'R-508A',
+    'R-508B',
+    'HFC-23',
+    'HFC-32',
+    'HFC-41',
+    'HFC-125',
+    'HFC-134',
+    'HFC-134a',
+    'HFC-143',
+    'HFC-143a',
+    'HFC-152',
+    'HFC-152a',
+    'HFC-161',
+    'HFC-227ea',
+    'HFC-236cb',
+    'HFC-236ea',
+    'HFC-236fa',
+    'HFC-245ca',
+    'HFC-245fa',
+    'HFC-365mfc',
+    'HFC-43-10mee'
   ];
 
   useEffect(() => {
@@ -113,8 +153,9 @@ const Scope1RefrigerantEmissionsForm: React.FC<Props> = ({ isApplicable, onAppli
           .insert({
             user_id: user.id,
             refrigerant_type: 'N/A',
-            is_applicable: false,
-            unit_of_measurement: 'kg'
+            quantity_used: 0,
+            unit_of_measurement: 'kg',
+            is_applicable: false
           });
 
         toast({ title: 'Success!', description: 'Data saved successfully.' });
@@ -133,7 +174,7 @@ const Scope1RefrigerantEmissionsForm: React.FC<Props> = ({ isApplicable, onAppli
         .delete()
         .eq('user_id', user.id);
 
-      // Insert new records
+      // Insert new records - emission factors will be set automatically by the database trigger
       const recordsToInsert = data
         .filter(item => item.quantity_used && item.quantity_used > 0)
         .map(item => ({
@@ -190,7 +231,7 @@ const Scope1RefrigerantEmissionsForm: React.FC<Props> = ({ isApplicable, onAppli
           <>
             <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
               <p><strong>Instructions:</strong></p>
-              <p>Refrigerant emissions occur from air conditioning, refrigeration systems, and heat pumps. Include any refrigerant leaks, maintenance releases, or equipment disposal.</p>
+              <p>Refrigerant emissions occur from air conditioning, refrigeration systems, and heat pumps. Include any refrigerant leaks, maintenance releases, or equipment disposal. Emission factors will be automatically applied based on the refrigerant type selected.</p>
             </div>
 
             <div className="overflow-x-auto">

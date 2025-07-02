@@ -158,7 +158,7 @@ const RefrigerantEmissions = () => {
         if (error) throw error;
         toast({
           title: "Success",
-          description: "Refrigerant emission record updated successfully",
+          description: "Refrigerant emission record updated successfully. Emission factors have been automatically calculated.",
         });
       } else {
         const { error } = await supabase
@@ -168,7 +168,7 @@ const RefrigerantEmissions = () => {
         if (error) throw error;
         toast({
           title: "Success",
-          description: "Refrigerant emission record created successfully",
+          description: "Refrigerant emission record created successfully. Emission factors have been automatically calculated.",
         });
       }
 
@@ -222,7 +222,7 @@ const RefrigerantEmissions = () => {
         <AccordionItem value="instructions">
           <AccordionTrigger className="text-base font-semibold">Instructions</AccordionTrigger>
           <AccordionContent>
-            <div className="text-gray-700">Please fill in the details for each refrigerant that applies to your business.</div>
+            <div className="text-gray-700">Please fill in the details for each refrigerant that applies to your business. Emission factors will be automatically calculated based on the refrigerant type selected.</div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -237,13 +237,14 @@ const RefrigerantEmissions = () => {
               <TableHead>Quantity Used</TableHead>
               <TableHead>Last Year Emission Figures</TableHead>
               <TableHead>Unit Of Measurement</TableHead>
+              <TableHead>Emission Factor</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {records.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">No Refrigerant Releases</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">No Refrigerant Releases</TableCell>
               </TableRow>
             ) : (
               records.map((record) => (
@@ -252,6 +253,7 @@ const RefrigerantEmissions = () => {
                   <TableCell>{record.quantity_used || '-'}</TableCell>
                   <TableCell>{record.last_year_emission_figures || '-'}</TableCell>
                   <TableCell>{record.unit_of_measurement}</TableCell>
+                  <TableCell>{record.emission_factor || 'Auto-calculated'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => openModal(record)}>Edit</Button>
@@ -321,6 +323,9 @@ const RefrigerantEmissions = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                <strong>Note:</strong> Emission factors will be automatically calculated based on the selected refrigerant type.
               </div>
               <div className="flex gap-3">
                 <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white">
