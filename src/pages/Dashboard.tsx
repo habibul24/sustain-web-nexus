@@ -198,17 +198,25 @@ const Dashboard = () => {
       if (waterError) throw waterError;
 
       // Combine all Scope 3 data
-      const combinedData = [
+      const combinedData: Scope3Data[] = [
         ...(paperData || []).map(item => ({
-          ...item,
+          id: item.id,
           source_type: 'Paper',
-          emissions_kg_co2: item.emissions_kg_co2 || 0
+          waste_type: item.waste_type,
+          quantity_used: item.quantity || 0,
+          emission_factor: 0, // Paper emissions are pre-calculated
+          emissions_kg_co2: item.emissions_kg_co2 || 0,
+          created_at: item.updated_at
         })),
         ...(waterData || []).map(item => ({
-          ...item,
+          id: item.id,
           source_type: 'Water',
           location_name: (item as any).office_locations?.name || 'Unknown Location',
-          emissions_kg_co2: item.quantity_used * (item.emission_factor || 0)
+          quantity_used: item.quantity_used,
+          emission_factor: item.emission_factor || 0,
+          emissions_kg_co2: item.quantity_used * (item.emission_factor || 0),
+          receives_bills_directly: item.receives_bills_directly,
+          created_at: item.created_at
         }))
       ];
 
