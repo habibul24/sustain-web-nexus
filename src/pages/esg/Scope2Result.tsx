@@ -352,7 +352,7 @@ const Scope2Result = () => {
       }
       // Save the PDF
       doc.save(`scope-2-emissions-report.pdf`);
-      toast.success('PDF generated successfully!');
+      toast.success('PDF generated. Go to Dashboard to print the graphs!');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
@@ -388,6 +388,10 @@ const Scope2Result = () => {
     { label: 'Total Emission', value: `${getTotalEmissions().toFixed(2)} kgCO2e` },
   ];
 
+  const goToDashboardScope2 = () => {
+    navigate('/dashboard?tab=environmental&scope=scope2');
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -398,6 +402,12 @@ const Scope2Result = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      <button
+        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
+        onClick={goToDashboardScope2}
+      >
+        Go to Scope 2 Dashboard
+      </button>
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Your Scope 2 Carbon Emission Results</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

@@ -8,6 +8,7 @@ import { supabase } from '../../integrations/supabase/client';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
 import { generatePDF, generateExcel } from '../../utils/exportUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface Employee {
   id: string;
@@ -56,6 +57,7 @@ const EmployeeProfile = () => {
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -297,7 +299,7 @@ const EmployeeProfile = () => {
         comparisonData || undefined,
         4 // Social scope
       );
-      toast.success('PDF generated successfully!');
+      toast.success('PDF generated. Go to Dashboard to print the graphs!');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
@@ -327,6 +329,10 @@ const EmployeeProfile = () => {
     }
   };
 
+  const goToDashboardSocial = () => {
+    navigate('/dashboard?tab=social');
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -339,6 +345,12 @@ const EmployeeProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <button
+        className="mb-4 px-4 py-2 bg-purple-600 text-white rounded"
+        onClick={goToDashboardSocial}
+      >
+        Go to Social Dashboard
+      </button>
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4">Employee Profile Management</h1>
         

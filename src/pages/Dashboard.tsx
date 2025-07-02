@@ -5,6 +5,8 @@ import { supabase } from '../integrations/supabase/client';
 import { useAuthContext } from '../contexts/AuthContext';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Scope2Data {
   id: string;
@@ -52,6 +54,17 @@ interface Employee {
   date_of_employment?: string;
   date_of_exit?: string;
 }
+
+// Utility to generate PDF from a DOM node
+const generatePDFfromSection = async (sectionId: string, filename: string) => {
+  const input = document.getElementById(sectionId);
+  if (!input) return;
+  const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+  pdf.save(filename);
+};
 
 const Dashboard = () => {
   const { user } = useAuthContext();
@@ -1023,227 +1036,283 @@ const Dashboard = () => {
             </TabsList>
 
             <TabsContent value="scope1" className="space-y-6">
-              {scope1Data.length > 0 ? (
-                <>
-                  {/* Scope 1 Pie Charts - 4 separate charts for each category */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {/* Stationary Combustion (1a) */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Stationary Combustion (1a)</CardTitle>
-                        <CardDescription className="text-xs">Fuel type distribution (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <PieChart>
-                            <Pie
-                              data={getScope1CategoryData('Stationary Combustion (1a)')}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={60}
-                              dataKey="emissions"
-                            >
-                              {getScope1CategoryData('Stationary Combustion (1a)').map((entry, index) => (
-                                <Cell key={`cell-1a-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="text-center text-xs mt-2 font-semibold">Fuel Type</div>
-                      </CardContent>
-                    </Card>
+              <button
+                className="mb-4 px-4 py-2 bg-green-600 text-white rounded"
+                onClick={() => generatePDFfromSection('scope1-section', 'scope1-dashboard.pdf')}
+              >
+                Generate PDF
+              </button>
+              <div id="scope1-section">
+                {scope1Data.length > 0 ? (
+                  <>
+                    {/* Scope 1 Pie Charts - 4 separate charts for each category */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+                      {/* Stationary Combustion (1a) */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Stationary Combustion (1a)</CardTitle>
+                          <CardDescription className="text-xs">Fuel type distribution (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <PieChart>
+                              <Pie
+                                data={getScope1CategoryData('Stationary Combustion (1a)')}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={renderCustomizedLabel}
+                                outerRadius={60}
+                                dataKey="emissions"
+                              >
+                                {getScope1CategoryData('Stationary Combustion (1a)').map((entry, index) => (
+                                  <Cell key={`cell-1a-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ChartContainer>
+                          <div className="text-center text-xs mt-2 font-semibold">Fuel Type</div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Process Emissions (1b) */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Process Emissions (1b)</CardTitle>
-                        <CardDescription className="text-xs">Process type distribution (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <PieChart>
-                            <Pie
-                              data={getScope1CategoryData('Process Emissions (1b)')}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={60}
-                              dataKey="emissions"
-                            >
-                              {getScope1CategoryData('Process Emissions (1b)').map((entry, index) => (
-                                <Cell key={`cell-1b-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="text-center text-xs mt-2 font-semibold">Process Type</div>
-                      </CardContent>
-                    </Card>
+                      {/* Process Emissions (1b) */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Process Emissions (1b)</CardTitle>
+                          <CardDescription className="text-xs">Process type distribution (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <PieChart>
+                              <Pie
+                                data={getScope1CategoryData('Process Emissions (1b)')}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={renderCustomizedLabel}
+                                outerRadius={60}
+                                dataKey="emissions"
+                              >
+                                {getScope1CategoryData('Process Emissions (1b)').map((entry, index) => (
+                                  <Cell key={`cell-1b-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ChartContainer>
+                          <div className="text-center text-xs mt-2 font-semibold">Process Type</div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Mobile Combustion (1c) */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Mobile Combustion (1c)</CardTitle>
-                        <CardDescription className="text-xs">Vehicle type distribution (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <PieChart>
-                            <Pie
-                              data={getScope1CategoryData('Mobile Combustion (1c)')}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={60}
-                              dataKey="emissions"
-                            >
-                              {getScope1CategoryData('Mobile Combustion (1c)').map((entry, index) => (
-                                <Cell key={`cell-1c-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="text-center text-xs mt-2 font-semibold">Vehicle Type</div>
-                      </CardContent>
-                    </Card>
+                      {/* Mobile Combustion (1c) */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Mobile Combustion (1c)</CardTitle>
+                          <CardDescription className="text-xs">Vehicle type distribution (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <PieChart>
+                              <Pie
+                                data={getScope1CategoryData('Mobile Combustion (1c)')}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={renderCustomizedLabel}
+                                outerRadius={60}
+                                dataKey="emissions"
+                              >
+                                {getScope1CategoryData('Mobile Combustion (1c)').map((entry, index) => (
+                                  <Cell key={`cell-1c-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ChartContainer>
+                          <div className="text-center text-xs mt-2 font-semibold">Vehicle Type</div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Refrigerant Emissions (1d) */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Refrigerant Emissions (1d)</CardTitle>
-                        <CardDescription className="text-xs">Refrigerant type distribution (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <PieChart>
-                            <Pie
-                              data={getScope1CategoryData('Refrigerant Emissions (1d)')}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={60}
-                              dataKey="emissions"
-                            >
-                              {getScope1CategoryData('Refrigerant Emissions (1d)').map((entry, index) => (
-                                <Cell key={`cell-1d-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="text-center text-xs mt-2 font-semibold">Refrigerant Type</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Scope 1 Year by Year Comparison */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Scope 1 Emissions by Year</CardTitle>
-                        <CardDescription className="text-xs">2025 vs 2024 comparison by source type</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-64">
-                          <BarChart data={scope1YearlyData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="Stationary Combustion (1a)" fill="#22c55e" />
-                            <Bar dataKey="Mobile Combustion (1c)" fill="#3b82f6" />
-                            <Bar dataKey="Process Emissions (1b)" fill="#f59e0b" />
-                            <Bar dataKey="Refrigerant Emissions (1d)" fill="#ef4444" />
-                          </BarChart>
-                        </ChartContainer>
-                      </CardContent>
-                    </Card>
-
-                    {/* Summary Statistics */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Scope 1 Total Emissions</CardTitle>
-                        <CardDescription>Current year (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                          {scope1Data.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Data Points:</span>
-                            <span className="font-medium">{scope1Data.length}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Scope 1 Emissions</CardTitle>
-                    <CardDescription>Direct emissions from owned or controlled sources</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-12 text-gray-500">
-                      No Scope 1 emissions data available. Start by adding data in the respective emission categories.
+                      {/* Refrigerant Emissions (1d) */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Refrigerant Emissions (1d)</CardTitle>
+                          <CardDescription className="text-xs">Refrigerant type distribution (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <PieChart>
+                              <Pie
+                                data={getScope1CategoryData('Refrigerant Emissions (1d)')}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={renderCustomizedLabel}
+                                outerRadius={60}
+                                dataKey="emissions"
+                              >
+                                {getScope1CategoryData('Refrigerant Emissions (1d)').map((entry, index) => (
+                                  <Cell key={`cell-1d-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ChartContainer>
+                          <div className="text-center text-xs mt-2 font-semibold">Refrigerant Type</div>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+
+                    {/* Scope 1 Year by Year Comparison */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Scope 1 Emissions by Year</CardTitle>
+                          <CardDescription className="text-xs">2025 vs 2024 comparison by source type</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-64">
+                            <BarChart data={scope1YearlyData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                              <YAxis tick={{ fontSize: 10 }} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Bar dataKey="Stationary Combustion (1a)" fill="#22c55e" />
+                              <Bar dataKey="Mobile Combustion (1c)" fill="#3b82f6" />
+                              <Bar dataKey="Process Emissions (1b)" fill="#f59e0b" />
+                              <Bar dataKey="Refrigerant Emissions (1d)" fill="#ef4444" />
+                            </BarChart>
+                          </ChartContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Summary Statistics */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Scope 1 Total Emissions</CardTitle>
+                          <CardDescription>Current year (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-green-600">
+                            {scope1Data.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">Data Points:</span>
+                              <span className="font-medium">{scope1Data.length}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Scope 1 Emissions</CardTitle>
+                      <CardDescription>Direct emissions from owned or controlled sources</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-12 text-gray-500">
+                        No Scope 1 emissions data available. Start by adding data in the respective emission categories.
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="scope2" className="space-y-6">
-              {/* Scope 2 Charts in One Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Year Comparison Bar Chart */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">CO₂e Emissions Year Comparison</CardTitle>
-                    <CardDescription className="text-xs">2024 vs 2025</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <BarChart data={yearComparisonData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="emissions" />
-                      </BarChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Monthly Emissions Pie Chart - Only show if there's monthly data */}
-                {monthlyData.length > 0 ? (
+              <button
+                className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => generatePDFfromSection('scope2-section', 'scope2-dashboard.pdf')}
+              >
+                Generate PDF
+              </button>
+              <div id="scope2-section">
+                {/* Scope 2 Charts in One Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Year Comparison Bar Chart */}
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
-                      <CardDescription className="text-xs">Direct billing only</CardDescription>
+                      <CardTitle className="text-sm">CO₂e Emissions Year Comparison</CardTitle>
+                      <CardDescription className="text-xs">2024 vs 2025</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <BarChart data={yearComparisonData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="emissions" />
+                        </BarChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Monthly Emissions Pie Chart - Only show if there's monthly data */}
+                  {monthlyData.length > 0 ? (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
+                        <CardDescription className="text-xs">Direct billing only</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <PieChart>
+                            <Pie
+                              data={monthlyData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderMonthlyLabel}
+                              outerRadius={60}
+                              dataKey="emissions"
+                            >
+                              {monthlyData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
+                        <CardDescription className="text-xs">No monthly data available</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                          Monthly breakdown not available for area-based calculations
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Location Emissions Pie Chart */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">CO₂e Emissions by Location (2025)</CardTitle>
+                      <CardDescription className="text-xs">All office locations</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ChartContainer config={chartConfig} className="h-48">
                         <PieChart>
                           <Pie
-                            data={monthlyData}
+                            data={locationData}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={renderMonthlyLabel}
+                            label={renderLocationLabel}
                             outerRadius={60}
                             dataKey="emissions"
                           >
-                            {monthlyData.map((entry, index) => (
+                            {locationData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.fill} />
                             ))}
                           </Pie>
@@ -1252,585 +1321,561 @@ const Dashboard = () => {
                       </ChartContainer>
                     </CardContent>
                   </Card>
-                ) : (
+                </div>
+
+                {/* Summary Statistics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Monthly CO₂e Emissions (2025)</CardTitle>
-                      <CardDescription className="text-xs">No monthly data available</CardDescription>
+                    <CardHeader>
+                      <CardTitle>Total Emissions</CardTitle>
+                      <CardDescription>Current year (2025)</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                        Monthly breakdown not available for area-based calculations
+                      <div className="text-2xl font-bold text-green-600">
+                        {scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0).toFixed(2)} kgCO₂e
                       </div>
                     </CardContent>
                   </Card>
-                )}
 
-                {/* Location Emissions Pie Chart */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">CO₂e Emissions by Location (2025)</CardTitle>
-                    <CardDescription className="text-xs">All office locations</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <PieChart>
-                        <Pie
-                          data={locationData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={renderLocationLabel}
-                          outerRadius={60}
-                          dataKey="emissions"
-                        >
-                          {locationData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Active Locations</CardTitle>
+                      <CardDescription>Reporting emissions</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {locationData.length}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Summary Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Emissions</CardTitle>
-                    <CardDescription>Current year (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {scope2Data.reduce((sum, item) => sum + calculateCO2Emission(item), 0).toFixed(2)} kgCO₂e
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Locations</CardTitle>
-                    <CardDescription>Reporting emissions</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {locationData.length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Data Points</CardTitle>
-                    <CardDescription>Total entries recorded</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">
-                      {scope2Data.length}
-                    </div>
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Data Points</CardTitle>
+                      <CardDescription>Total entries recorded</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {scope2Data.length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="scope3" className="space-y-6">
-              {scope3Data.length > 0 ? (
-                <>
-                  {/* Scope 3 Pie Charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Paper Types Pie Chart */}
-                    {getScope3PaperTypeData().length > 0 ? (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
-                          <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                                                  <ChartContainer config={chartConfig} className="h-48">
-                          <PieChart>
-                            <Pie
-                              data={getScope3PaperTypeData()}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={60}
-                              dataKey="emissions"
-                            >
-                              {getScope3PaperTypeData().map((entry, index) => (
-                                <Cell key={`cell-paper-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="text-center text-xs mt-2 font-semibold">Paper Type</div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
-                          <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                            No paper waste data available.
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
+              <button
+                className="mb-4 px-4 py-2 bg-yellow-600 text-white rounded"
+                onClick={() => generatePDFfromSection('scope3-section', 'scope3-dashboard.pdf')}
+              >
+                Generate PDF
+              </button>
+              <div id="scope3-section">
+                {scope3Data.length > 0 ? (
+                  <>
+                    {/* Scope 3 Pie Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Paper Types Pie Chart */}
+                      {getScope3PaperTypeData().length > 0 ? (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
+                            <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-48">
+                              <PieChart>
+                                <Pie
+                                  data={getScope3PaperTypeData()}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={renderCustomizedLabel}
+                                  outerRadius={60}
+                                  dataKey="emissions"
+                                >
+                                  {getScope3PaperTypeData().map((entry, index) => (
+                                    <Cell key={`cell-paper-${index}`} fill={entry.fill} />
+                                  ))}
+                                </Pie>
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                              </PieChart>
+                            </ChartContainer>
+                            <div className="text-center text-xs mt-2 font-semibold">Paper Type</div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
+                            <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                              No paper waste data available.
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
 
-                    {/* Water Locations Pie Chart - Only show if there's direct billing data */}
-                    {scope3WaterLocationData.length > 0 ? (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Water Emissions by Location</CardTitle>
-                          <CardDescription className="text-xs">Direct billing only</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <ChartContainer config={chartConfig} className="h-48">
-                            <PieChart>
-                              <Pie
-                                data={scope3WaterLocationData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={renderLocationLabel}
-                                outerRadius={60}
-                                dataKey="emissions"
-                              >
-                                {scope3WaterLocationData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                              </Pie>
-                              <ChartTooltip content={<ChartTooltipContent />} />
-                            </PieChart>
-                          </ChartContainer>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Water Emissions by Location</CardTitle>
-                          <CardDescription className="text-xs">No direct billing data available</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                            Location breakdown not available for area-based calculations
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
+                      {/* Water Locations Pie Chart - Only show if there's direct billing data */}
+                      {scope3WaterLocationData.length > 0 ? (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Water Emissions by Location</CardTitle>
+                            <CardDescription className="text-xs">Direct billing only</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-48">
+                              <PieChart>
+                                <Pie
+                                  data={scope3WaterLocationData}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={renderLocationLabel}
+                                  outerRadius={60}
+                                  dataKey="emissions"
+                                >
+                                  {scope3WaterLocationData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                  ))}
+                                </Pie>
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                              </PieChart>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Water Emissions by Location</CardTitle>
+                            <CardDescription className="text-xs">No direct billing data available</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                              Location breakdown not available for area-based calculations
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
 
-                    {/* Water Monthly Emissions Pie Chart - Only show if there's direct billing data */}
-                    {getScope3WaterMonthlyData().length > 0 ? (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
-                          <CardDescription className="text-xs">Direct billing only (2025)</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <ChartContainer config={chartConfig} className="h-48">
-                            <PieChart>
-                              <Pie
-                                data={getScope3WaterMonthlyData()}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={renderMonthlyLabel}
-                                outerRadius={60}
-                                dataKey="emissions"
-                              >
-                                {getScope3WaterMonthlyData().map((entry, index) => (
-                                  <Cell key={`cell-monthly-${index}`} fill={entry.fill} />
-                                ))}
-                              </Pie>
-                              <ChartTooltip content={<ChartTooltipContent />} />
-                            </PieChart>
-                          </ChartContainer>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
-                          <CardDescription className="text-xs">No monthly data available</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                            Monthly breakdown not available for area-based calculations
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-
-                  {/* Scope 3 Year by Year Comparison */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {/* Paper Yearly Comparison */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Paper Emissions by Year</CardTitle>
-                        <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <BarChart data={getScope3PaperYearlyData()}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="emissions" fill="#22c55e" />
-                          </BarChart>
-                        </ChartContainer>
-                      </CardContent>
-                    </Card>
-
-                    {/* Water Yearly Comparison */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Water Emissions by Year</CardTitle>
-                        <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={chartConfig} className="h-48">
-                          <BarChart data={getScope3WaterYearlyData()}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="emissions" fill="#3b82f6" />
-                          </BarChart>
-                        </ChartContainer>
-                      </CardContent>
-                    </Card>
-
-                    {/* Summary Statistics */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Scope 3 Total Emissions</CardTitle>
-                        <CardDescription>Current year (2025)</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                          {scope3Data.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Paper Emissions:</span>
-                            <span className="font-medium">
-                              {scope3Data.filter(item => item.source_type === 'Paper')
-                                .reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Water Emissions:</span>
-                            <span className="font-medium">
-                              {scope3Data.filter(item => item.source_type === 'Water')
-                                .reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Data Points:</span>
-                            <span className="font-medium">{scope3Data.length}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Scope 3 Emissions</CardTitle>
-                    <CardDescription>Indirect emissions from value chain</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-12 text-gray-500">
-                      No Scope 3 emissions data available. Start by adding data in the Paper and Water sections.
+                      {/* Water Monthly Emissions Pie Chart - Only show if there's direct billing data */}
+                      {getScope3WaterMonthlyData().length > 0 ? (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
+                            <CardDescription className="text-xs">Direct billing only (2025)</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-48">
+                              <PieChart>
+                                <Pie
+                                  data={getScope3WaterMonthlyData()}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={renderMonthlyLabel}
+                                  outerRadius={60}
+                                  dataKey="emissions"
+                                >
+                                  {getScope3WaterMonthlyData().map((entry, index) => (
+                                    <Cell key={`cell-monthly-${index}`} fill={entry.fill} />
+                                  ))}
+                                </Pie>
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                              </PieChart>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
+                            <CardDescription className="text-xs">No monthly data available</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                              Monthly breakdown not available for area-based calculations
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+
+                    {/* Scope 3 Year by Year Comparison */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Paper Yearly Comparison */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Paper Emissions by Year</CardTitle>
+                          <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <BarChart data={getScope3PaperYearlyData()}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                              <YAxis tick={{ fontSize: 10 }} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Bar dataKey="emissions" fill="#22c55e" />
+                            </BarChart>
+                          </ChartContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Water Yearly Comparison */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Water Emissions by Year</CardTitle>
+                          <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <BarChart data={getScope3WaterYearlyData()}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                              <YAxis tick={{ fontSize: 10 }} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Bar dataKey="emissions" fill="#3b82f6" />
+                            </BarChart>
+                          </ChartContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Summary Statistics */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Scope 3 Total Emissions</CardTitle>
+                          <CardDescription>Current year (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-green-600">
+                            {scope3Data.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">Paper Emissions:</span>
+                              <span className="font-medium">
+                                {scope3Data.filter(item => item.source_type === 'Paper')
+                                  .reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">Water Emissions:</span>
+                              <span className="font-medium">
+                                {scope3Data.filter(item => item.source_type === 'Water')
+                                  .reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0).toFixed(2)} kgCO₂e
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">Data Points:</span>
+                              <span className="font-medium">{scope3Data.length}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Scope 3 Emissions</CardTitle>
+                      <CardDescription>Indirect emissions from value chain</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-12 text-gray-500">
+                        No Scope 3 emissions data available. Start by adding data in the Paper and Water sections.
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </TabsContent>
 
         <TabsContent value="social" className="space-y-6">
-          {employees.length > 0 ? (
-            <>
-              {/* Social Charts Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {/* Gender Distribution Pie Chart */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Gender Distribution</CardTitle>
-                    <CardDescription className="text-xs">All employees (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <PieChart>
-                        <Pie
-                          data={genderDistributionData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={renderSocialLabel}
-                          outerRadius={60}
-                          dataKey="value"
-                        >
-                          {genderDistributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Executive Gender Distribution */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Executive Gender Distribution</CardTitle>
-                    <CardDescription className="text-xs">Leadership positions (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <PieChart>
-                        <Pie
-                          data={executiveGenderData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={renderSocialLabel}
-                          outerRadius={60}
-                          dataKey="value"
-                        >
-                          {executiveGenderData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Age Distribution */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Age Distribution</CardTitle>
-                    <CardDescription className="text-xs">Employee age groups (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <PieChart>
-                        <Pie
-                          data={ageDistributionData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={renderSocialLabel}
-                          outerRadius={60}
-                          dataKey="value"
-                        >
-                          {ageDistributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Employees by Country */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Employees by Country</CardTitle>
-                    <CardDescription className="text-xs">Geographic distribution (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <BarChart data={employeesByCountryData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="country" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" />
-                      </BarChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Turnover by Gender */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Turnover Rate by Gender</CardTitle>
-                    <CardDescription className="text-xs">Percentage by gender (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <BarChart data={turnoverByGenderData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="gender" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="turnover" />
-                      </BarChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Turnover by Age Group */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Turnover Rate by Age Group</CardTitle>
-                    <CardDescription className="text-xs">Percentage by age range (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-48">
-                      <BarChart data={turnoverByAgeData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="ageGroup" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="turnover" />
-                      </BarChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Social Summary Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Employees</CardTitle>
-                    <CardDescription>Current workforce (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {employees2025.length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gender Ratio</CardTitle>
-                    <CardDescription>Male to Female (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">
-                      {genderDistributionData[0]?.value || 0}:{genderDistributionData[1]?.value || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Executives</CardTitle>
-                    <CardDescription>Leadership positions (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {employees2025.filter(emp => emp.position === 'Yes').length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Countries</CardTitle>
-                    <CardDescription>Operating locations (2025)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {employeesByCountryData.length}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Social Year Comparison Charts */}
-              <div className="mt-8">
-                <h2 className="text-lg font-bold mb-4">Year-by-Year Comparison</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Total Employees by Year */}
+          <button
+            className="mb-4 px-4 py-2 bg-purple-600 text-white rounded"
+            onClick={() => generatePDFfromSection('social-section', 'social-dashboard.pdf')}
+          >
+            Generate PDF
+          </button>
+          <div id="social-section">
+            {employees.length > 0 ? (
+              <>
+                {/* Social Charts Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {/* Gender Distribution Pie Chart */}
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Total Employees by Year</CardTitle>
-                      <CardDescription className="text-xs">Average number of employees</CardDescription>
+                      <CardTitle className="text-sm">Gender Distribution</CardTitle>
+                      <CardDescription className="text-xs">All employees (2025)</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ChartContainer config={chartConfig} className="h-48">
-                        <BarChart data={socialYearStats}>
+                        <PieChart>
+                          <Pie
+                            data={genderDistributionData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderSocialLabel}
+                            outerRadius={60}
+                            dataKey="value"
+                          >
+                            {genderDistributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Executive Gender Distribution */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Executive Gender Distribution</CardTitle>
+                      <CardDescription className="text-xs">Leadership positions (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <PieChart>
+                          <Pie
+                            data={executiveGenderData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderSocialLabel}
+                            outerRadius={60}
+                            dataKey="value"
+                          >
+                            {executiveGenderData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Age Distribution */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Age Distribution</CardTitle>
+                      <CardDescription className="text-xs">Employee age groups (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <PieChart>
+                          <Pie
+                            data={ageDistributionData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderSocialLabel}
+                            outerRadius={60}
+                            dataKey="value"
+                          >
+                            {ageDistributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Employees by Country */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Employees by Country</CardTitle>
+                      <CardDescription className="text-xs">Geographic distribution (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-48">
+                        <BarChart data={employeesByCountryData}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <XAxis dataKey="country" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="avgEmployees" fill="#3b82f6" />
+                          <Bar dataKey="count" />
                         </BarChart>
                       </ChartContainer>
                     </CardContent>
                   </Card>
-                  {/* Turnover Rate by Year */}
+
+                  {/* Turnover by Gender */}
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Turnover Rate by Year</CardTitle>
-                      <CardDescription className="text-xs">% of employees who left</CardDescription>
+                      <CardTitle className="text-sm">Turnover Rate by Gender</CardTitle>
+                      <CardDescription className="text-xs">Percentage by gender (2025)</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ChartContainer config={chartConfig} className="h-48">
-                        <BarChart data={socialYearStats}>
+                        <BarChart data={turnoverByGenderData}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <XAxis dataKey="gender" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="turnoverRate" fill="#ef4444" />
+                          <Bar dataKey="turnover" />
                         </BarChart>
                       </ChartContainer>
                     </CardContent>
                   </Card>
-                  {/* New Hires by Year */}
+
+                  {/* Turnover by Age Group */}
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">New Hires by Year</CardTitle>
-                      <CardDescription className="text-xs">Employees hired each year</CardDescription>
+                      <CardTitle className="text-sm">Turnover Rate by Age Group</CardTitle>
+                      <CardDescription className="text-xs">Percentage by age range (2025)</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ChartContainer config={chartConfig} className="h-48">
-                        <BarChart data={socialYearStats}>
+                        <BarChart data={turnoverByAgeData}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                          <XAxis dataKey="ageGroup" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="newHires" fill="#22c55e" />
+                          <Bar dataKey="turnover" />
                         </BarChart>
                       </ChartContainer>
                     </CardContent>
                   </Card>
                 </div>
-              </div>
-            </>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Social Impact Metrics</CardTitle>
-                <CardDescription>Upload employee data to view social metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  Social metrics will be available once you upload employee data in the Employee Profile section.
+
+                {/* Social Summary Statistics */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Total Employees</CardTitle>
+                      <CardDescription>Current workforce (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {employees2025.length}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Gender Ratio</CardTitle>
+                      <CardDescription>Male to Female (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {genderDistributionData[0]?.value || 0}:{genderDistributionData[1]?.value || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Executives</CardTitle>
+                      <CardDescription>Leadership positions (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                        {employees2025.filter(emp => emp.position === 'Yes').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Countries</CardTitle>
+                      <CardDescription>Operating locations (2025)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {employeesByCountryData.length}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+
+                {/* Social Year Comparison Charts */}
+                <div className="mt-8">
+                  <h2 className="text-lg font-bold mb-4">Year-by-Year Comparison</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Total Employees by Year */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Total Employees by Year</CardTitle>
+                        <CardDescription className="text-xs">Average number of employees</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <BarChart data={socialYearStats}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="avgEmployees" fill="#3b82f6" />
+                          </BarChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+                    {/* Turnover Rate by Year */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Turnover Rate by Year</CardTitle>
+                        <CardDescription className="text-xs">% of employees who left</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <BarChart data={socialYearStats}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="turnoverRate" fill="#ef4444" />
+                          </BarChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+                    {/* New Hires by Year */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">New Hires by Year</CardTitle>
+                        <CardDescription className="text-xs">Employees hired each year</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <BarChart data={socialYearStats}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="newHires" fill="#22c55e" />
+                          </BarChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Social Impact Metrics</CardTitle>
+                  <CardDescription>Upload employee data to view social metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-gray-500">
+                    Social metrics will be available once you upload employee data in the Employee Profile section.
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="governance" className="space-y-6">
