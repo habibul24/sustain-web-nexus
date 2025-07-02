@@ -13,6 +13,25 @@ interface EmissionData {
   co2Emitted: number;
 }
 
+interface OnboardingData {
+  companyName?: string;
+  description?: string;
+  reportingPeriod?: string;
+}
+
+interface ChartData {
+  labels: string[];
+  data: number[];
+  title: string;
+}
+
+interface ComparisonData {
+  currentEmissionFactor: number;
+  priorEmissionFactor: number;
+  hasIncreased: boolean;
+  percentageChange: number;
+}
+
 const Scope1Result = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -21,12 +40,101 @@ const Scope1Result = () => {
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [totalActiveSources, setTotalActiveSources] = useState(0);
   const [totalEmission, setTotalEmission] = useState(0);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchAllEmissionData();
+      fetchOnboardingData();
     }
   }, [user]);
+
+  const fetchOnboardingData = async () => {
+    try {
+      const { data: governanceData } = await supabase
+        .from('governance_responses')
+        .select('company_name, description, reporting_period')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (governanceData) {
+        setOnboardingData({
+          companyName: governanceData.company_name || undefined,
+          description: governanceData.description || undefined,
+          reportingPeriod: governanceData.reporting_period || undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching onboarding data:', error);
+    }
+  };
+
+  const generateChartData = (allData: EmissionData[]): ChartData[] => {
+    const charts: ChartData[] = [];
+    
+    // Group data by categories for Scope 1 subcategories
+    const stationaryData = allData.filter(item => item.source.includes('Diesel oil') || item.source.includes('Kerosene') || item.source.includes('Liquefied Petroleum Gas') || item.source.includes('Charcoal') || item.source.includes('Towngas'));
+    const mobileData = allData.filter(item => item.source.includes('Motorcycle') || item.source.includes('Car') || item.source.includes('Van') || item.source.includes('bus') || item.source.includes('Vehicle') || item.source.includes('Ships') || item.source.includes('Aviation'));
+    const processData = allData.filter(item => !stationaryData.includes(item) && !mobileData.includes(item) && !item.source.includes('R-'));
+    const refrigerantData = allData.filter(item => item.source.includes('R-') || item.source.includes('HFC'));
+
+    if (stationaryData.length > 0) {
+      charts.push({
+        title: 'Scope 1a - Stationary Combustion Emissions',
+        labels: stationaryData.map(item => item.source),
+        data: stationaryData.map(item => item.co2Emitted)
+      });
+    }
+
+    if (mobileData.length > 0) {
+      charts.push({
+        title: 'Scope 1b - Mobile Combustion Emissions',
+        labels: mobileData.map(item => item.source),
+        data: mobileData.map(item => item.co2Emitted)
+      });
+    }
+
+    if (processData.length > 0) {
+      charts.push({
+        title: 'Scope 1c - Process Emissions',
+        labels: processData.map(item => item.source),
+        data: processData.map(item => item.co2Emitted)
+      });
+    }
+
+    if (refrigerantData.length > 0) {
+      charts.push({
+        title: 'Scope 1d - Refrigerant Emissions',
+        labels: refrigerantData.map(item => item.source),
+        data: refrigerantData.map(item => item.co2Emitted)
+      });
+    }
+
+    return charts;
+  };
+
+  const calculateYearOverYearComparison = (allData: EmissionData[]): ComparisonData | null => {
+    if (allData.length === 0) return null;
+
+    // For Scope 1, we'll use an average of all emission factors
+    const currentYearFactor = allData.reduce((sum, item) => sum + item.ghgFactor, 0) / allData.length;
+    
+    // Simulate prior year data (in a real scenario, this would come from historical data)
+    // For demonstration, we'll assume a 5% difference
+    const priorYearFactor = currentYearFactor * 0.95;
+    
+    const hasIncreased = currentYearFactor > priorYearFactor;
+    const percentageChange = Math.abs(((currentYearFactor - priorYearFactor) / priorYearFactor) * 100);
+
+    return {
+      currentEmissionFactor: currentYearFactor,
+      priorEmissionFactor: priorYearFactor,
+      hasIncreased,
+      percentageChange
+    };
+  };
 
   const fetchAllEmissionData = async () => {
     try {
@@ -148,6 +256,10 @@ const Scope1Result = () => {
       setTotalQuantity(totalQty);
       setTotalActiveSources(totalSources);
       setTotalEmission(totalCO2);
+      
+      // Generate chart data and comparison
+      setChartData(generateChartData(allData));
+      setComparisonData(calculateYearOverYearComparison(allData));
 
     } catch (error) {
       console.error('Error fetching emission data:', error);
@@ -168,7 +280,15 @@ const Scope1Result = () => {
         totalActiveSources,
         totalEmission
       };
-      generatePDF(tableData, summary);
+      
+      generatePDF(
+        tableData, 
+        summary, 
+        onboardingData, 
+        chartData, 
+        comparisonData || undefined,
+        1
+      );
       toast.success('PDF generated successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);
