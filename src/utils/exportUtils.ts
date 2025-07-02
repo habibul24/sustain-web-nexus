@@ -18,14 +18,15 @@ interface SummaryData {
 
 interface OnboardingData {
   companyName?: string;
-  description?: string;
-  reportingPeriod?: string;
+  operationsDescription?: string;
+  reportingYearEndDate?: string;
 }
 
 interface ChartData {
   labels: string[];
   data: number[];
   title: string;
+  type: 'pie' | 'bar' | 'doughnut';
 }
 
 interface ComparisonData {
@@ -35,6 +36,98 @@ interface ComparisonData {
   percentageChange: number;
 }
 
+// Canvas-based chart generation
+const generateChartCanvas = (chartData: ChartData): HTMLCanvasElement => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 300;
+  const ctx = canvas.getContext('2d')!;
+
+  // Clear canvas
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (chartData.type === 'doughnut' || chartData.type === 'pie') {
+    // Generate pie/doughnut chart
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+    const total = chartData.data.reduce((sum, val) => sum + val, 0);
+    
+    let currentAngle = 0;
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+    
+    chartData.data.forEach((value, index) => {
+      const sliceAngle = (value / total) * 2 * Math.PI;
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      ctx.closePath();
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      currentAngle += sliceAngle;
+    });
+    
+    // Add legend
+    chartData.labels.forEach((label, index) => {
+      const y = 20 + index * 20;
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fillRect(10, y, 15, 15);
+      ctx.fillStyle = 'black';
+      ctx.font = '12px Arial';
+      ctx.fillText(`${label}: ${chartData.data[index].toFixed(2)}`, 30, y + 12);
+    });
+    
+  } else if (chartData.type === 'bar') {
+    // Generate bar chart
+    const maxValue = Math.max(...chartData.data);
+    const barWidth = (canvas.width - 80) / chartData.data.length;
+    const chartHeight = canvas.height - 80;
+    
+    chartData.data.forEach((value, index) => {
+      const barHeight = (value / maxValue) * chartHeight;
+      const x = 40 + index * barWidth;
+      const y = canvas.height - 40 - barHeight;
+      
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x, y, barWidth - 10, barHeight);
+      
+      // Add value labels
+      ctx.fillStyle = 'black';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(value.toFixed(1), x + barWidth/2, y - 5);
+      
+      // Add x-axis labels
+      ctx.save();
+      ctx.translate(x + barWidth/2, canvas.height - 10);
+      ctx.rotate(-Math.PI/4);
+      ctx.fillText(chartData.labels[index], 0, 0);
+      ctx.restore();
+    });
+    
+    // Add y-axis
+    ctx.beginPath();
+    ctx.moveTo(40, 20);
+    ctx.lineTo(40, canvas.height - 40);
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    
+    // Add x-axis
+    ctx.beginPath();
+    ctx.moveTo(40, canvas.height - 40);
+    ctx.lineTo(canvas.width - 20, canvas.height - 40);
+    ctx.stroke();
+  }
+  
+  return canvas;
+};
+
 const addChartToPDF = (doc: jsPDF, chartData: ChartData[], startY: number): number => {
   let currentY = startY;
   
@@ -43,24 +136,43 @@ const addChartToPDF = (doc: jsPDF, chartData: ChartData[], startY: number): numb
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text(chart.title, 14, currentY);
-    currentY += 10;
+    currentY += 15;
     
-    // Create a simple table representation of the chart data
-    const chartTableData = chart.labels.map((label, i) => [
-      label,
-      chart.data[i]?.toFixed(2) || '0.00'
-    ]);
-    
-    autoTable(doc, {
-      head: [['Category', 'Value (kgCO2e)']],
-      body: chartTableData,
-      startY: currentY,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [34, 197, 94] },
-      margin: { left: 14, right: 14 }
-    });
-    
-    currentY = (doc as any).lastAutoTable.finalY + 15;
+    try {
+      // Generate chart as canvas and add to PDF
+      const canvas = generateChartCanvas(chart);
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 120;
+      const imgHeight = 90;
+      
+      // Check if we need a new page
+      if (currentY + imgHeight > 250) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.addImage(imgData, 'PNG', 14, currentY, imgWidth, imgHeight);
+      currentY += imgHeight + 20;
+      
+    } catch (error) {
+      console.error('Error adding chart to PDF:', error);
+      // Fallback to table representation
+      const chartTableData = chart.labels.map((label, i) => [
+        label,
+        chart.data[i]?.toFixed(2) || '0.00'
+      ]);
+      
+      autoTable(doc, {
+        head: [['Category', 'Value (kgCO2e)']],
+        body: chartTableData,
+        startY: currentY,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [34, 197, 94] },
+        margin: { left: 14, right: 14 }
+      });
+      
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
     
     // Check if we need a new page
     if (currentY > 250) {
@@ -90,6 +202,8 @@ export const generatePDF = (
   comparisonData?: ComparisonData,
   scopeNumber: number = 1
 ) => {
+  console.log('Generating PDF with onboarding data:', onboardingData);
+  
   const doc = new jsPDF();
   let currentY = 22;
   
@@ -100,7 +214,7 @@ export const generatePDF = (
   currentY += 20;
   
   // Add onboarding information if available
-  if (onboardingData) {
+  if (onboardingData && (onboardingData.companyName || onboardingData.operationsDescription || onboardingData.reportingYearEndDate)) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('Company Information:', 14, currentY);
@@ -114,14 +228,14 @@ export const generatePDF = (
       currentY += 8;
     }
     
-    if (onboardingData.description) {
-      const descriptionLines = doc.splitTextToSize(`Description: ${onboardingData.description}`, 180);
+    if (onboardingData.operationsDescription) {
+      const descriptionLines = doc.splitTextToSize(`Operations Description: ${onboardingData.operationsDescription}`, 180);
       doc.text(descriptionLines, 14, currentY);
       currentY += descriptionLines.length * 6;
     }
     
-    if (onboardingData.reportingPeriod) {
-      doc.text(`Reporting Period End Date: ${onboardingData.reportingPeriod}`, 14, currentY);
+    if (onboardingData.reportingYearEndDate) {
+      doc.text(`Reporting Year End Date: ${onboardingData.reportingYearEndDate}`, 14, currentY);
       currentY += 8;
     }
     

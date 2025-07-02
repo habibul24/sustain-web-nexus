@@ -54,12 +54,20 @@ const Scope1Result = () => {
 
   const fetchOnboardingData = async () => {
     try {
+      console.log('Fetching onboarding data for user:', user?.id);
+      
       // Fetch from user_profiles table
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .select('company_name, operations_description, reporting_year_end_date')
         .eq('id', user?.id)
         .single();
+
+      console.log('Profile data:', profileData, 'Error:', profileError);
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile data:', profileError);
+      }
 
       setOnboardingData({
         companyName: profileData?.company_name || undefined,
@@ -76,7 +84,7 @@ const Scope1Result = () => {
     
     if (allData.length === 0) return charts;
 
-    // Group data by categories for Scope 1 subcategories (same as dashboard logic)
+    // Group data by categories for Scope 1 subcategories
     const stationaryData = allData.filter(item => 
       item.source.includes('Diesel oil') || 
       item.source.includes('Kerosene') || 
@@ -107,7 +115,6 @@ const Scope1Result = () => {
       item.source.includes('HFC')
     );
 
-    // Create the same charts as in Dashboard
     // 1. Scope 1 Emissions by Subcategory (Doughnut chart)
     const categoryData = [];
     const categoryLabels = [];
@@ -154,7 +161,6 @@ const Scope1Result = () => {
     }
 
     // 2. Monthly Scope 1 Emissions Trend (Bar chart)
-    // For now, we'll create a simplified monthly view based on available data
     const monthlyData = Array(12).fill(0);
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -350,6 +356,7 @@ const Scope1Result = () => {
 
   const handleGeneratePDF = () => {
     try {
+      console.log('Generating PDF with onboarding data:', onboardingData);
       const summary = {
         totalQuantity,
         totalActiveSources,
