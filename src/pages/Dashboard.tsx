@@ -153,13 +153,13 @@ const Dashboard = () => {
         })),
         ...(mobileData || []).map(item => ({
           ...item,
-          source_type: 'Mobile Combustion (1b)',
+          source_type: 'Mobile Combustion (1c)',
           quantity_used: item.fuel_per_vehicle,
           emissions_kg_co2: item.fuel_per_vehicle * (item.emission_factor || 0)
         })),
         ...(processData || []).map(item => ({
           ...item,
-          source_type: 'Process Emissions (1c)',
+          source_type: 'Process Emissions (1b)',
           emissions_kg_co2: item.quantity_used * (item.emission_factor || 0)
         })),
         ...(refrigerantData || []).map(item => ({
@@ -177,7 +177,7 @@ const Dashboard = () => {
 
   const fetchScope3Data = async () => {
     try {
-      // Fetch Paper data (3a)
+      // Fetch all Paper data (3a)
       const { data: paperData, error: paperError } = await supabase
         .from('paper')
         .select('*')
@@ -197,13 +197,36 @@ const Dashboard = () => {
 
       if (waterError) throw waterError;
 
-      // Combine all Scope 3 data
+      // Map each paper row into three records for Landfill, Recycle, Combust
+      let paperRecords: any[] = [];
+      if (Array.isArray(paperData)) {
+        paperRecords = paperData.flatMap(row => [
+          {
+            source_type: 'Paper',
+            waste_type: 'Landfill',
+            quantity_used: row.quantity_landfill || 0,
+            emission_factor: row.carbon_dioxide_emitted_co2_landfill || 0,
+            emissions_kg_co2: (row.quantity_landfill || 0) * (row.carbon_dioxide_emitted_co2_landfill || 0)
+          },
+          {
+            source_type: 'Paper',
+            waste_type: 'Recycle',
+            quantity_used: row.quantity_recycle || 0,
+            emission_factor: row.carbon_dioxide_emitted_co2_recycle || 0,
+            emissions_kg_co2: (row.quantity_recycle || 0) * (row.carbon_dioxide_emitted_co2_recycle || 0)
+          },
+          {
+            source_type: 'Paper',
+            waste_type: 'Combust',
+            quantity_used: row.quantity_combust || 0,
+            emission_factor: row.carbon_dioxide_emitted_co2_combust || 0,
+            emissions_kg_co2: (row.quantity_combust || 0) * (row.carbon_dioxide_emitted_co2_combust || 0)
+          }
+        ]);
+      }
+
       const combinedData = [
-        ...(paperData || []).map(item => ({
-          ...item,
-          source_type: 'Paper',
-          emissions_kg_co2: item.emissions_kg_co2 || 0
-        })),
+        ...paperRecords,
         ...(waterData || []).map(item => ({
           ...item,
           source_type: 'Water',
@@ -247,24 +270,58 @@ const Dashboard = () => {
   const getScope1PieData = () => {
     const scope1Emissions = scope1Data.reduce((acc, item) => {
       const sourceType = item.source_type;
-      const emissions = item.emissions_kg_co2 || 0;
-      
+      const emissions = typeof item.emissions_kg_co2 === 'number' ? item.emissions_kg_co2 : 0;
       acc[sourceType] = (acc[sourceType] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
-
     const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
-    
     return Object.entries(scope1Emissions).map(([source, emissions], index) => ({
       source,
-      emissions: Number(emissions.toFixed(2)),
+      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
       fill: colors[index % colors.length]
     }));
   };
 
+  // Corrected Scope 1 category data functions and order
+  const getScope1CategoryData = (category: string) => {
+    let categoryData: any[] = [];
+    let groupField = '';
+    let label = '';
+    if (category === 'Stationary Combustion (1a)') {
+      categoryData = scope1Data.filter(item => item.source_type === category);
+      groupField = 'source_of_energy';
+      label = 'Fuel Type';
+    } else if (category === 'Process Emissions (1b)') {
+      categoryData = scope1Data.filter(item => item.source_type === category);
+      groupField = 'source_of_energy';
+      label = 'Process Type';
+    } else if (category === 'Mobile Combustion (1c)') {
+      categoryData = scope1Data.filter(item => item.source_type === category);
+      groupField = 'vehicle_fuel_type';
+      label = 'Vehicle Type';
+    } else if (category === 'Refrigerant Emissions (1d)') {
+      categoryData = scope1Data.filter(item => item.source_type === category);
+      groupField = 'refrigerant_type';
+      label = 'Refrigerant Type';
+    }
+    const grouped = categoryData.reduce((acc, item) => {
+      const key = (item[groupField] || 'Unknown').toString();
+      const emissions = typeof item.emissions_kg_co2 === 'number' ? item.emissions_kg_co2 : 0;
+      acc[key] = (acc[key] || 0) + emissions;
+      return acc;
+    }, {} as Record<string, number>);
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+    return Object.entries(grouped).map(([name, emissions], index) => ({
+      name,
+      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
+      fill: colors[index % colors.length],
+      label
+    }));
+  };
+
   const getScope1YearlyData = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
+    // Specifically show 2025 vs 2024 comparison
+    const years = [2024, 2025];
     
     const yearlyData = years.map(year => {
       const yearData = scope1Data.filter(item => 
@@ -274,8 +331,8 @@ const Dashboard = () => {
       const emissions = {
         year: year.toString(),
         'Stationary Combustion (1a)': 0,
-        'Mobile Combustion (1b)': 0,
-        'Process Emissions (1c)': 0,
+        'Mobile Combustion (1c)': 0,
+        'Process Emissions (1b)': 0,
         'Refrigerant Emissions (1d)': 0
       };
       
@@ -295,49 +352,43 @@ const Dashboard = () => {
   // Scope 3 Data Preparation Functions
   const getScope3PaperTypeData = () => {
     const paperData = scope3Data.filter(item => item.source_type === 'Paper');
+    
     const paperTypes = paperData.reduce((acc, item) => {
       const wasteType = item.waste_type || 'Unknown';
+      // Use the pre-calculated emissions_kg_co2 value
       const emissions = item.emissions_kg_co2 || 0;
-      
       acc[wasteType] = (acc[wasteType] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
-
-    const colors = ['#22c55e', '#3b82f6', '#f59e0b'];
     
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b'];
     return Object.entries(paperTypes).map(([type, emissions], index) => ({
       type,
-      emissions: Number(emissions.toFixed(2)),
-      fill: colors[index % colors.length]
+      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
+      fill: colors[index % colors.length],
+      label: 'Paper Type'
     }));
   };
 
   const getScope3WaterLocationData = () => {
-    // Filter water data where bills are received directly (similar to Scope 2)
-    const waterData = scope3Data.filter(item => 
-      item.source_type === 'Water' && item.receives_bills_directly === 'yes'
-    );
-    
+    const waterData = scope3Data.filter(item => item.source_type === 'Water' && item.receives_bills_directly === 'yes');
     const locationEmissions = waterData.reduce((acc, item) => {
       const location = item.location_name || 'Unknown Location';
-      const emissions = item.emissions_kg_co2 || 0;
-      
+      const emissions = typeof item.emissions_kg_co2 === 'number' ? item.emissions_kg_co2 : 0;
       acc[location] = (acc[location] || 0) + emissions;
       return acc;
     }, {} as Record<string, number>);
-
     const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-    
     return Object.entries(locationEmissions).map(([location, emissions], index) => ({
       location,
-      emissions: Number(emissions.toFixed(2)),
+      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
       fill: colors[index % colors.length]
     }));
   };
 
   const getScope3YearlyData = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
+    // Specifically show 2025 vs 2024 comparison
+    const years = [2024, 2025];
     
     const yearlyData = years.map(year => {
       const yearData = scope3Data.filter(item => 
@@ -358,6 +409,83 @@ const Dashboard = () => {
       });
       
       return emissions;
+    });
+    
+    return yearlyData;
+  };
+
+  // New function to get monthly water data for Scope 3
+  const getScope3WaterMonthlyData = () => {
+    // Filter water data where bills are received directly (similar to Scope 2)
+    const waterData = scope3Data.filter(item => 
+      item.source_type === 'Water' && item.receives_bills_directly === 'yes'
+    );
+    
+    const monthlyEmissions = waterData.reduce((acc, item) => {
+      const monthValue = (item as any).month;
+      const monthName = getMonthName(monthValue);
+      const emissions = typeof item.emissions_kg_co2 === 'number' ? item.emissions_kg_co2 : 0;
+      
+      acc[monthName] = (acc[monthName] || 0) + emissions;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const sortedMonths = Object.entries(monthlyEmissions)
+      .map(([month, emissions]) => ({
+        month,
+        emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0
+      }))
+      .sort((a, b) => b.emissions - a.emissions);
+
+    // Color palette for months - each month gets a unique color
+    const colors = [
+      '#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', 
+      '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1',
+      '#14b8a6', '#f43f5e'
+    ];
+
+    return sortedMonths.map((item, index) => ({
+      ...item,
+      fill: colors[index % colors.length],
+      isTop5: index < 5
+    }));
+  };
+
+  // New function to get separate paper yearly data
+  const getScope3PaperYearlyData = () => {
+    const years = [2024, 2025];
+    
+    const yearlyData = years.map(year => {
+      const yearData = scope3Data.filter(item => 
+        item.source_type === 'Paper' && new Date(item.created_at).getFullYear() === year
+      );
+      
+      const totalEmissions = yearData.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0);
+      
+      return {
+        year: year.toString(),
+        emissions: typeof totalEmissions === 'number' ? Number(totalEmissions.toFixed(2)) : 0
+      };
+    });
+    
+    return yearlyData;
+  };
+
+  // New function to get separate water yearly data
+  const getScope3WaterYearlyData = () => {
+    const years = [2024, 2025];
+    
+    const yearlyData = years.map(year => {
+      const yearData = scope3Data.filter(item => 
+        item.source_type === 'Water' && new Date(item.created_at).getFullYear() === year
+      );
+      
+      const totalEmissions = yearData.reduce((sum, item) => sum + (item.emissions_kg_co2 || 0), 0);
+      
+      return {
+        year: year.toString(),
+        emissions: typeof totalEmissions === 'number' ? Number(totalEmissions.toFixed(2)) : 0
+      };
     });
     
     return yearlyData;
@@ -417,7 +545,7 @@ const Dashboard = () => {
     const sortedMonths = Object.entries(monthlyEmissions)
       .map(([month, emissions]) => ({
         month,
-        emissions: Number(emissions.toFixed(2))
+        emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0
       }))
       .sort((a, b) => b.emissions - a.emissions);
 
@@ -451,7 +579,7 @@ const Dashboard = () => {
 
     return Object.entries(locationEmissions).map(([location, emissions], index) => ({
       location,
-      emissions: Number(emissions.toFixed(2)),
+      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
       fill: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][index % 6]
     }));
   };
@@ -897,18 +1025,19 @@ const Dashboard = () => {
             <TabsContent value="scope1" className="space-y-6">
               {scope1Data.length > 0 ? (
                 <>
-                  {/* Scope 1 Pie Charts in One Row */}
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                  {/* Scope 1 Pie Charts - 4 separate charts for each category */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {/* Stationary Combustion (1a) */}
                     <Card>
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Scope 1 Emissions Distribution</CardTitle>
-                        <CardDescription className="text-xs">All emission sources (2025)</CardDescription>
+                        <CardTitle className="text-sm">Stationary Combustion (1a)</CardTitle>
+                        <CardDescription className="text-xs">Fuel type distribution (2025)</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ChartContainer config={chartConfig} className="h-48">
                           <PieChart>
                             <Pie
-                              data={scope1PieData}
+                              data={getScope1CategoryData('Stationary Combustion (1a)')}
                               cx="50%"
                               cy="50%"
                               labelLine={false}
@@ -916,13 +1045,101 @@ const Dashboard = () => {
                               outerRadius={60}
                               dataKey="emissions"
                             >
-                              {scope1PieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              {getScope1CategoryData('Stationary Combustion (1a)').map((entry, index) => (
+                                <Cell key={`cell-1a-${index}`} fill={entry.fill} />
                               ))}
                             </Pie>
                             <ChartTooltip content={<ChartTooltipContent />} />
                           </PieChart>
                         </ChartContainer>
+                        <div className="text-center text-xs mt-2 font-semibold">Fuel Type</div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Process Emissions (1b) */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Process Emissions (1b)</CardTitle>
+                        <CardDescription className="text-xs">Process type distribution (2025)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <PieChart>
+                            <Pie
+                              data={getScope1CategoryData('Process Emissions (1b)')}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderCustomizedLabel}
+                              outerRadius={60}
+                              dataKey="emissions"
+                            >
+                              {getScope1CategoryData('Process Emissions (1b)').map((entry, index) => (
+                                <Cell key={`cell-1b-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                        <div className="text-center text-xs mt-2 font-semibold">Process Type</div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Mobile Combustion (1c) */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Mobile Combustion (1c)</CardTitle>
+                        <CardDescription className="text-xs">Vehicle type distribution (2025)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <PieChart>
+                            <Pie
+                              data={getScope1CategoryData('Mobile Combustion (1c)')}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderCustomizedLabel}
+                              outerRadius={60}
+                              dataKey="emissions"
+                            >
+                              {getScope1CategoryData('Mobile Combustion (1c)').map((entry, index) => (
+                                <Cell key={`cell-1c-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                        <div className="text-center text-xs mt-2 font-semibold">Vehicle Type</div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Refrigerant Emissions (1d) */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Refrigerant Emissions (1d)</CardTitle>
+                        <CardDescription className="text-xs">Refrigerant type distribution (2025)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <PieChart>
+                            <Pie
+                              data={getScope1CategoryData('Refrigerant Emissions (1d)')}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderCustomizedLabel}
+                              outerRadius={60}
+                              dataKey="emissions"
+                            >
+                              {getScope1CategoryData('Refrigerant Emissions (1d)').map((entry, index) => (
+                                <Cell key={`cell-1d-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                        <div className="text-center text-xs mt-2 font-semibold">Refrigerant Type</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -932,7 +1149,7 @@ const Dashboard = () => {
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Scope 1 Emissions by Year</CardTitle>
-                        <CardDescription className="text-xs">Yearly comparison by source type</CardDescription>
+                        <CardDescription className="text-xs">2025 vs 2024 comparison by source type</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ChartContainer config={chartConfig} className="h-64">
@@ -942,8 +1159,8 @@ const Dashboard = () => {
                             <YAxis tick={{ fontSize: 10 }} />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Bar dataKey="Stationary Combustion (1a)" fill="#22c55e" />
-                            <Bar dataKey="Mobile Combustion (1b)" fill="#3b82f6" />
-                            <Bar dataKey="Process Emissions (1c)" fill="#f59e0b" />
+                            <Bar dataKey="Mobile Combustion (1c)" fill="#3b82f6" />
+                            <Bar dataKey="Process Emissions (1b)" fill="#f59e0b" />
                             <Bar dataKey="Refrigerant Emissions (1d)" fill="#ef4444" />
                           </BarChart>
                         </ChartContainer>
@@ -1122,33 +1339,46 @@ const Dashboard = () => {
               {scope3Data.length > 0 ? (
                 <>
                   {/* Scope 3 Pie Charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Paper Types Pie Chart */}
-                    {scope3PaperTypeData.length > 0 && (
+                    {getScope3PaperTypeData().length > 0 ? (
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
                           <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <ChartContainer config={chartConfig} className="h-48">
-                            <PieChart>
-                              <Pie
-                                data={scope3PaperTypeData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={renderCustomizedLabel}
-                                outerRadius={60}
-                                dataKey="emissions"
-                              >
-                                {scope3PaperTypeData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                              </Pie>
-                              <ChartTooltip content={<ChartTooltipContent />} />
-                            </PieChart>
-                          </ChartContainer>
+                                                  <ChartContainer config={chartConfig} className="h-48">
+                          <PieChart>
+                            <Pie
+                              data={getScope3PaperTypeData()}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderCustomizedLabel}
+                              outerRadius={60}
+                              dataKey="emissions"
+                            >
+                              {getScope3PaperTypeData().map((entry, index) => (
+                                <Cell key={`cell-paper-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ChartContainer>
+                        <div className="text-center text-xs mt-2 font-semibold">Paper Type</div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Paper Waste by Type</CardTitle>
+                          <CardDescription className="text-xs">Distribution by disposal method</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                            No paper waste data available.
+                          </div>
                         </CardContent>
                       </Card>
                     )}
@@ -1194,24 +1424,85 @@ const Dashboard = () => {
                         </CardContent>
                       </Card>
                     )}
+
+                    {/* Water Monthly Emissions Pie Chart - Only show if there's direct billing data */}
+                    {getScope3WaterMonthlyData().length > 0 ? (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
+                          <CardDescription className="text-xs">Direct billing only (2025)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={chartConfig} className="h-48">
+                            <PieChart>
+                              <Pie
+                                data={getScope3WaterMonthlyData()}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={renderMonthlyLabel}
+                                outerRadius={60}
+                                dataKey="emissions"
+                              >
+                                {getScope3WaterMonthlyData().map((entry, index) => (
+                                  <Cell key={`cell-monthly-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ChartContainer>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Water Emissions by Month</CardTitle>
+                          <CardDescription className="text-xs">No monthly data available</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+                            Monthly breakdown not available for area-based calculations
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
 
                   {/* Scope 3 Year by Year Comparison */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Paper Yearly Comparison */}
                     <Card>
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Scope 3 Emissions by Year</CardTitle>
-                        <CardDescription className="text-xs">Yearly comparison by source type</CardDescription>
+                        <CardTitle className="text-sm">Paper Emissions by Year</CardTitle>
+                        <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <ChartContainer config={chartConfig} className="h-64">
-                          <BarChart data={scope3YearlyData}>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <BarChart data={getScope3PaperYearlyData()}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                             <YAxis tick={{ fontSize: 10 }} />
                             <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="Paper" fill="#22c55e" />
-                            <Bar dataKey="Water" fill="#3b82f6" />
+                            <Bar dataKey="emissions" fill="#22c55e" />
+                          </BarChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Water Yearly Comparison */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Water Emissions by Year</CardTitle>
+                        <CardDescription className="text-xs">2025 vs 2024 comparison</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer config={chartConfig} className="h-48">
+                          <BarChart data={getScope3WaterYearlyData()}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="emissions" fill="#3b82f6" />
                           </BarChart>
                         </ChartContainer>
                       </CardContent>
