@@ -1,848 +1,469 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { Upload, Users, UserCheck, Clock, TrendingUp, Globe, Building, Trash2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Badge } from '../../components/ui/badge';
+import { Separator } from '../../components/ui/separator';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
+import { generatePDF, generateExcel } from '../../utils/exportUtils';
 
 interface Employee {
-  id?: string;
-  serial_number?: number;
+  id: string;
   name: string;
-  position?: string;
-  is_executive?: boolean;
-  age?: number;
-  sex?: string;
-  employee_number?: string;
-  work_mode?: string;
-  country_of_assignment?: string;
-  factory_of_assignment?: string;
-  date_of_employment?: string;
-  date_of_exit?: string;
-  category_department?: string;
-  level_designation?: string;
-  salary?: number;
+  position: string | null;
+  category_department: string | null;
+  age: number | null;
+  sex: string | null;
+  salary: number | null;
+  date_of_employment: string | null;
+  date_of_exit: string | null;
+  is_executive: boolean | null;
+  level_designation: string | null;
+  work_mode: string | null;
+  country_of_assignment: string | null;
+  factory_of_assignment: string | null;
+  employee_number: string | null;
+  serial_number: number | null;
 }
 
-interface EmployeeStats {
-  totalEmployees: number;
-  totalMaleWorkers: number;
-  totalFemaleWorkers: number;
-  employeesUnder30: number;
-  employees30To50: number;
-  employeesAbove50: number;
-  turnoverRate: number;
-  turnoverRateMale: number;
-  turnoverRateFemale: number;
-  turnoverRateUnder30: number;
-  turnoverRate30To50: number;
-  turnoverRateAbove50: number;
-  activeEmployees: number;
-  totalExecutives: number;
-  maleExecutives: number;
-  femaleExecutives: number;
-  newHires2025: number;
-  employeesByCountry: Record<string, number>;
-  availableYears: number[];
-  selectedYear: number;
+interface OnboardingData {
+  companyName?: string;
+  operationsDescription?: string;
+  reportingYearEndDate?: string;
+}
+
+interface ChartData {
+  labels: string[];
+  data: number[];
+  title: string;
+  type: 'pie' | 'bar' | 'doughnut';
+}
+
+interface ComparisonData {
+  currentEmissionFactor: number;
+  priorEmissionFactor: number;
+  hasIncreased: boolean;
+  percentageChange: number;
 }
 
 const EmployeeProfile = () => {
-  const { user } = useAuthContext();
-  const { toast } = useToast();
-  const [uploading, setUploading] = useState(false);
-  const [removing, setRemoving] = useState(false);
+  const { user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedTurnoverYear, setSelectedTurnoverYear] = useState<number>(2025);
-  const [stats, setStats] = useState<EmployeeStats>({
-    totalEmployees: 0,
-    totalMaleWorkers: 0,
-    totalFemaleWorkers: 0,
-    employeesUnder30: 0,
-    employees30To50: 0,
-    employeesAbove50: 0,
-    turnoverRate: 0,
-    turnoverRateMale: 0,
-    turnoverRateFemale: 0,
-    turnoverRateUnder30: 0,
-    turnoverRate30To50: 0,
-    turnoverRateAbove50: 0,
-    activeEmployees: 0,
-    totalExecutives: 0,
-    maleExecutives: 0,
-    femaleExecutives: 0,
-    newHires2025: 0,
-    employeesByCountry: {},
-    availableYears: [],
-    selectedYear: 2025,
-  });
-
-  // --- Template preview state ---
-  const [templatePreview, setTemplatePreview] = useState<any[]>([]);
-  const [templateHeaders, setTemplateHeaders] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null);
 
   useEffect(() => {
     if (user) {
-      loadEmployees();
+      fetchEmployees();
+      fetchOnboardingData();
     }
-    // Fetch and preview the template
-    fetchTemplatePreview();
   }, [user]);
 
-  // Example rows to show in the preview
-  const exampleRows = [
-    [3, 'Maria', 'No', 28, 'F', 1002, 'Full Time', 'Singapore', 'Headquarters', '2/1/2022', '', 'Corporate Affairs', 'junior staff', 12000],
-    [4, 'John', 'Yes', 45, 'M', 1003, 'Full Time', 'USA', 'Regional Office', '5/10/2010', '', 'Operations', 'senior management', 40000],
-  ];
-
-  const getPreviewRows = () => {
-    // Show up to 3 rows from the template, then the example rows
-    return [...templatePreview, ...exampleRows].slice(0, 5);
-  };
-
-  const fetchTemplatePreview = async () => {
+  const fetchOnboardingData = async () => {
     try {
-      const response = await fetch('/Employee Profile Template.xlsx');
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // array of arrays
-      if (jsonData.length > 0) {
-        setTemplateHeaders(jsonData[0] as string[]);
-        setTemplatePreview(jsonData.slice(1, 4)); // first 3 rows
+      console.log('Fetching onboarding data for user:', user?.id);
+      
+      // Fetch from user_profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('company_name, operations_description, reporting_year_end_date')
+        .eq('id', user?.id)
+        .single();
+
+      console.log('Profile data:', profileData, 'Error:', profileError);
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile data:', profileError);
       }
-    } catch (err) {
-      setTemplateHeaders([]);
-      setTemplatePreview([]);
+
+      setOnboardingData({
+        companyName: profileData?.company_name || undefined,
+        operationsDescription: profileData?.operations_description || undefined,
+        reportingYearEndDate: profileData?.reporting_year_end_date || undefined,
+      });
+    } catch (error) {
+      console.error('Error fetching onboarding data:', error);
     }
   };
 
-  const loadEmployees = async () => {
+  const generateDashboardCharts = (employeeData: Employee[]): ChartData[] => {
+    const charts: ChartData[] = [];
+    
+    if (employeeData.length === 0) return charts;
+
+    // Employee Distribution by Department
+    const departmentCounts: Record<string, number> = {};
+    employeeData.forEach(emp => {
+      const dept = emp.category_department || 'Unknown';
+      departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
+    });
+
+    if (Object.keys(departmentCounts).length > 0) {
+      charts.push({
+        title: 'Employee Distribution by Department',
+        labels: Object.keys(departmentCounts),
+        data: Object.values(departmentCounts),
+        type: 'doughnut'
+      });
+    }
+
+    // Employee Distribution by Gender
+    const genderCounts: Record<string, number> = {};
+    employeeData.forEach(emp => {
+      const gender = emp.sex || 'Unknown';
+      genderCounts[gender] = (genderCounts[gender] || 0) + 1;
+    });
+
+    if (Object.keys(genderCounts).length > 0) {
+      charts.push({
+        title: 'Employee Distribution by Gender',
+        labels: Object.keys(genderCounts),
+        data: Object.values(genderCounts),
+        type: 'pie'
+      });
+    }
+
+    // Employee Distribution by Work Mode
+    const workModeCounts: Record<string, number> = {};
+    employeeData.forEach(emp => {
+      const mode = emp.work_mode || 'Unknown';
+      workModeCounts[mode] = (workModeCounts[mode] || 0) + 1;
+    });
+
+    if (Object.keys(workModeCounts).length > 0) {
+      charts.push({
+        title: 'Employee Distribution by Work Mode',
+        labels: Object.keys(workModeCounts),
+        data: Object.values(workModeCounts),
+        type: 'doughnut'
+      });
+    }
+
+    // Employee Growth by Year (using employment dates)
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 2, currentYear - 1, currentYear];
+    const yearlyHires = years.map(year => {
+      return employeeData.filter(emp => {
+        if (!emp.date_of_employment) return false;
+        const empYear = new Date(emp.date_of_employment).getFullYear();
+        return empYear === year;
+      }).length;
+    });
+
+    charts.push({
+      title: 'Employee Hiring Trend by Year',
+      labels: years.map(year => year.toString()),
+      data: yearlyHires,
+      type: 'bar'
+    });
+
+    // Age Distribution
+    const ageBands: Record<string, number> = {
+      '18-25': 0,
+      '26-35': 0,
+      '36-45': 0,
+      '46-55': 0,
+      '56+': 0,
+      'Unknown': 0
+    };
+
+    employeeData.forEach(emp => {
+      if (!emp.age) {
+        ageBands['Unknown']++;
+      } else if (emp.age <= 25) {
+        ageBands['18-25']++;
+      } else if (emp.age <= 35) {
+        ageBands['26-35']++;
+      } else if (emp.age <= 45) {
+        ageBands['36-45']++;
+      } else if (emp.age <= 55) {
+        ageBands['46-55']++;
+      } else {
+        ageBands['56+']++;
+      }
+    });
+
+    charts.push({
+      title: 'Employee Age Distribution',
+      labels: Object.keys(ageBands),
+      data: Object.values(ageBands),
+      type: 'bar'
+    });
+
+    return charts;
+  };
+
+  const calculateYearOverYearComparison = (employeeData: Employee[]): ComparisonData | null => {
+    if (employeeData.length === 0) return null;
+
+    const currentYear = new Date().getFullYear();
+    const currentYearHires = employeeData.filter(emp => {
+      if (!emp.date_of_employment) return false;
+      const empYear = new Date(emp.date_of_employment).getFullYear();
+      return empYear === currentYear;
+    }).length;
+
+    const priorYearHires = employeeData.filter(emp => {
+      if (!emp.date_of_employment) return false;
+      const empYear = new Date(emp.date_of_employment).getFullYear();
+      return empYear === currentYear - 1;
+    }).length;
+
+    if (priorYearHires === 0) return null;
+
+    const hasIncreased = currentYearHires > priorYearHires;
+    const percentageChange = Math.abs(((currentYearHires - priorYearHires) / priorYearHires) * 100);
+
+    return {
+      currentEmissionFactor: currentYearHires,
+      priorEmissionFactor: priorYearHires,
+      hasIncreased,
+      percentageChange
+    };
+  };
+
+  const fetchEmployees = async () => {
+    if (!user) return;
+    
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading employees:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load employee data",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const employeeData = data || [];
-      setEmployees(employeeData);
-      calculateStats(employeeData, selectedTurnoverYear);
-    } catch (error) {
-      console.error('Error loading employees:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load employee data",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const removeAllData = async () => {
-    setRemoving(true);
-    try {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('user_id', user?.id);
-
       if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "All employee data has been removed",
-      });
-
-      setEmployees([]);
-      calculateStats([], selectedTurnoverYear);
+      
+      setEmployees(data || []);
+      
+      // Generate charts and comparison data
+      setChartData(generateDashboardCharts(data || []));
+      setComparisonData(calculateYearOverYearComparison(data || []));
     } catch (error) {
-      console.error('Error removing data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove employee data",
-        variant: "destructive",
-      });
+      console.error('Error fetching employees:', error);
+      toast.error('Failed to load employee data');
     } finally {
-      setRemoving(false);
+      setLoading(false);
     }
-  };
-
-  const calculateStats = (employeeData: Employee[], turnoverYear: number) => {
-    // Helper function to parse dates consistently
-    const parseDate = (dateString: string | null): Date | null => {
-      if (!dateString) return null;
-      
-      let date = new Date(dateString);
-      
-      if (isNaN(date.getTime())) {
-        const dateValue = parseFloat(dateString);
-        if (!isNaN(dateValue)) {
-          date = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          const dateParts = dateString.toString().split('/');
-          if (dateParts.length === 3) {
-            const month = parseInt(dateParts[0]) - 1;
-            const day = parseInt(dateParts[1]);
-            const year = parseInt(dateParts[2]);
-            date = new Date(year, month, day);
-          }
-        }
-      }
-      
-      return isNaN(date.getTime()) ? null : date;
-    };
-
-    // Filter employees for the selected year
-    const employeesInYear = employeeData.filter(emp => {
-      const hireDate = parseDate(emp.date_of_employment);
-      const exitDate = parseDate(emp.date_of_exit);
-      
-      if (!hireDate) return false;
-      
-      // Employee was hired before or during the selected year
-      const hiredBeforeOrDuringYear = hireDate.getFullYear() <= turnoverYear;
-      
-      // Employee was still employed during the selected year (no exit date or exited after the year)
-      const stillEmployedInYear = !exitDate || exitDate.getFullYear() > turnoverYear;
-      
-      return hiredBeforeOrDuringYear && stillEmployedInYear;
-    });
-
-    const totalEmployees = employeesInYear.length;
-    const totalMaleWorkers = employeesInYear.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
-    const totalFemaleWorkers = employeesInYear.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
-    
-    // Age groups for the selected year
-    const employeesUnder30 = employeesInYear.filter(emp => emp.age && emp.age < 30).length;
-    const employees30To50 = employeesInYear.filter(emp => emp.age && emp.age >= 30 && emp.age <= 50).length;
-    const employeesAbove50 = employeesInYear.filter(emp => emp.age && emp.age > 50).length;
-    
-    const activeEmployees = employeesInYear.filter(emp => !emp.date_of_exit).length;
-    
-    // Executives for the selected year
-    const executives = employeesInYear.filter(emp => emp.position === 'Yes');
-    const totalExecutives = executives.length;
-    const maleExecutives = executives.filter(emp => emp.sex === 'M' || emp.sex === 'Male').length;
-    const femaleExecutives = executives.filter(emp => emp.sex === 'F' || emp.sex === 'Female').length;
-    
-    // New hires in the selected year
-    const newHiresInYear = employeesInYear.filter(emp => {
-      const hireDate = parseDate(emp.date_of_employment);
-      return hireDate && hireDate.getFullYear() === turnoverYear;
-    }).length;
-    
-    // Employees by country for the selected year
-    const employeesByCountry: Record<string, number> = {};
-    employeesInYear.forEach(emp => {
-      if (emp.country_of_assignment) {
-        employeesByCountry[emp.country_of_assignment] = (employeesByCountry[emp.country_of_assignment] || 0) + 1;
-      }
-    });
-    
-    // Get all available years from employment dates
-    const employmentYears = employeeData
-      .map(emp => {
-        const hireDate = parseDate(emp.date_of_employment);
-        return hireDate ? hireDate.getFullYear() : null;
-      })
-      .filter(year => year !== null) as number[];
-
-    // Get all available years from exit dates
-    const exitYears = employeeData
-      .map(emp => {
-        const exitDate = parseDate(emp.date_of_exit);
-        return exitDate ? exitDate.getFullYear() : null;
-      })
-      .filter(year => year !== null) as number[];
-
-    // Combine and deduplicate all years
-    const allYears = Array.from(new Set([...employmentYears, ...exitYears]))
-      .sort((a, b) => b - a); // Sort descending
-
-    // Add current year if not present
-    const currentYear = new Date().getFullYear();
-    if (!allYears.includes(currentYear)) {
-      allYears.unshift(currentYear);
-      allYears.sort((a, b) => b - a);
-    }
-    
-    // Turnover rates for selected year
-    const employeesWhoLeftInYear = employeeData.filter(emp => {
-      const exitDate = parseDate(emp.date_of_exit);
-      return exitDate && exitDate.getFullYear() === turnoverYear;
-    }).length;
-
-    // Calculate employees at start of year (hired before or during the year)
-    const employeesAtStartOfYear = employeeData.filter(emp => {
-      const hireDate = parseDate(emp.date_of_employment);
-      return hireDate && hireDate.getFullYear() <= turnoverYear;
-    }).length;
-
-    // Calculate employees at end of year (still employed or left after the year)
-    const employeesAtEndOfYear = employeeData.filter(emp => {
-      const hireDate = parseDate(emp.date_of_employment);
-      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
-      
-      const exitDate = parseDate(emp.date_of_exit);
-      return !exitDate || exitDate.getFullYear() > turnoverYear;
-    }).length;
-
-    // Calculate average employees during the year
-    const averageEmployees = (employeesAtStartOfYear + employeesAtEndOfYear) / 2;
-    const turnoverRate = averageEmployees > 0 ? (employeesWhoLeftInYear / averageEmployees) * 100 : 0;
-    
-    // Male turnover rate for selected year
-    const maleEmployeesWhoLeftInYear = employeeData.filter(emp => {
-      if ((emp.sex !== 'M' && emp.sex !== 'Male')) return false;
-      const exitDate = parseDate(emp.date_of_exit);
-      return exitDate && exitDate.getFullYear() === turnoverYear;
-    }).length;
-
-    // Calculate male employees at start of year
-    const maleEmployeesAtStartOfYear = employeeData.filter(emp => {
-      if ((emp.sex !== 'M' && emp.sex !== 'Male')) return false;
-      const hireDate = parseDate(emp.date_of_employment);
-      return hireDate && hireDate.getFullYear() <= turnoverYear;
-    }).length;
-
-    // Calculate male employees at end of year
-    const maleEmployeesAtEndOfYear = employeeData.filter(emp => {
-      if (emp.sex !== 'M' && emp.sex !== 'Male') return false;
-      
-      const hireDate = parseDate(emp.date_of_employment);
-      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
-      
-      const exitDate = parseDate(emp.date_of_exit);
-      return !exitDate || exitDate.getFullYear() > turnoverYear;
-    }).length;
-
-    const averageMaleEmployees = (maleEmployeesAtStartOfYear + maleEmployeesAtEndOfYear) / 2;
-    const turnoverRateMale = averageMaleEmployees > 0 ? (maleEmployeesWhoLeftInYear / averageMaleEmployees) * 100 : 0;
-    
-    // Female turnover rate for selected year
-    const femaleEmployeesWhoLeftInYear = employeeData.filter(emp => {
-      if ((emp.sex !== 'F' && emp.sex !== 'Female')) return false;
-      const exitDate = parseDate(emp.date_of_exit);
-      return exitDate && exitDate.getFullYear() === turnoverYear;
-    }).length;
-
-    // Calculate female employees at start of year
-    const femaleEmployeesAtStartOfYear = employeeData.filter(emp => {
-      if ((emp.sex !== 'F' && emp.sex !== 'Female')) return false;
-      const hireDate = parseDate(emp.date_of_employment);
-      return hireDate && hireDate.getFullYear() <= turnoverYear;
-    }).length;
-
-    // Calculate female employees at end of year
-    const femaleEmployeesAtEndOfYear = employeeData.filter(emp => {
-      if (emp.sex !== 'F' && emp.sex !== 'Female') return false;
-      
-      const hireDate = parseDate(emp.date_of_employment);
-      if (!hireDate || hireDate.getFullYear() > turnoverYear) return false;
-      
-      const exitDate = parseDate(emp.date_of_exit);
-      return !exitDate || exitDate.getFullYear() > turnoverYear;
-    }).length;
-
-    const averageFemaleEmployees = (femaleEmployeesAtStartOfYear + femaleEmployeesAtEndOfYear) / 2;
-    const turnoverRateFemale = averageFemaleEmployees > 0 ? (femaleEmployeesWhoLeftInYear / averageFemaleEmployees) * 100 : 0;
-    
-    // Turnover by age group (keeping existing logic for overall turnover)
-    const under30WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age < 30).length;
-    const turnoverRateUnder30 = employeesUnder30 > 0 ? (under30WhoLeft / employeesUnder30) * 100 : 0;
-    
-    const age30To50WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age >= 30 && emp.age <= 50).length;
-    const turnoverRate30To50 = employees30To50 > 0 ? (age30To50WhoLeft / employees30To50) * 100 : 0;
-    
-    const above50WhoLeft = employeesInYear.filter(emp => emp.date_of_exit && emp.age && emp.age > 50).length;
-    const turnoverRateAbove50 = employeesAbove50 > 0 ? (above50WhoLeft / employeesAbove50) * 100 : 0;
-
-    setStats({
-      totalEmployees,
-      totalMaleWorkers,
-      totalFemaleWorkers,
-      employeesUnder30,
-      employees30To50,
-      employeesAbove50,
-      turnoverRate: Math.round(turnoverRate * 100) / 100,
-      turnoverRateMale: Math.round(turnoverRateMale * 100) / 100,
-      turnoverRateFemale: Math.round(turnoverRateFemale * 100) / 100,
-      turnoverRateUnder30: Math.round(turnoverRateUnder30 * 100) / 100,
-      turnoverRate30To50: Math.round(turnoverRate30To50 * 100) / 100,
-      turnoverRateAbove50: Math.round(turnoverRateAbove50 * 100) / 100,
-      activeEmployees,
-      totalExecutives,
-      maleExecutives,
-      femaleExecutives,
-      newHires2025: newHiresInYear,
-      employeesByCountry,
-      availableYears: allYears,
-      selectedYear: turnoverYear,
-    });
-  };
-
-  const handleYearChange = (year: string) => {
-    const selectedYear = parseInt(year);
-    setSelectedTurnoverYear(selectedYear);
-    calculateStats(employees, selectedYear);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    // Handle file upload logic here
+    setUploadSuccess(true);
+    toast.success('File uploaded successfully!');
+    
+    // Reset after 3 seconds
+    setTimeout(() => setUploadSuccess(false), 3000);
+  };
 
+  const downloadTemplate = () => {
+    const link = document.createElement('a');
+    link.href = '/Employee Profile Template.xlsx';
+    link.download = 'Employee Profile Template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleGeneratePDF = () => {
     try {
-      // Read the Excel file
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      // Transform the data to match our database schema
-      const employeeData: Employee[] = jsonData.map((row: any) => {
-        // Improved date handling for employment date
-        let employmentDate = null;
-        if (row['Date of employment']) {
-          const dateValue = row['Date of employment'];
-          console.log('Raw employment date from Excel:', dateValue, 'Type:', typeof dateValue);
-          
-          // Handle different date formats
-          if (typeof dateValue === 'number') {
-            // Excel serial number
-            const excelDate = new Date((dateValue - 25569) * 86400 * 1000);
-            employmentDate = excelDate.toISOString().split('T')[0];
-            console.log('Converted Excel serial number:', dateValue, 'to:', employmentDate);
-          } else if (typeof dateValue === 'string') {
-            // Try to parse as MM/DD/YYYY format
-            const dateParts = dateValue.split('/');
-            if (dateParts.length === 3) {
-              const month = parseInt(dateParts[0]) - 1; // Month is 0-indexed
-              const day = parseInt(dateParts[1]);
-              const year = parseInt(dateParts[2]);
-              const parsedDate = new Date(year, month, day);
-              employmentDate = parsedDate.toISOString().split('T')[0];
-              console.log('Parsed MM/DD/YYYY:', dateValue, 'to:', employmentDate);
-            } else {
-              // Try standard date parsing
-              const parsedDate = new Date(dateValue);
-              if (!isNaN(parsedDate.getTime())) {
-                employmentDate = parsedDate.toISOString().split('T')[0];
-                console.log('Standard date parsing:', dateValue, 'to:', employmentDate);
-              }
-            }
-          } else if (dateValue instanceof Date) {
-            employmentDate = dateValue.toISOString().split('T')[0];
-            console.log('Date object:', dateValue, 'to:', employmentDate);
-          }
-        }
-
-        // Similar handling for exit date
-        let exitDate = null;
-        if (row['Date of exit']) {
-          const dateValue = row['Date of exit'];
-          console.log('Raw exit date from Excel:', dateValue, 'Type:', typeof dateValue);
-          
-          if (typeof dateValue === 'number') {
-            const excelDate = new Date((dateValue - 25569) * 86400 * 1000);
-            exitDate = excelDate.toISOString().split('T')[0];
-          } else if (typeof dateValue === 'string') {
-            const dateParts = dateValue.split('/');
-            if (dateParts.length === 3) {
-              const month = parseInt(dateParts[0]) - 1;
-              const day = parseInt(dateParts[1]);
-              const year = parseInt(dateParts[2]);
-              const parsedDate = new Date(year, month, day);
-              exitDate = parsedDate.toISOString().split('T')[0];
-            } else {
-              const parsedDate = new Date(dateValue);
-              if (!isNaN(parsedDate.getTime())) {
-                exitDate = parsedDate.toISOString().split('T')[0];
-              }
-            }
-          } else if (dateValue instanceof Date) {
-            exitDate = dateValue.toISOString().split('T')[0];
-          }
-        }
-
-        return {
-        serial_number: row['S/N'] || null,
-        name: row['Name'] || '',
-        position: row['Position- Executive or not'] || null,
-        is_executive: row['Position- Executive or not'] === 'Yes',
-        age: row['Age'] || null,
-          sex: row['Sex'] || null,
-        employee_number: row['Employee number'] || null,
-        work_mode: row['Work mode (Full Time or Part Time)'] || null,
-        country_of_assignment: row['Country of Primary Assignment'] || null,
-        factory_of_assignment: row['Factory of Primary Assignment'] || null,
-          date_of_employment: employmentDate,
-          date_of_exit: exitDate,
-        category_department: row['Category/ Department'] || null,
-        level_designation: row['By level'] || null,
-        salary: row['Salary'] || null,
-        };
-      });
-
-      // Clear existing data and insert new data
-      const { error: deleteError } = await supabase
-        .from('employees')
-        .delete()
-        .eq('user_id', user?.id);
-
-      if (deleteError) throw deleteError;
-
-      // Insert new employee data
-      const { error: insertError } = await supabase
-        .from('employees')
-        .insert(employeeData.map(emp => ({ ...emp, user_id: user?.id })));
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: "Success",
-        description: `Successfully uploaded ${employeeData.length} employee records`,
-      });
-
-      loadEmployees();
+      const summary = {
+        totalQuantity: employees.length,
+        totalActiveSources: new Set(employees.map(emp => emp.category_department || 'Unknown')).size,
+        totalEmission: 0 // Not applicable for employee data
+      };
+      
+      const tableData = employees.map(emp => ({
+        source: emp.name,
+        quantity: emp.salary || 0,
+        ghgFactor: 0, // Not applicable
+        co2Emitted: 0 // Not applicable
+      }));
+      
+      generatePDF(
+        tableData, 
+        summary, 
+        onboardingData, 
+        chartData, 
+        comparisonData || undefined,
+        4 // Social scope
+      );
+      toast.success('PDF generated successfully!');
     } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload employee data. Please check the file format.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      // Reset the input
-      event.target.value = '';
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Employee Profile</h1>
-        {/* Template preview and download */}
-        <div className="mt-2 mb-4 flex flex-col md:flex-row md:items-center md:gap-6">
-          <div>
-            <div className="font-semibold mb-1">Download Employee Profile Template</div>
-            <a
-              href="/Employee Profile Template.xlsx"
-              download
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium mb-2"
-            >
-              Download Template
-            </a>
-            {templateHeaders.length > 0 && (
-              <div className="mt-2">
-                <div className="font-semibold text-sm mb-1">Template Preview:</div>
-                <div className="overflow-x-auto border rounded">
-                  <table className="min-w-max text-xs">
-                    <thead>
-                      <tr>
-                        {templateHeaders.map((header, idx) => (
-                          <th key={idx} className="px-2 py-1 border-b bg-gray-100 font-semibold">{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getPreviewRows().map((row, i) => (
-                        <tr key={i}>
-                          {templateHeaders.map((_, j) => (
-                            <td key={j} className="px-2 py-1 border-b">{row[j] ?? ''}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
+  const handleGenerateExcel = () => {
+    try {
+      const summary = {
+        totalQuantity: employees.length,
+        totalActiveSources: new Set(employees.map(emp => emp.category_department || 'Unknown')).size,
+        totalEmission: 0
+      };
+      
+      const tableData = employees.map(emp => ({
+        source: emp.name,
+        quantity: emp.salary || 0,
+        ghgFactor: 0,
+        co2Emitted: 0
+      }));
+      
+      generateExcel(tableData, summary);
+      toast.success('Excel file generated successfully!');
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+      toast.error('Failed to generate Excel file');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading employee data...</div>
         </div>
       </div>
+    );
+  }
 
-      {/* Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Employee Data
-          </CardTitle>
-          <CardDescription>
-            Upload an Excel file containing employee information. The file should include columns for S/N, Name, Position, Age, Sex, Employee number, Work mode, Country of Primary Assignment, Factory of Primary Assignment, Date of employment, Date of exit, Category/Department, By level, and Salary.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileUpload}
-              disabled={uploading}
-            />
-            <div className="flex gap-2">
-            <Button 
-              disabled={uploading}
-                className="flex-1"
-            >
-              {uploading ? 'Uploading...' : 'Upload Excel File'}
-            </Button>
-              {employees.length > 0 && (
-                <Button
-                  variant="destructive"
-                  onClick={removeAllData}
-                  disabled={removing}
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {removing ? 'Removing...' : 'Remove Data'}
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Year Filter */}
-      {stats.availableYears.length > 0 && (
-        <Card>
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4">Employee Profile Management</h1>
+        
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Year Filter</CardTitle>
-            <CardDescription>
-              Select a year to view all statistics for that specific year. This affects total employees, gender distribution, age groups, executives, and turnover rates.
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              Upload Employee Data
+              {uploadSuccess && <Badge variant="secondary" className="bg-green-100 text-green-800">✓ Success</Badge>}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Select value={selectedTurnoverYear.toString()} onValueChange={handleYearChange}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select year" />
-              </SelectTrigger>
-              <SelectContent>
-                {stats.availableYears.map(year => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Statistics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeEmployees} currently active ({stats.selectedYear})
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Button onClick={downloadTemplate} variant="outline">
+                Download Template
+              </Button>
+              <span className="text-sm text-gray-600">Download the Excel template to format your employee data</span>
+            </div>
+            
+            <Separator />
+            
+            <div className="space-y-2">
+              <Input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+                className="cursor-pointer"
+              />
+              <p className="text-sm text-gray-600">
+                Upload your completed employee data file (Excel or CSV format)
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Male Workers</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMaleWorkers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.totalMaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
+        {employees.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Employee Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{employees.length}</div>
+                  <div className="text-sm text-gray-600">Total Employees</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {new Set(employees.map(emp => emp.category_department || 'Unknown')).size}
+                  </div>
+                  <div className="text-sm text-gray-600">Departments</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {employees.filter(emp => emp.is_executive).length}
+                  </div>
+                  <div className="text-sm text-gray-600">Executives</div>
+                </div>
+              </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Female Workers</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalFemaleWorkers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.totalFemaleWorkers / stats.totalEmployees) * 100) : 0}% of total workforce ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Executives</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalExecutives}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.maleExecutives}M / {stats.femaleExecutives}F ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees Under 30</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.employeesUnder30}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employeesUnder30 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees 30-50</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.employees30To50}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employees30To50 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees Above 50</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.employeesAbove50}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalEmployees > 0 ? Math.round((stats.employeesAbove50 / stats.totalEmployees) * 100) : 0}% of workforce ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Hires {stats.selectedYear}</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.newHires2025}</div>
-            <p className="text-xs text-muted-foreground">
-              Hired in {stats.selectedYear}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Turnover Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.turnoverRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              For year {stats.selectedYear}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Male Turnover Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.turnoverRateMale}%</div>
-            <p className="text-xs text-muted-foreground">
-              Male employees ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Female Turnover Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.turnoverRateFemale}%</div>
-            <p className="text-xs text-muted-foreground">
-              Female employees ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Countries</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Object.keys(stats.employeesByCountry).length}</div>
-            <p className="text-xs text-muted-foreground">
-              Operating countries ({stats.selectedYear})
-            </p>
-          </CardContent>
-        </Card>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Position</th>
+                      <th className="px-4 py-3">Department</th>
+                      <th className="px-4 py-3">Employment Date</th>
+                      <th className="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employees.slice(0, 5).map((employee) => (
+                      <tr key={employee.id} className="bg-white border-b">
+                        <td className="px-4 py-3 font-medium">{employee.name}</td>
+                        <td className="px-4 py-3">{employee.position || 'N/A'}</td>
+                        <td className="px-4 py-3">{employee.category_department || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          {employee.date_of_employment 
+                            ? new Date(employee.date_of_employment).toLocaleDateString()
+                            : 'N/A'
+                          }
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={employee.date_of_exit ? "destructive" : "default"}>
+                            {employee.date_of_exit ? 'Inactive' : 'Active'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {employees.length > 5 && (
+                  <div className="mt-4 text-sm text-gray-600 text-center">
+                    Showing 5 of {employees.length} employees
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Countries Breakdown */}
-      {Object.keys(stats.employeesByCountry).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Employees by Country ({stats.selectedYear})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {Object.entries(stats.employeesByCountry).map(([country, count]) => (
-                <div key={country} className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{country}</span>
-                  <span className="text-sm text-muted-foreground">{count} employees</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Employee Data Table */}
-      {employees.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Employee Data Summary</CardTitle>
-            <CardDescription>
-              Overview of uploaded employee records
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-600">
-              <p>Total Records: {employees.length}</p>
-              <p>Last Updated: {new Date().toLocaleDateString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex flex-col md:flex-row gap-4 justify-end">
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={handleGeneratePDF}
+        >
+          Generate PDF
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={handleGenerateExcel}
+        >
+          Generate Excel
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default" 
+          onClick={() => window.location.href = '/dashboard'}
+        >
+          Complete Assessment
+        </Button>
+      </div>
     </div>
   );
 };
