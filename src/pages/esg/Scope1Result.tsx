@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
-import { generatePDF, generateExcel } from '../../utils/exportUtils';
+import { generatePDF, generateExcel, generateDynamicSummaryText } from '../../utils/exportUtils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -358,83 +358,30 @@ const Scope1Result = () => {
         totalActiveSources,
         totalEmission
       };
-      // Only generate the PDF with summary, table, and footer (no charts)
-      const doc = new jsPDF();
-      let currentY = 22;
-      // Add title
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Scope 1 Carbon Emission Report`, 14, currentY);
-      currentY += 20;
-      // Add onboarding information if available
-      if (onboardingData && (onboardingData.companyName || onboardingData.operationsDescription || onboardingData.reportingYearEndDate)) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Company Information:', 14, currentY);
-        currentY += 10;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        if (onboardingData.companyName) {
-          doc.text(`Company Name: ${onboardingData.companyName}`, 14, currentY);
-          currentY += 8;
-        }
-        if (onboardingData.operationsDescription) {
-          const descriptionLines = doc.splitTextToSize(`Operations Description: ${onboardingData.operationsDescription}`, 180);
-          doc.text(descriptionLines, 14, currentY);
-          currentY += descriptionLines.length * 6;
-        }
-        if (onboardingData.reportingYearEndDate) {
-          doc.text(`Reporting Year End Date: ${onboardingData.reportingYearEndDate}`, 14, currentY);
-          currentY += 8;
-        }
-        currentY += 10;
-      }
-      // Add summary section
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Summary:', 14, currentY);
-      currentY += 10;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Total Quantity Till Date: ${totalQuantity.toFixed(4)}`, 14, currentY);
-      currentY += 8;
-      doc.text(`Total Active Sources Of Emission: ${totalActiveSources}`, 14, currentY);
-      currentY += 8;
-      doc.text(`Total Emission: ${totalEmission.toFixed(4)} kgCO2e`, 14, currentY);
-      currentY += 15;
-      // Add detailed data table
-      const tableHeaders = [
-        'Description Of Sources',
-        'Quantity Till Date',
-        'GHG Emission Factor',
-        'Co2 Carbon Emitted'
-      ];
-      const tableRows = tableData.map(row => [
-        row.source,
-        row.quantity.toFixed(4),
-        row.ghgFactor.toFixed(4),
-        row.co2Emitted.toFixed(4)
-      ]);
-      autoTable(doc, {
-        head: [tableHeaders],
-        body: tableRows,
-        startY: currentY,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [34, 197, 94] }
+      // Calculate current and prior emission factors for Towngas
+      const towngasRows = tableData.filter(row => row.source === 'Towngas');
+      const currentEmissionFactor = towngasRows.length > 0 ? towngasRows[0].ghgFactor : undefined;
+      // Assume prior emission factor is 0.549 (from your migration)
+      const priorEmissionFactor = 0.549;
+      // Calculate previous year emissions and quantity (if available)
+      // For demo, set as undefined to default to 'increased'
+      const previousEmissions = undefined;
+      const previousQuantity = undefined;
+      // Find highest month of consumption (if you have monthly data, else use 'May')
+      const highestMonth = 'May';
+      // Generate the summary text
+      const summaryText = generateDynamicSummaryText({
+        scope: 1,
+        currentEmissions: totalEmission,
+        previousEmissions,
+        currentEmissionFactors: currentEmissionFactor,
+        previousEmissionFactors: priorEmissionFactor,
+        currentQuantity: totalQuantity,
+        previousQuantity,
+        highestMonth
       });
-      // Add footer
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(
-          `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
-          14,
-          doc.internal.pageSize.height - 10
-        );
-      }
-      // Save the PDF
-      doc.save(`scope-1-emissions-report.pdf`);
+      // Only generate the PDF with summary, table, and footer (no charts)
+      generatePDF(tableData, summary, onboardingData, undefined, undefined, 1, summaryText);
       toast.success('PDF generated. Go to Dashboard to print the graphs!');
     } catch (error) {
       console.error('Error generating PDF:', error);

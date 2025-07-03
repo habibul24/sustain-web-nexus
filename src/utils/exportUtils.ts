@@ -42,7 +42,8 @@ export const generatePDF = (
   onboardingData?: OnboardingData,
   chartData?: ChartData[],
   comparisonData?: ComparisonData,
-  scopeNumber: number = 1
+  scopeNumber: number = 1,
+  summaryText?: string
 ) => {
   console.log('Generating PDF with onboarding data:', onboardingData);
   
@@ -122,6 +123,15 @@ export const generatePDF = (
     headStyles: { fillColor: [34, 197, 94] }
   });
   
+  // Add summaryText at the bottom before the footer
+  if (summaryText) {
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    const summaryLines = doc.splitTextToSize(summaryText, 180);
+    doc.text(summaryLines, 14, pageHeight - 40 - summaryLines.length * 5);
+  }
+  
   // Add footer
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
@@ -183,3 +193,50 @@ export const generateExcel = (tableData: EmissionData[], summary: SummaryData) =
   // Save the Excel file
   XLSX.writeFile(wb, 'scope-1-emissions-report.xlsx');
 };
+
+// Add this function to generate the dynamic summary text
+export function generateDynamicSummaryText({
+  scope,
+  currentEmissions,
+  previousEmissions,
+  currentEmissionFactors,
+  previousEmissionFactors,
+  currentQuantity,
+  previousQuantity,
+  highestMonth
+}: {
+  scope: 1 | 2 | 3,
+  currentEmissions: number,
+  previousEmissions?: number,
+  currentEmissionFactors?: number[] | number,
+  previousEmissionFactors?: number[] | number,
+  currentQuantity: number,
+  previousQuantity?: number,
+  highestMonth: string
+}) {
+  const scopeLabel = `Scope ${scope}`;
+  let emissionChange = 'increased';
+  if (previousEmissions !== undefined) {
+    emissionChange = currentEmissions > previousEmissions ? 'increased' : 'decreased';
+  }
+  let efChangeText = '';
+  if (scope === 1 && currentEmissionFactors && previousEmissionFactors) {
+    const pct = ((currentEmissionFactors as number) - (previousEmissionFactors as number)) / (previousEmissionFactors as number) * 100;
+    efChangeText = `${pct > 0 ? 'increase' : 'decrease'} of ${Math.abs(pct).toFixed(1)}%`;
+  } else if (scope === 2 && Array.isArray(currentEmissionFactors) && Array.isArray(previousEmissionFactors)) {
+    const pctArr = currentEmissionFactors.map((cur, i) => {
+      const prev = previousEmissionFactors[i];
+      console.log('cur', cur);
+      console.log('prev', prev);
+      return prev ? ((cur - prev) / prev) * 100 : 0;
+    });
+    const avgPct = pctArr.reduce((a, b) => a + b, 0) / pctArr.length;
+    efChangeText = `${avgPct > 0 ? 'increase' : 'decrease'} of ${Math.abs(avgPct).toFixed(1)}%`;
+  }
+  let qtyChange = 'reduction';
+  if (previousQuantity !== undefined) {
+    qtyChange = currentQuantity > previousQuantity ? 'increase' : 'reduction';
+  }
+  const qtyLabel = scope === 2 ? 'electricity' : 'fuel';
+  return `The ${scopeLabel} carbon emission has ${emissionChange} from the previous period. Factors contributing to these changes include the ${efChangeText || '(N/A)'} in the GHG emission factor from the supplier and a ${qtyChange} in the total ${qtyLabel} consumed. The emission factor is out of the Companys control, however the quantity used can be further reduced through energy efficiency management techniques, the highest month of consumption is ${highestMonth}. To reduce emission in the next period, investigate the causes of increase in the bill in this month i.e. when the summer/ winter is at its peak and the airconditioning units/ heater are probably at its highest.`;
+}
