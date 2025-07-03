@@ -16,6 +16,7 @@ interface Scope2Data {
   emissions_kg_co2: number | null;
   organization_area: number | null;
   total_building_area: number | null;
+  total_building_electricity: number | null;
   office_location_name: string;
   month: string | null;
   receives_bills_directly: string | null;
@@ -95,6 +96,7 @@ const Dashboard = () => {
           emissions_kg_co2,
           organization_area,
           total_building_area,
+          total_building_electricity,
           month,
           receives_bills_directly,
           created_at,
@@ -219,21 +221,24 @@ const Dashboard = () => {
             waste_type: 'Landfill',
             quantity_used: row.quantity_landfill || 0,
             emission_factor: row.carbon_dioxide_emitted_co2_landfill || 0,
-            emissions_kg_co2: (row.quantity_landfill || 0) * (row.carbon_dioxide_emitted_co2_landfill || 0)
+            emissions_kg_co2: (row.quantity_landfill || 0) * (row.carbon_dioxide_emitted_co2_landfill || 0),
+            created_at: row.created_at
           },
           {
             source_type: 'Paper',
             waste_type: 'Recycle',
             quantity_used: row.quantity_recycle || 0,
             emission_factor: row.carbon_dioxide_emitted_co2_recycle || 0,
-            emissions_kg_co2: (row.quantity_recycle || 0) * (row.carbon_dioxide_emitted_co2_recycle || 0)
+            emissions_kg_co2: (row.quantity_recycle || 0) * (row.carbon_dioxide_emitted_co2_recycle || 0),
+            created_at: row.created_at
           },
           {
             source_type: 'Paper',
             waste_type: 'Combust',
             quantity_used: row.quantity_combust || 0,
             emission_factor: row.carbon_dioxide_emitted_co2_combust || 0,
-            emissions_kg_co2: (row.quantity_combust || 0) * (row.carbon_dioxide_emitted_co2_combust || 0)
+            emissions_kg_co2: (row.quantity_combust || 0) * (row.carbon_dioxide_emitted_co2_combust || 0),
+            created_at: row.created_at
           }
         ]);
       }
@@ -360,6 +365,42 @@ const Dashboard = () => {
     });
     
     return yearlyData;
+  };
+
+  const groupScope2ByLocation = (data: Scope2Data[]) => {
+    return data.reduce((acc, item) => {
+      const location = item.office_location_name || 'Unknown Location';
+      if (!acc[location]) acc[location] = [];
+      acc[location].push(item);
+      return acc;
+    }, {} as Record<string, Scope2Data[]>);
+  };
+
+  const calculateLocationEmissions = (items: Scope2Data[]) => {
+    if (items.length === 0) return 0;
+    const first = items[0];
+    if (first.receives_bills_directly === 'yes') {
+      // Direct billing: sum all quantity_used, multiply by emission factor
+      const totalQuantity = items.reduce((sum, item) => sum + (item.quantity_used || 0), 0);
+      return totalQuantity * (first.emission_factor || 0);
+    } else {
+      // Area-based: use first entry's org/total area, total_building_electricity, emission_factor
+      if (first.organization_area && first.total_building_area && first.total_building_electricity && first.emission_factor) {
+        return (first.organization_area / first.total_building_area) * first.total_building_electricity * first.emission_factor;
+      }
+      return 0;
+    }
+  };
+
+  const getLocationData = () => {
+    // Group all Scope2Data entries by location
+    const grouped = groupScope2ByLocation(scope2Data);
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+    return Object.entries(grouped).map(([location, items], index) => ({
+      location,
+      emissions: Number(calculateLocationEmissions(items).toFixed(2)),
+      fill: colors[index % colors.length]
+    }));
   };
 
   // Scope 3 Data Preparation Functions
@@ -573,27 +614,6 @@ const Dashboard = () => {
       ...item,
       fill: colors[index % colors.length],
       isTop5: index < 5
-    }));
-  };
-
-  // Fixed location data preparation
-  const getLocationData = () => {
-    const locationEmissions = scope2Data.reduce((acc, item) => {
-      const location = item.office_location_name || 'Unknown Location';
-      const emissions = calculateCO2Emission(item);
-      
-      console.log('Processing location:', location, 'emissions:', emissions);
-      
-      acc[location] = (acc[location] || 0) + emissions;
-      return acc;
-    }, {} as Record<string, number>);
-
-    console.log('Location emissions breakdown:', locationEmissions);
-
-    return Object.entries(locationEmissions).map(([location, emissions], index) => ({
-      location,
-      emissions: typeof emissions === 'number' ? Number(emissions.toFixed(2)) : 0,
-      fill: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][index % 6]
     }));
   };
 
@@ -913,6 +933,30 @@ const Dashboard = () => {
         fontWeight="bold"
       >
         {`${name} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
+
+  // Add this function near your other render*Label functions:
+  const renderPaperTypeLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index, type
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 20;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    // if (percent < 0.05) return null;
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#374151"
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+      >
+        {`${type} (${(percent * 100).toFixed(0)}%)`}
       </text>
     );
   };
@@ -1391,7 +1435,7 @@ const Dashboard = () => {
                                   cx="50%"
                                   cy="50%"
                                   labelLine={false}
-                                  label={renderCustomizedLabel}
+                                  label={renderPaperTypeLabel}
                                   outerRadius={60}
                                   dataKey="emissions"
                                 >
