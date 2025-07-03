@@ -2149,6 +2149,7 @@ export type Database = {
           created_at: string
           data_source: string | null
           emission_factor: number | null
+          emission_factor_prior_year: number | null
           emissions_kg_co2: number | null
           gwp_co2e: number | null
           gwp_methane: number | null
@@ -2173,6 +2174,7 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           emission_factor?: number | null
+          emission_factor_prior_year?: number | null
           emissions_kg_co2?: number | null
           gwp_co2e?: number | null
           gwp_methane?: number | null
@@ -2197,6 +2199,7 @@ export type Database = {
           created_at?: string
           data_source?: string | null
           emission_factor?: number | null
+          emission_factor_prior_year?: number | null
           emissions_kg_co2?: number | null
           gwp_co2e?: number | null
           gwp_methane?: number | null
