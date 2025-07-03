@@ -9,12 +9,11 @@ const OrganizationCards = () => {
     {
       image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80",
       title: "Individual",
-      description: "Personal sustainability tracking for conscious consumers",
+      description: "Our comprehensive ESG hub is designed to help you master ESG implementation in companies. Gain the practical skills required to confidently calculate and interpret ESG metrics for reporting within hours.",
       features: [
-        "Personal carbon footprint calculator",
-        "Sustainable lifestyle recommendations",
-        "Green purchasing guides",
-        "Environmental impact tracking"
+        "ESG courses",
+        "Policies & Templates",
+        "Calculation Templates"
       ],
       buttonText: "Start Personal Journey",
       bgColor: "bg-white"
@@ -22,12 +21,12 @@ const OrganizationCards = () => {
     {
       image: "https://assets-blog.s3.amazonaws.com/office-furniture-blog/wp-content/uploads/2022/08/08004006/SP-HA_Blade-and-OFS-Opt-2-White_Frosted_Blue_Acrylic_Silver_Vectra_SP-scaled.jpg",
       title: "Business",
-      description: "Comprehensive ESG solutions for growing companies",
+      description: "From first assessment to ESG report creation, we provide the expertise & tools you need to ensure regulatory compliance & successfully implement sustainability within your company.",
       features: [
-        "ESG reporting and analytics",
-        "Compliance management",
-        "Sustainability metrics",
-        "Stakeholder communication"
+        "First time ESG assessment",
+        "Materiality assessment",
+        "ESG Data management software",
+        "Expert Advisory services"
       ],
       buttonText: "Explore Business Solutions",
       bgColor: "bg-white"
@@ -35,12 +34,11 @@ const OrganizationCards = () => {
     {
       image: "https://media.istockphoto.com/id/479842074/photo/empty-road-at-building-exterior.jpg?s=612x612&w=0&k=20&c=SbyfZGN0i2O_QPLCdBcu9vhuzbQvTz4bGEn-lIzrN0E=",
       title: "Large Organization",
-      description: "Enterprise-grade sustainability platform for complex operations",
+      description: "Does gathering consistent ESG data across your global locations feel like an insurmountable hurdle? Our specialty is working with large and listed organizations like yours to centralize data and streamline reporting, transforming it from a burden into a strategic asset.",
       features: [
-        "Advanced ESG analytics",
-        "Multi-location tracking",
-        "Custom reporting dashboards",
-        "API integrations"
+        "Customize Your Data Management Platform",
+        "Supply chain data management",
+        "Create & Share Custom Training"
       ],
       buttonText: "Schedule Enterprise Demo",
       bgColor: "bg-white"
