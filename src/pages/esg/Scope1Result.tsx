@@ -351,44 +351,6 @@ const Scope1Result = () => {
     return num.toFixed(4);
   };
 
-  const handleGeneratePDF = () => {
-    try {
-      const summary = {
-        totalQuantity,
-        totalActiveSources,
-        totalEmission
-      };
-      // Calculate current and prior emission factors for Towngas
-      const towngasRows = tableData.filter(row => row.source === 'Towngas');
-      const currentEmissionFactor = towngasRows.length > 0 ? towngasRows[0].ghgFactor : undefined;
-      // Assume prior emission factor is 0.549 (from your migration)
-      const priorEmissionFactor = 0.549;
-      // Calculate previous year emissions and quantity (if available)
-      // For demo, set as undefined to default to 'increased'
-      const previousEmissions = undefined;
-      const previousQuantity = undefined;
-      // Find highest month of consumption (if you have monthly data, else use 'May')
-      const highestMonth = 'May';
-      // Generate the summary text
-      const summaryText = generateDynamicSummaryText({
-        scope: 1,
-        currentEmissions: totalEmission,
-        previousEmissions,
-        currentEmissionFactors: currentEmissionFactor,
-        previousEmissionFactors: priorEmissionFactor,
-        currentQuantity: totalQuantity,
-        previousQuantity,
-        highestMonth
-      });
-      // Only generate the PDF with summary, table, and footer (no charts)
-      generatePDF(tableData, summary, onboardingData, undefined, undefined, 1, summaryText);
-      toast.success('PDF generated. Go to Dashboard to print the graphs!');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
-    }
-  };
-
   const handleGenerateExcel = () => {
     try {
       const summary = {
@@ -426,12 +388,6 @@ const Scope1Result = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <button
-        className="mb-4 px-4 py-2 bg-green-600 text-white rounded"
-        onClick={goToDashboardScope1}
-      >
-        Go to Scope 1 Dashboard
-      </button>
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Congratulations, your scope 1 carbon emission data is ready below</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {summary.map((s) => (
@@ -477,16 +433,16 @@ const Scope1Result = () => {
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white" 
           variant="default"
-          onClick={handleGeneratePDF}
+          onClick={handleGenerateExcel}
         >
-          Generate PDF
+          Generate Excel
         </Button>
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white" 
           variant="default"
-          onClick={handleGenerateExcel}
+          onClick={goToDashboardScope1}
         >
-          Generate Excel
+          Go to Scope 1 Dashboard
         </Button>
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white" 

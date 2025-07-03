@@ -7,6 +7,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { generatePDF, generateDynamicSummaryText } from '../utils/exportUtils';
+import { generatePDFWithDashboard } from '../utils/exportUtils';
+import { toast } from 'sonner';
 
 interface Scope2Data {
   id: string;
@@ -1051,6 +1054,152 @@ const Dashboard = () => {
     },
   };
 
+  // Add getLocationSummaries for Scope 2
+  interface LocationSummary {
+    location: string;
+    totalQuantity: number;
+    emissionFactor: number;
+    totalEmission: number;
+    receivesBillsDirectly: string;
+  }
+
+  const getLocationSummaries = (data: Scope2Data[] = scope2Data): LocationSummary[] => {
+    const locationGroups: Record<string, Scope2Data[]> = {};
+    data.forEach(item => {
+      const location = item.office_location_name;
+      if (!locationGroups[location]) {
+        locationGroups[location] = [];
+      }
+      locationGroups[location].push(item);
+    });
+    return Object.entries(locationGroups).map(([location, items]) => {
+      const receivesBillsDirectly = items[0]?.receives_bills_directly || 'yes';
+      const emissionFactor = items[0]?.emission_factor || 0;
+      let totalQuantity = 0;
+      let totalEmission = 0;
+      if (receivesBillsDirectly === 'yes') {
+        totalQuantity = items.reduce((sum, item) => sum + (item.quantity_used || 0), 0);
+        totalEmission = totalQuantity * emissionFactor;
+      } else {
+        const firstItem = items[0];
+        if (firstItem && firstItem.organization_area && firstItem.total_building_area && firstItem.total_building_electricity) {
+          totalQuantity = (firstItem.organization_area / firstItem.total_building_area) * firstItem.total_building_electricity;
+          totalEmission = totalQuantity * emissionFactor;
+        }
+      }
+      return {
+        location,
+        totalQuantity,
+        emissionFactor,
+        totalEmission,
+        receivesBillsDirectly
+      };
+    });
+  };
+
+  const handleScope2DashboardPDF = async () => {
+    try {
+      const locationSummaries = getLocationSummaries();
+      const tableData: { source: string; quantity: number; ghgFactor: number; co2Emitted: number }[] = locationSummaries.map(row => ({
+        source: row.location,
+        quantity: row.totalQuantity,
+        ghgFactor: row.emissionFactor,
+        co2Emitted: row.totalEmission
+      }));
+      const totalQuantity = tableData.reduce((sum, row) => sum + row.quantity, 0);
+      const totalActiveSources = tableData.length;
+      const totalEmission = tableData.reduce((sum, row) => sum + row.co2Emitted, 0);
+      const summary = {
+        totalQuantity,
+        totalActiveSources,
+        totalEmission
+      };
+      const currentEmissionFactors = tableData.map(row => row.ghgFactor);
+      const priorEmissionFactors = currentEmissionFactors.map(() => 0.549);
+      const previousEmissions = undefined;
+      const previousQuantity = undefined;
+      const highestMonth = 'May';
+      const summaryText = generateDynamicSummaryText({
+        scope: 2,
+        currentEmissions: totalEmission,
+        previousEmissions,
+        currentEmissionFactors,
+        previousEmissionFactors: priorEmissionFactors,
+        currentQuantity: totalQuantity,
+        previousQuantity,
+        highestMonth
+      });
+      await generatePDFWithDashboard(
+        tableData,
+        summary,
+        undefined, // onboardingData
+        undefined, // chartData
+        undefined, // comparisonData
+        2, // scopeNumber
+        summaryText,
+        {
+          sectionId: 'scope2-section',
+          title: 'Scope 2 Dashboard Overview',
+          description: ''
+        }
+      );
+    } catch (error) {
+      console.error('Error generating Scope 2 PDF:', error);
+      toast.error('Failed to generate Scope 2 PDF');
+    }
+  };
+
+  const handleScope3DashboardPDF = async () => {
+    try {
+      // (Optional: instruct user to scroll the dashboard section into view if graphs are missing)
+      // alert('If graphs are missing, please scroll the Scope 3 dashboard section into view before generating the PDF.');
+      const tableData = scope3Data.map(item => ({
+        source: item.source_type,
+        quantity: item.quantity_used || 0,
+        ghgFactor: item.emission_factor || 0,
+        co2Emitted: item.emissions_kg_co2 || 0
+      }));
+      const totalQuantity = tableData.reduce((sum, row) => sum + row.quantity, 0);
+      const totalActiveSources = tableData.length;
+      const totalEmission = tableData.reduce((sum, row) => sum + row.co2Emitted, 0);
+      const summary = {
+        totalQuantity,
+        totalActiveSources,
+        totalEmission
+      };
+      const previousEmissions = undefined;
+      const previousQuantity = undefined;
+      const highestMonth = 'May';
+      const summaryText = generateDynamicSummaryText({
+        scope: 3,
+        currentEmissions: totalEmission,
+        previousEmissions,
+        currentEmissionFactors: undefined,
+        previousEmissionFactors: undefined,
+        currentQuantity: totalQuantity,
+        previousQuantity,
+        highestMonth
+      });
+      await generatePDFWithDashboard(
+        tableData,
+        summary,
+        undefined, // onboardingData
+        undefined, // chartData
+        undefined, // comparisonData
+        3, // scopeNumber
+        summaryText,
+        {
+          sectionId: 'scope3-section',
+          title: 'Scope 3 Dashboard Overview',
+          description: ''
+        }
+      );
+    } catch (error) {
+      console.error('Error generating Scope 3 PDF:', error);
+      toast.error('Failed to generate Scope 3 PDF');
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8">
@@ -1270,7 +1419,7 @@ const Dashboard = () => {
             <TabsContent value="scope2" className="space-y-6">
               <button
                 className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={() => generatePDFfromSection('scope2-section', 'scope2-dashboard.pdf')}
+                onClick={handleScope2DashboardPDF}
               >
                 Generate PDF
               </button>
@@ -1411,7 +1560,7 @@ const Dashboard = () => {
             <TabsContent value="scope3" className="space-y-6">
               <button
                 className="mb-4 px-4 py-2 bg-yellow-600 text-white rounded"
-                onClick={() => generatePDFfromSection('scope3-section', 'scope3-dashboard.pdf')}
+                onClick={handleScope3DashboardPDF}
               >
                 Generate PDF
               </button>

@@ -268,42 +268,6 @@ const Scope2Result = () => {
     return locationSummaries.length;
   };
 
-  const handleGeneratePDF = () => {
-    try {
-      const summary = {
-        totalQuantity: getTotalQuantity(),
-        totalActiveSources: getActiveSources(),
-        totalEmission: getTotalEmissions()
-      };
-      // Gather emission factors for each location
-      const currentEmissionFactors = locationSummaries.map(row => row.emissionFactor);
-      const priorEmissionFactors = currentEmissionFactors.map(() => 0.549); // Use 0.549 for all as prior
-      const previousEmissions = undefined;
-      const previousQuantity = undefined;
-      const highestMonth = 'May';
-      const summaryText = generateDynamicSummaryText({
-        scope: 2,
-        currentEmissions: getTotalEmissions(),
-        previousEmissions,
-        currentEmissionFactors,
-        previousEmissionFactors: priorEmissionFactors,
-        currentQuantity: getTotalQuantity(),
-        previousQuantity,
-        highestMonth
-      });
-      generatePDF(locationSummaries.map(row => ({
-        source: row.location,
-        quantity: row.totalQuantity,
-        ghgFactor: row.emissionFactor,
-        co2Emitted: row.totalEmission
-      })), summary, onboardingData, undefined, undefined, 2, summaryText);
-      toast.success('PDF generated. Go to Dashboard to print the graphs!');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
-    }
-  };
-
   const handleGenerateExcel = () => {
     try {
       const summary = {
@@ -347,14 +311,7 @@ const Scope2Result = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <button
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={goToDashboardScope2}
-      >
-        Go to Scope 2 Dashboard
-      </button>
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Your Scope 2 Carbon Emission Results</h1>
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {summary.map((s) => (
           <div key={s.label} className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
@@ -363,7 +320,6 @@ const Scope2Result = () => {
           </div>
         ))}
       </div>
-      
       <div className="bg-white rounded-xl shadow p-4 mb-4 overflow-x-auto">
         <table className="min-w-full text-left">
           <thead>
@@ -386,25 +342,23 @@ const Scope2Result = () => {
           </tbody>
         </table>
       </div>
-      
       <div className="mb-6 text-gray-700 text-sm">
         Emission Factor Source: <a href="#" className="text-green-700 underline">View Reference</a>
       </div>
-      
       <div className="flex flex-col md:flex-row gap-4 justify-end">
-        <Button 
-          className="bg-green-500 hover:bg-green-600 text-white" 
-          variant="default"
-          onClick={handleGeneratePDF}
-        >
-          Generate PDF
-        </Button>
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white" 
           variant="default"
           onClick={handleGenerateExcel}
         >
           Generate Excel
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={goToDashboardScope2}
+        >
+          Go to Scope 2 Dashboard
         </Button>
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white" 

@@ -21,7 +21,7 @@ const aboutDropdown: DropdownItem[] = [
 ];
 const servicesDropdown: DropdownItem[] = [
   { name: 'ESG & Sustainability Courses', href: 'https://www.edu.greendatabiz.com/', external: true },
-  { name: 'GreenData Software', href: 'https://greendatabiz.com/', external: true },
+  { name: 'GreenData Software', href: '/greendata-software' },
   { name: 'ESG & Sustainability: Gap & Materiality Assessment and Reporting', href: '/services/assessment-reporting' },
   { name: 'ESG & Sustainability: Advisory and Analytics', href: '/services/advisory-analytics' },
 ];

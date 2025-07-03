@@ -44,6 +44,7 @@ import Marketplace from './pages/Marketplace';
 import ConsultationForm from './pages/ConsultationForm';
 import ThirdPartyCarbonData from './pages/ThirdPartyCarbonData';
 import MyDataRequests from './pages/MyDataRequests';
+import GreenDataSoftware from './pages/GreenDataSoftware';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -72,6 +73,7 @@ function App() {
               <Route path="/consultation" element={<ConsultationForm />} />
               <Route path="/third-party-carbon-data" element={<ThirdPartyCarbonData />} />
               <Route path="/my-data-requests" element={<MyDataRequests />} />
+              <Route path="/greendata-software" element={<GreenDataSoftware />} />
               
               <Route path="/my-esg" element={<MyESG />}>
                 <Route index element={<Introduction />} />

@@ -6,6 +6,7 @@ import ESGCarousel from '@/components/ESGCarousel';
 import OrganizationCards from '@/components/OrganizationCards';
 import SustainabilitySection from '@/components/SustainabilitySection';
 import FloatInOnView from '@/components/FloatInOnView';
+import GreenDataSoftware from './GreenDataSoftware';
 
 const Index = () => {
   return (

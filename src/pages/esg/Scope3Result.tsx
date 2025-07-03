@@ -285,104 +285,22 @@ const Scope3Result = () => {
     return totalPaperEmission + totalWaterEmission;
   };
 
-  const handleGeneratePDF = () => {
-    try {
-      const waterRows = getWaterByLocation();
-      const totalEmission = getTotalEmissionWithWater();
-      const totalQuantity = (paper?.quantity_landfill || 0) + (paper?.quantity_recycle || 0) + 
-                           (paper?.quantity_combust || 0) + (paper?.quantity_vendor || 0) +
-                           waterRows.reduce((sum, row) => sum + row.totalQuantity, 0);
-      const summary = {
-        totalQuantity,
-        totalActiveSources: (paper ? 1 : 0) + waterRows.length,
-        totalEmission
-      };
-      const previousEmissions = undefined;
-      const previousQuantity = undefined;
-      const highestMonth = 'May';
-      const summaryText = generateDynamicSummaryText({
-        scope: 3,
-        currentEmissions: totalEmission,
-        previousEmissions,
-        currentEmissionFactors: undefined,
-        previousEmissionFactors: undefined,
-        currentQuantity: totalQuantity,
-        previousQuantity,
-        highestMonth
-      });
-      // Only generate the PDF with summary, table, and footer (no charts)
-      const tableRows = [];
-      if (paper) {
-        if (paper.quantity_landfill) {
-          tableRows.push([
-            'Paper - Landfill',
-            paper.quantity_landfill.toFixed(4),
-            (paper.carbon_dioxide_emitted_co2_landfill || 0).toFixed(4),
-            ((paper.quantity_landfill || 0) * (paper.carbon_dioxide_emitted_co2_landfill || 0)).toFixed(4)
-          ]);
-        }
-        if (paper.quantity_recycle) {
-          tableRows.push([
-            'Paper - Recycle',
-            paper.quantity_recycle.toFixed(4),
-            (paper.carbon_dioxide_emitted_co2_recycle || 0).toFixed(4),
-            ((paper.quantity_recycle || 0) * (paper.carbon_dioxide_emitted_co2_recycle || 0)).toFixed(4)
-          ]);
-        }
-        if (paper.quantity_combust) {
-          tableRows.push([
-            'Paper - Combust',
-            paper.quantity_combust.toFixed(4),
-            (paper.carbon_dioxide_emitted_co2_combust || 0).toFixed(4),
-            ((paper.quantity_combust || 0) * (paper.carbon_dioxide_emitted_co2_combust || 0)).toFixed(4)
-          ]);
-        }
-        if (paper.quantity_vendor) {
-          tableRows.push([
-            'Paper - Vendor',
-            paper.quantity_vendor.toFixed(4),
-            '0.0000',
-            paper.quantity_vendor.toFixed(4)
-          ]);
-        }
-      }
-      waterRows.forEach(row => {
-        tableRows.push([
-          `Water - ${row.name}`,
-          row.totalQuantity.toFixed(4),
-          row.emissionFactor.toFixed(4),
-          row.totalEmission.toFixed(4)
-        ]);
-      });
-      generatePDF(tableRows.map(([source, quantity, ghgFactor, co2Emitted]) => ({
-        source,
-        quantity: Number(quantity),
-        ghgFactor: Number(ghgFactor),
-        co2Emitted: Number(co2Emitted)
-      })), summary, onboardingData, undefined, undefined, 3, summaryText);
-      toast.success('PDF generated. Go to Dashboard to print the graphs!');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
-    }
+  const goToDashboardScope3 = () => {
+    navigate('/dashboard?tab=environmental&scope=scope3');
   };
 
+  // Restore handleGenerateExcel for the button
   const handleGenerateExcel = () => {
     try {
       const waterRows = getWaterByLocation();
       const totalEmission = getTotalEmissionWithWater();
-      const totalQuantity = (paper?.quantity_landfill || 0) + (paper?.quantity_recycle || 0) + 
-                           (paper?.quantity_combust || 0) + (paper?.quantity_vendor || 0) +
-                           waterRows.reduce((sum, row) => sum + row.totalQuantity, 0);
-      
+      const totalQuantity = (paper ? 1 : 0) + waterRows.length;
       const summary = {
         totalQuantity,
         totalActiveSources: (paper ? 1 : 0) + waterRows.length,
         totalEmission
       };
-      
       const tableData = [];
-      
       if (paper) {
         if (paper.quantity_landfill) {
           tableData.push({
@@ -417,7 +335,6 @@ const Scope3Result = () => {
           });
         }
       }
-      
       waterRows.forEach(row => {
         tableData.push({
           source: `Water - ${row.name}`,
@@ -426,17 +343,12 @@ const Scope3Result = () => {
           co2Emitted: row.totalEmission
         });
       });
-      
       generateExcel(tableData, summary);
       toast.success('Excel file generated successfully!');
     } catch (error) {
       console.error('Error generating Excel:', error);
       toast.error('Failed to generate Excel file');
     }
-  };
-
-  const goToDashboardScope3 = () => {
-    navigate('/dashboard?tab=environmental&scope=scope3');
   };
 
   if (loading) {
@@ -534,12 +446,6 @@ const Scope3Result = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative">
-      <button
-        className="mb-4 px-4 py-2 bg-yellow-600 text-white rounded"
-        onClick={goToDashboardScope3}
-      >
-        Go to Scope 3 Dashboard
-      </button>
       <h1 className="text-2xl md:text-3xl font-bold mb-8">Your Scope 3 Carbon Emission Results</h1>
       {/* Paper summary table */}
       <h2 className="text-xl font-bold mb-2">Waste Paper Summary</h2>
@@ -574,70 +480,78 @@ const Scope3Result = () => {
                 <td className="py-2 px-3">{row.emission}</td>
               </tr>
             ))}
-            <tr className="font-bold bg-green-50">
-              <td className="py-2 px-3">Total</td>
-              <td className="py-2 px-3">{totalPaperTableQuantity.toFixed(2)}</td>
-              <td className="py-2 px-3">{totalPaperTableFactor.toFixed(3)}</td>
-              <td className="py-2 px-3">{totalPaperTableEmission.toFixed(2)}</td>
+            <tr className="font-bold">
+              <td>Total</td>
+              <td>{totalPaperTableQuantity.toFixed(2)}</td>
+              <td>{totalPaperTableFactor.toFixed(3)}</td>
+              <td>{totalPaperTableEmission.toFixed(2)}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      {/* Water Results Section */}
-      {waterLoading ? (
-        <div className="text-center">Loading water data...</div>
-      ) : waterRows.length === 0 ? (
-        <div className="text-center">No water data found.</div>
-      ) : (
-        <>
-          {/* Water summary table */}
-          <h2 className="text-xl font-bold mb-2 mt-10">Waste Water Summary</h2>
-          <table className="min-w-[300px] mb-6">
-            <tbody>
-              <tr>
-                <td className="font-semibold pr-4">Total Water Quantity</td>
-                <td>{waterRows.reduce((sum, row) => sum + row.totalQuantity, 0).toFixed(2)} m³</td>
+      <h2 className="text-xl font-bold mb-2 mt-8">Water Emissions Summary</h2>
+      <table className="min-w-[300px] mb-6">
+        <tbody>
+          <tr>
+            <td className="font-semibold pr-4">Total Water Quantity</td>
+            <td>{totalWaterTableQuantity.toFixed(2)} m³</td>
+          </tr>
+          <tr>
+            <td className="font-semibold pr-4">Total Water Emission</td>
+            <td>{totalWaterTableEmission.toFixed(2)} kgCO2e</td>
+          </tr>
+        </tbody>
+      </table>
+      <div className="bg-white rounded-xl shadow p-4 mb-4 overflow-x-auto">
+        <table className="min-w-full text-left">
+          <thead>
+            <tr className="border-b">
+              <th className="py-2 px-3 font-semibold">Location</th>
+              <th className="py-2 px-3 font-semibold">Quantity (m³)</th>
+              <th className="py-2 px-3 font-semibold">Emission Factor</th>
+              <th className="py-2 px-3 font-semibold">CO2e Emission (kgCO2e)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {waterRows.map(row => (
+              <tr key={row.name}>
+                <td className="py-2 px-3">{row.name}</td>
+                <td className="py-2 px-3">{row.totalQuantity.toFixed(2)}</td>
+                <td className="py-2 px-3">{row.emissionFactor.toFixed(3)}</td>
+                <td className="py-2 px-3">{row.totalEmission.toFixed(2)}</td>
               </tr>
-              <tr>
-                <td className="font-semibold pr-4">Total Water Emission</td>
-                <td>{totalWaterEmission.toFixed(2)} kgCO2e</td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="bg-white rounded-xl shadow p-4 mb-4 overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-2 px-3 font-semibold">Location</th>
-                  <th className="py-2 px-3 font-semibold">Total Quantity</th>
-                  <th className="py-2 px-3 font-semibold">Emission Factor</th>
-                  <th className="py-2 px-3 font-semibold">Total CO2e Emission (kg CO2e)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {waterRows.map((row, idx) => (
-                  <tr key={row.name + idx}>
-                    <td className="py-2 px-3">{row.name}</td>
-                    <td className="py-2 px-3">{row.totalQuantity.toFixed(2)}</td>
-                    <td className="py-2 px-3">{row.emissionFactor}</td>
-                    <td className="py-2 px-3">{row.totalEmission.toFixed(2)}</td>
-                  </tr>
-                ))}
-                <tr className="font-bold bg-green-50">
-                  <td className="py-2 px-3">Total</td>
-                  <td className="py-2 px-3">{totalWaterTableQuantity.toFixed(2)}</td>
-                  <td className="py-2 px-3">{totalWaterTableFactor.toFixed(3)}</td>
-                  <td className="py-2 px-3">{totalWaterTableEmission.toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-      <div className="flex flex-row gap-4 justify-end fixed bottom-8 right-8 z-50">
-        <Button onClick={handleGenerateExcel} className="bg-green-600 hover:bg-green-700 text-white">Generate Excel</Button>
-        <Button onClick={handleGeneratePDF} className="bg-green-600 hover:bg-green-700 text-white">Generate PDF</Button>
-        <Button onClick={() => navigate('/my-esg/social/employee-profile')} className="bg-green-600 hover:bg-green-700 text-white">Next</Button>
+            ))}
+            <tr className="font-bold">
+              <td>Total</td>
+              <td>{totalWaterTableQuantity.toFixed(2)}</td>
+              <td>{totalWaterTableFactor.toFixed(3)}</td>
+              <td>{totalWaterTableEmission.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 justify-end mt-8">
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={() => navigate('/my-esg/social/employee-profile')}
+        >
+          Next
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={handleGenerateExcel}
+        >
+          Generate Excel
+        </Button>
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white" 
+          variant="default"
+          onClick={goToDashboardScope3}
+        >
+          Go to Scope 3 Dashboard
+        </Button>
       </div>
     </div>
   );
