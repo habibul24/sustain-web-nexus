@@ -1,6 +1,5 @@
 import React from 'react';
 // import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 
 const Services = () => {
@@ -135,8 +134,6 @@ const Services = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };

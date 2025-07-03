@@ -9,7 +9,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import Footer from '@/components/Footer';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -308,8 +307,6 @@ const SignUp = () => {
           </Card>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };

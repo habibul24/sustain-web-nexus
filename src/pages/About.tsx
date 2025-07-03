@@ -1,6 +1,5 @@
 import React from 'react';
 // import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Zap, ShieldCheck, Briefcase, CheckCircle, Sparkles, Lightbulb, Globe } from 'lucide-react';
 import FloatInOnView from '@/components/FloatInOnView';
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
@@ -96,7 +95,6 @@ const About = () => {
           </div>
         </section>
       </FloatInOnView>
-      <Footer />
     </div>
   );
 };

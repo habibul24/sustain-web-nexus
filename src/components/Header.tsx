@@ -27,7 +27,7 @@ const servicesDropdown: DropdownItem[] = [
 ];
 const resourcesDropdown: DropdownItem[] = [
   { name: 'Blogs', href: '/resources/blogs' },
-  { name: 'Client Onboarding Questionnaire', href: '/consultation-form' },
+  { name: 'Client Onboarding Questionnaire', href: '/consultation' },
 ];
 
 const Header = () => {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Footer from '@/components/Footer';
 
 const industryOptions = [
   'Apparel',
@@ -235,7 +234,6 @@ const ConsultationForm = () => {
           </div>
         </section>
       </div>
-      <Footer />
     </div>
   );
 };

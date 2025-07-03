@@ -1,6 +1,5 @@
 import React from 'react';
 // import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import ImageTextSection from '@/components/ImageTextSection';
 import ESGCarousel from '@/components/ESGCarousel';
@@ -16,7 +15,6 @@ const Index = () => {
       <OrganizationCards />
       <SustainabilitySection />
       <ESGCarousel />
-      <Footer />
     </div>
   );
 };

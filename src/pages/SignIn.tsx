@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 const SignIn = () => {
@@ -38,8 +37,6 @@ const SignIn = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };
